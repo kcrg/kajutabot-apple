@@ -5,12 +5,14 @@ struct ContentView: View {
     @State private var app = AppState()
 
     var body: some View {
-        Group {
+        ZStack {
             switch app.authState {
             case .restoring:
-                ProgressView("Przywracanie sesji…")
+                StartupView()
+                    .transition(.opacity)
             case let .signedOut(message):
                 LoginView(app: app, message: message)
+                    .transition(.opacity.combined(with: .scale(scale: 0.985)))
             case let .recoverableError(message):
                 ContentUnavailableView {
                     Label("Nie można przywrócić sesji", systemImage: "exclamationmark.triangle")
@@ -19,10 +21,13 @@ struct ContentView: View {
                 } actions: {
                     Button("Spróbuj ponownie") { app.retryRestore() }
                 }
+                .transition(.opacity)
             case .signedIn:
                 AuthenticatedRootView(app: app)
+                    .transition(.opacity)
             }
         }
+        .animation(.smooth(duration: 0.32), value: app.authState)
         .preferredColorScheme(app.preferredColorScheme)
         .task { await app.initializeIfNeeded() }
         .onChange(of: scenePhase) { _, phase in
@@ -35,6 +40,31 @@ struct ContentView: View {
     }
 }
 
+private struct StartupView: View {
+    private let logoSize: CGFloat = 112
+    private let logoVerticalOffset: CGFloat = -18
+
+    var body: some View {
+        ZStack {
+            Image("LaunchLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: logoSize, height: logoSize)
+                .offset(y: logoVerticalOffset)
+                .accessibilityHidden(true)
+
+            ProgressView()
+                .controlSize(.small)
+                .tint(.accentColor)
+                .offset(y: 55)
+                .accessibilityLabel("Przywracanie sesji")
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+        .ignoresSafeArea()
+    }
+}
+
 private struct AuthenticatedRootView: View {
     @Bindable var app: AppState
 
@@ -42,7 +72,11 @@ private struct AuthenticatedRootView: View {
         Group {
             switch app.guildAccessState {
             case .checking:
-                ProgressView(app.isGuest ? "Łączenie z serwerem demonstracyjnym…" : "Sprawdzanie serwerów Discord…")
+                if app.onboardingCompleted && !app.manualOnboardingRequested {
+                    MainTabView(app: app)
+                } else {
+                    ProgressView(app.isGuest ? "Łączenie z serwerem demonstracyjnym…" : "Sprawdzanie serwerów Discord…")
+                }
             case .error:
                 ContentUnavailableView {
                     Label("Nie udało się pobrać serwerów", systemImage: "wifi.exclamationmark")
@@ -62,16 +96,24 @@ private struct AuthenticatedRootView: View {
                     Button("Wyloguj", role: .destructive) { app.logout() }
                 }
             case .available:
-                if app.shouldShowOnboarding {
-                    OnboardingView(app: app)
-                        .transition(.move(edge: .trailing).combined(with: .opacity))
-                } else {
-                    MainTabView(app: app)
-                        .transition(.opacity)
+                ZStack {
+                    if app.shouldShowOnboarding {
+                        OnboardingView(app: app)
+                            .transition(
+                                .asymmetric(
+                                    insertion: .opacity,
+                                    removal: .move(edge: .top).combined(with: .opacity)
+                                )
+                            )
+                            .zIndex(1)
+                    } else {
+                        MainTabView(app: app)
+                            .transition(.opacity)
+                    }
                 }
+                .animation(.smooth(duration: 0.45), value: app.shouldShowOnboarding)
             }
         }
-        .animation(.snappy(duration: 0.32), value: app.shouldShowOnboarding)
     }
 }
 

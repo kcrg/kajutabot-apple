@@ -38,6 +38,7 @@ final class AppState {
     private var session: UserSession?
     private var presentationRecoveryTask: Task<Void, Never>?
     private var presentationIdleTask: Task<Void, Never>?
+    private var startupPresentationTask: Task<Void, Never>?
 
     var authState: AppAuthState = .restoring
     var isSigningIn = false
@@ -55,16 +56,19 @@ final class AppState {
     var queue: QueueSnapshotResponse?
     var presentationQueue: QueueSnapshotResponse?
     var isLoadingQueue = false
+    var hasResolvedQueueState = false
+    var initialHeroArtworkReady = false
+    var presentationTrackRevision = 0
     var isMutating = false
     var activeControlAction: PlayerControlAction?
     var errorMessage: String?
-    var noticeMessage: String?
 
     var searchQuery = ""
     var searchSource: SearchSourceOption = .youtube
     var searchResults: [SearchItemResponse] = []
     var searchHistory: [String] = []
     var isSearching = false
+    var lastCompletedSearchQuery: String?
 
     var favorites: [FavoriteResponse] = []
     var isLoadingFavorites = false
@@ -72,6 +76,7 @@ final class AppState {
     var favoritesShuffle = false
 
     var manualOnboardingRequested = false
+    var onboardingCompleted = false
 
     var themeMode: ThemeMode {
         didSet { defaults.set(themeMode.rawValue, forKey: Keys.themeMode) }
@@ -123,11 +128,6 @@ final class AppState {
         return manualOnboardingRequested || !onboardingCompleted
     }
 
-    var onboardingCompleted: Bool {
-        guard let session else { return false }
-        return defaults.bool(forKey: onboardingKey(for: session))
-    }
-
     var favoritesOwnerKey: String {
         guard let session else { return "unknown" }
         return session.sessionType == .guest ? "guest" : session.user.discordUserId
@@ -143,9 +143,9 @@ final class AppState {
                 return
             }
             session = restored
-            authState = .signedIn(restored.user)
+            onboardingCompleted = defaults.bool(forKey: onboardingKey(for: restored))
             favoritesShuffle = defaults.bool(forKey: Keys.favoritesShufflePrefix + favoritesOwnerKey)
-            await bootstrapAuthenticatedState()
+            await bootstrapAndPresentAuthenticatedState(user: restored.user)
         } catch {
             authState = .recoverableError("Nie można odczytać bezpiecznego magazynu sesji.")
         }
@@ -220,7 +220,9 @@ final class AppState {
                 }
                 try await sessionManager.clear()
                 resetAuthenticatedState()
-                authState = .signedOut()
+                withAnimation(.smooth(duration: 0.32)) {
+                    authState = .signedOut()
+                }
             } catch {
                 errorMessage = "Serwer nie potwierdził wylogowania. Sesja pozostała aktywna."
                 if let session { authState = .signedIn(session.user) }
@@ -240,6 +242,7 @@ final class AppState {
     func completeOnboarding() {
         guard let session else { return }
         defaults.set(true, forKey: onboardingKey(for: session))
+        onboardingCompleted = true
         manualOnboardingRequested = false
     }
 
@@ -255,6 +258,8 @@ final class AppState {
         defaults.removeObject(forKey: Keys.channelId)
         queue = nil
         presentationQueue = nil
+        hasResolvedQueueState = false
+        initialHeroArtworkReady = false
         cancelPresentationRecovery()
         realtime.connect(guildId: guildId)
         Task {
@@ -273,14 +278,14 @@ final class AppState {
         Task { await refreshQueueAsync(guildId: guildId) }
     }
 
-    func dismissMessages() {
+    func dismissError() {
         errorMessage = nil
-        noticeMessage = nil
     }
 
     func setSearchSource(_ source: SearchSourceOption) {
         searchSource = source
         searchResults = []
+        lastCompletedSearchQuery = nil
     }
 
     func performSearch() {
@@ -298,7 +303,9 @@ final class AppState {
             do {
                 let response = try await api.search(query: query, source: searchSource)
                 searchResults = response.items
+                lastCompletedSearchQuery = query
             } catch {
+                lastCompletedSearchQuery = nil
                 errorMessage = userMessage(for: error)
             }
         }
@@ -312,6 +319,7 @@ final class AppState {
     func clearAddTrack() {
         searchQuery = ""
         searchResults = []
+        lastCompletedSearchQuery = nil
         isSearching = false
     }
 
@@ -335,9 +343,7 @@ final class AppState {
                     request: EnqueueRequest(voiceChannelId: channelId, inputs: inputs, expectedVersion: queue?.version)
                 )
                 applyQueueSnapshot(response.snapshot)
-                if response.operation.succeeded {
-                    noticeMessage = "Dodano do kolejki."
-                } else {
+                if !response.operation.succeeded {
                     errorMessage = response.operation.message ?? "Nie udało się dodać utworu."
                 }
             } catch {
@@ -355,7 +361,7 @@ final class AppState {
 
     func toggleRepeat() {
         let enabled = !(queue?.isRepeatEnabled ?? false)
-        performControl(.repeatTrack, successMessage: enabled ? "Powtarzanie włączone" : "Powtarzanie wyłączone") { api, guildId, version in
+        performControl(.repeatTrack) { api, guildId, version in
             try await api.setRepeat(guildId: guildId, request: SetQueueRepeatRequest(isEnabled: enabled, expectedVersion: version))
         }
     }
@@ -363,7 +369,7 @@ final class AppState {
     func toggleRadio() {
         guard let queue else { return }
         if queue.radio.isEnabled {
-            performControl(.radio, successMessage: "Radio wyłączone", forcePresentationIdleOnSuccess: true) { api, guildId, version in
+            performControl(.radio, forcePresentationIdleOnSuccess: true) { api, guildId, version in
                 try await api.disableRadio(guildId: guildId, expectedVersion: version)
             }
             return
@@ -374,7 +380,7 @@ final class AppState {
         }
         let minDuration = queue.radio.minimumDurationSeconds ?? 60
         let maxDuration = queue.radio.maximumDurationSeconds ?? 600
-        performControl(.radio, successMessage: "Radio włączone", forcePresentationIdleOnSuccess: true) { api, guildId, version in
+        performControl(.radio, forcePresentationIdleOnSuccess: true) { api, guildId, version in
             try await api.enableRadio(
                 guildId: guildId,
                 request: EnableRadioRequest(
@@ -454,7 +460,6 @@ final class AppState {
     func setFavoritesShuffle(_ enabled: Bool) {
         favoritesShuffle = enabled
         defaults.set(enabled, forKey: Keys.favoritesShufflePrefix + favoritesOwnerKey)
-        noticeMessage = enabled ? "Losowanie włączone" : "Losowanie wyłączone"
     }
 
     func isFavorite(_ track: TrackResponse) -> Bool {
@@ -486,7 +491,6 @@ final class AppState {
                 try await api.deleteFavorite(contentURL: contentURL)
                 let identity = favoriteIdentity(contentURL)
                 favorites.removeAll { favoriteIdentity($0.contentUrl) == identity }
-                noticeMessage = "Usunięto z ulubionych."
             } catch { errorMessage = userMessage(for: error) }
         }
     }
@@ -514,22 +518,59 @@ final class AppState {
                     )
                 )
                 applyQueueSnapshot(response.snapshot)
-                if response.operation.succeeded { noticeMessage = "Dodano ulubione do kolejki." }
-                else { errorMessage = response.operation.message ?? "Nie udało się dodać ulubionych." }
+                if !response.operation.succeeded {
+                    errorMessage = response.operation.message ?? "Nie udało się dodać ulubionych."
+                }
             } catch { errorMessage = userMessage(for: error) }
         }
     }
 
     private func finishSignIn(_ newSession: UserSession) async {
         session = newSession
-        authState = .signedIn(newSession.user)
+        onboardingCompleted = defaults.bool(forKey: onboardingKey(for: newSession))
         favoritesShuffle = defaults.bool(forKey: Keys.favoritesShufflePrefix + favoritesOwnerKey)
-        await bootstrapAuthenticatedState()
+        await bootstrapAndPresentAuthenticatedState(user: newSession.user)
     }
 
-    private func bootstrapAuthenticatedState() async {
+    /// Keep the launch/login surface visible for a very short grace period while the
+    /// authenticated state is restored. If the queue and current artwork are ready
+    /// sooner, transition immediately. Otherwise enter the app after 200 ms and let
+    /// the normal player skeleton carry the remaining load.
+    private func bootstrapAndPresentAuthenticatedState(user: AuthUserResponse) async {
+        startupPresentationTask?.cancel()
+        startupPresentationTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(200))
+            guard !Task.isCancelled, let self else { return }
+            self.presentAuthenticatedUI(user: user)
+        }
+
+        // Favorites are independent from the initial player presentation.
+        Task { [weak self] in
+            await self?.refreshFavoritesAsync()
+        }
+
         await loadGuilds()
-        await refreshFavoritesAsync()
+        await preloadInitialPlayerArtwork()
+
+        startupPresentationTask?.cancel()
+        startupPresentationTask = nil
+        presentAuthenticatedUI(user: user)
+    }
+
+    private func presentAuthenticatedUI(user: AuthUserResponse) {
+        guard session?.user.discordUserId == user.discordUserId else { return }
+        if case .signedIn = authState { return }
+        withAnimation(.smooth(duration: 0.24)) {
+            authState = .signedIn(user)
+        }
+    }
+
+    private func preloadInitialPlayerArtwork() async {
+        guard let track = presentationQueue?.nowPlaying else {
+            initialHeroArtworkReady = true
+            return
+        }
+        initialHeroArtworkReady = await ArtworkPreloader.preloadHero(urlString: track.thumbnailUrl)
     }
 
     private func loadGuilds() async {
@@ -544,6 +585,8 @@ final class AppState {
                 selectedGuildId = nil
                 selectedVoiceChannelId = nil
                 queue = nil
+                presentationQueue = nil
+                hasResolvedQueueState = true
                 guildAccessState = .none
                 realtime.stop()
                 return
@@ -564,6 +607,8 @@ final class AppState {
                 realtime.connect(guildId: guildId)
                 await loadVoiceChannels(guildId: guildId, preserveChannel: selectedVoiceChannelId)
                 await refreshQueueAsync(guildId: guildId)
+            } else {
+                hasResolvedQueueState = true
             }
         } catch {
             guildAccessState = .error
@@ -594,7 +639,12 @@ final class AppState {
 
     private func refreshQueueAsync(guildId: String) async {
         isLoadingQueue = true
-        defer { isLoadingQueue = false }
+        defer {
+            isLoadingQueue = false
+            if selectedGuildId == guildId {
+                hasResolvedQueueState = true
+            }
+        }
         do {
             let snapshot = try await api.getQueue(guildId: guildId)
             applyQueueSnapshot(snapshot)
@@ -620,14 +670,12 @@ final class AppState {
                 let identity = favoriteIdentity(added.contentUrl)
                 favorites.removeAll { favoriteIdentity($0.contentUrl) == identity }
                 favorites.insert(added, at: 0)
-                noticeMessage = "Dodano do ulubionych."
             } catch { errorMessage = userMessage(for: error) }
         }
     }
 
     private func performControl(
         _ action: PlayerControlAction?,
-        successMessage: String? = nil,
         forcePresentationIdleOnSuccess: Bool = false,
         operation: @escaping (KajutaBotAPIClient, String, Int64?) async throws -> QueueMutationResponse
     ) {
@@ -643,8 +691,9 @@ final class AppState {
             do {
                 let response = try await operation(api, guildId, queue?.version)
                 applyQueueSnapshot(response.snapshot, forcePresentationIdle: forcePresentationIdleOnSuccess)
-                if response.operation.succeeded { noticeMessage = successMessage }
-                else { errorMessage = response.operation.message ?? "Operacja nie powiodła się." }
+                if !response.operation.succeeded {
+                    errorMessage = response.operation.message ?? "Operacja nie powiodła się."
+                }
             } catch { await handleMutationError(error) }
         }
     }
@@ -668,7 +717,19 @@ final class AppState {
 
         let previousQueue = queue
         let previousPresentation = presentationQueue
+        let playbackChanged: Bool = {
+            guard let nextTrack = snapshot.nowPlaying else { return false }
+            guard let previousTrack = previousQueue?.nowPlaying else { return true }
+            return previousTrack.id != nextTrack.id
+                || previousQueue?.nowPlayingStartedAt != snapshot.nowPlayingStartedAt
+                || activeControlAction == .skip
+        }()
+
         queue = snapshot
+        hasResolvedQueueState = true
+        if playbackChanged {
+            presentationTrackRevision &+= 1
+        }
 
         if snapshot.nowPlaying != nil {
             presentationQueue = snapshot
@@ -741,11 +802,18 @@ final class AppState {
     }
 
     private func resetAuthenticatedState() {
+        startupPresentationTask?.cancel()
+        startupPresentationTask = nil
         session = nil
+        onboardingCompleted = false
+        manualOnboardingRequested = false
         guilds = []
         voiceChannels = []
         queue = nil
         presentationQueue = nil
+        hasResolvedQueueState = false
+        initialHeroArtworkReady = false
+        presentationTrackRevision = 0
         cancelPresentationRecovery()
         favorites = []
         guildAccessState = .checking

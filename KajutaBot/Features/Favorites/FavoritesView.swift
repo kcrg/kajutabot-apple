@@ -10,17 +10,26 @@ struct FavoritesView: View {
             if app.isLoadingFavorites && app.favorites.isEmpty {
                 ForEach(0..<5, id: \.self) { _ in
                     FavoriteSkeletonRow()
+                        .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 5, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                 }
             } else if app.favorites.isEmpty {
                 ContentUnavailableView("Brak ulubionych", systemImage: "heart", description: Text("Dodaj utwór z odtwarzacza albo wklej jego link."))
                     .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
             } else {
                 ForEach(app.favorites) { favorite in
                     FavoriteRow(app: app, favorite: favorite)
+                        .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 5, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                 }
             }
         }
         .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("Ulubione")
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
@@ -49,9 +58,22 @@ struct FavoritesView: View {
         .sheet(isPresented: $showAddFavorite) {
             NavigationStack {
                 Form {
-                    TextField("https://…", text: $newFavoriteURL)
-                        .textInputAutocapitalization(.never)
-                        .keyboardType(.URL)
+                    Section("Link do utworu") {
+                        ZStack(alignment: .leading) {
+                            if newFavoriteURL.isEmpty {
+                                Text("https://youtube.com/…")
+                                    .foregroundStyle(.primary.opacity(0.62))
+                                    .allowsHitTesting(false)
+                            }
+
+                            TextField("", text: $newFavoriteURL)
+                                .foregroundStyle(.primary)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .keyboardType(.URL)
+                                .accessibilityLabel("Link do utworu")
+                        }
+                    }
                 }
                 .navigationTitle("Dodaj do ulubionych")
                 .navigationBarTitleDisplayMode(.inline)
@@ -104,7 +126,11 @@ private struct FavoriteRow: View {
             }
             .buttonStyle(.borderless)
         }
-        .padding(.vertical, 5)
+        .padding(12)
+        .background(
+            Color(uiColor: .secondarySystemGroupedBackground),
+            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+        )
         .contextMenu {
             if let url = URL(string: favorite.contentUrl) {
                 Link(destination: url) { Label("Otwórz źródło", systemImage: "safari") }
@@ -122,7 +148,11 @@ private struct FavoriteSkeletonRow: View {
                 RoundedRectangle(cornerRadius: 4).fill(.quaternary).frame(width: 120, height: 12)
             }
         }
+        .padding(12)
+        .background(
+            Color(uiColor: .secondarySystemGroupedBackground),
+            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+        )
         .redacted(reason: .placeholder)
-        .padding(.vertical, 5)
     }
 }

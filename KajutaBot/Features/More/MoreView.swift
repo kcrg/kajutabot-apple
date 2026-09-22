@@ -46,7 +46,15 @@ struct MoreView: View {
                 Button {
                     app.manualOnboardingRequested = true
                 } label: {
-                    SettingsLabel(icon: "signpost.right", title: "Przewodnik po aplikacji", subtitle: "Uruchom onboarding ponownie")
+                    HStack(spacing: 12) {
+                        SettingsLabel(icon: "signpost.right", title: "Przewodnik po aplikacji", subtitle: "Uruchom onboarding ponownie")
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -140,11 +148,12 @@ private struct LibrariesView: View {
     private let libraries: [LibraryInfo] = [
         .init(name: "SwiftUI", description: "Deklaratywny interfejs i animacje", license: "Apple SDK"),
         .init(name: "Observation", description: "Obserwowalny stan aplikacji", license: "Apple SDK"),
-        .init(name: "URLSession", description: "REST API i WebSocket SignalR", license: "Apple SDK"),
+        .init(name: "URLSession", description: "REST API", license: "Apple SDK"),
         .init(name: "AuthenticationServices", description: "Discord OAuth przez ASWebAuthenticationSession", license: "Apple SDK"),
         .init(name: "CryptoKit", description: "PKCE SHA-256", license: "Apple SDK"),
         .init(name: "Security / Keychain", description: "Bezpieczne przechowywanie sesji", license: "Apple SDK"),
         .init(name: "Nuke", description: "Ładowanie, cache i pipeline obrazów", license: "MIT"),
+        .init(name: "SignalRClient", description: "Oficjalny klient ASP.NET Core SignalR dla Swift", license: "MIT"),
     ]
 
     var body: some View {

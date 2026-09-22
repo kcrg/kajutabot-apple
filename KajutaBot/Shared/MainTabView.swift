@@ -49,7 +49,7 @@ struct MainTabView: View {
                 selectedTab = .player
             }
         }
-        .tabBarMinimizeBehavior(.onScrollDown)
+        .tabBarMinimizeBehavior(selectedTab == .player ? .never : .onScrollDown)
         .onChange(of: selectedTab) { previousTab, newTab in
             if previousTab == .search && newTab != .search {
                 app.clearAddTrack()

@@ -5,60 +5,63 @@ struct LoginView: View {
     let message: String?
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                Spacer(minLength: 80)
-                BrandMark()
-                Text("KajutaBot")
-                    .font(.largeTitle.bold())
-                    .padding(.top, 20)
-                Text("Steruj muzyką na Discordzie z telefonu. Zaloguj się przez Discord albo wypróbuj aplikację od razu w trybie gościa.")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 8)
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(spacing: 0) {
+                    BrandMark()
+                    Text("KajutaBot")
+                        .font(.largeTitle.bold())
+                        .padding(.top, 20)
+                    Text("Steruj muzyką na Discordzie z telefonu. Zaloguj się przez Discord albo wypróbuj aplikację od razu w trybie gościa.")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
 
-                if !app.config.isOAuthConfigured {
-                    MessageCard(text: "Brak konfiguracji Discord Client ID. Uzupełnij KAJUTABOT_DISCORD_CLIENT_ID w Build Settings.")
-                        .padding(.top, 24)
-                }
-                if let message {
-                    MessageCard(text: message)
-                        .padding(.top, 12)
-                }
-
-                Button {
-                    app.signInWithDiscord()
-                } label: {
-                    HStack {
-                        if app.isSigningIn && !app.isGuestSigningIn { ProgressView().controlSize(.small) }
-                        Text(app.isSigningIn && !app.isGuestSigningIn ? "Logowanie…" : "Zaloguj przez Discord")
-                            .frame(maxWidth: .infinity)
+                    if !app.config.isOAuthConfigured {
+                        MessageCard(text: "Brak konfiguracji Discord Client ID. Uzupełnij KAJUTABOT_DISCORD_CLIENT_ID w Build Settings.")
+                            .padding(.top, 24)
                     }
-                    .frame(minHeight: 48)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(app.isSigningIn || !app.config.isOAuthConfigured)
-                .padding(.top, 28)
-
-                Button {
-                    app.signInAsGuest()
-                } label: {
-                    HStack {
-                        if app.isGuestSigningIn { ProgressView().controlSize(.small) }
-                        Text(app.isGuestSigningIn ? "Logowanie…" : "Wypróbuj jako gość")
-                            .frame(maxWidth: .infinity)
+                    if let message {
+                        MessageCard(text: message)
+                            .padding(.top, 12)
                     }
-                    .frame(minHeight: 48)
+
+                    Button {
+                        app.signInWithDiscord()
+                    } label: {
+                        HStack {
+                            if app.isSigningIn && !app.isGuestSigningIn { ProgressView().controlSize(.small) }
+                            Text(app.isSigningIn && !app.isGuestSigningIn ? "Logowanie…" : "Zaloguj przez Discord")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .frame(minHeight: 48)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(app.isSigningIn || !app.config.isOAuthConfigured)
+                    .padding(.top, 28)
+
+                    Button {
+                        app.signInAsGuest()
+                    } label: {
+                        HStack {
+                            if app.isGuestSigningIn { ProgressView().controlSize(.small) }
+                            Text(app.isGuestSigningIn ? "Logowanie…" : "Wypróbuj jako gość")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .frame(minHeight: 48)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(app.isSigningIn)
+                    .padding(.top, 10)
                 }
-                .buttonStyle(.bordered)
-                .disabled(app.isSigningIn)
-                .padding(.top, 10)
-                Spacer(minLength: 80)
+                .frame(maxWidth: 440)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 32)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: proxy.size.height, alignment: .center)
             }
-            .frame(maxWidth: 440)
-            .padding(.horizontal, 24)
-            .frame(maxWidth: .infinity)
+            .scrollBounceBehavior(.basedOnSize)
         }
     }
 }

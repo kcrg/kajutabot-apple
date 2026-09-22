@@ -10,54 +10,80 @@ struct MiniPlayerView: View {
         if let track = app.nowPlaying, let queue = app.queue {
             let progressQueue = app.presentationQueue ?? queue
 
-            if placement == .inline {
+            switch placement {
+            case .inline:
                 inlinePlayer(track: track)
-            } else {
+            case .expanded, .none:
+                expandedPlayer(track: track, queue: progressQueue)
+            @unknown default:
                 expandedPlayer(track: track, queue: progressQueue)
             }
         }
     }
 
     private func inlinePlayer(track: TrackResponse) -> some View {
-        HStack(spacing: 8) {
-            ArtworkView(urlString: track.thumbnailUrl, layout: .square(30), cornerRadius: 6)
+        HStack(spacing: 7) {
+            ArtworkView(
+                urlString: track.thumbnailUrl,
+                layout: .square(24),
+                cornerRadius: 6
+            )
+            .fixedSize()
+            .accessibilityHidden(true)
 
             Text(track.title)
                 .font(.caption.weight(.semibold))
                 .lineLimit(1)
+                .truncationMode(.tail)
+                .layoutPriority(1)
 
-            Spacer(minLength: 4)
+            Spacer(minLength: 2)
 
             Button {
                 app.skip()
             } label: {
                 Image(systemName: "forward.end.fill")
-                    .frame(width: 28, height: 28)
+                    .font(.caption.weight(.semibold))
+                    .frame(width: 24, height: 24)
+                    .contentShape(Circle())
             }
             .buttonStyle(.plain)
             .disabled(app.isMutating)
+            .accessibilityLabel("Pomiń utwór")
         }
+        .padding(.leading, 10)
+        .padding(.trailing, 12)
+        .frame(maxWidth: .infinity, minHeight: 34, maxHeight: 34, alignment: .center)
         .contentShape(Rectangle())
         .onTapGesture(perform: openPlayer)
     }
 
     private func expandedPlayer(track: TrackResponse, queue: QueueSnapshotResponse) -> some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 12) {
-                ArtworkView(urlString: track.thumbnailUrl, layout: .square(48), cornerRadius: 9)
+        ZStack(alignment: .bottom) {
+            HStack(spacing: 10) {
+                ArtworkView(
+                    urlString: track.thumbnailUrl,
+                    layout: .square(42),
+                    cornerRadius: 9
+                )
+                .fixedSize()
+                .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(track.title)
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
+                        .truncationMode(.tail)
 
                     TimelineView(.periodic(from: .now, by: 1)) { context in
                         let position = playbackPosition(queue: queue, now: context.date) ?? 0
                         Text("\(formatDuration(Int64(position * 1_000))) / \(formatDuration(track.durationMilliseconds))")
                             .font(.caption)
+                            .monospacedDigit()
                             .foregroundStyle(.secondary)
                     }
                 }
+                .layoutPriority(1)
 
                 Spacer(minLength: 4)
 
@@ -65,32 +91,40 @@ struct MiniPlayerView: View {
                     app.toggleFavorite(track)
                 } label: {
                     Image(systemName: app.isFavorite(track) ? "heart.fill" : "heart")
-                        .font(.title3)
-                        .frame(width: 36, height: 36)
+                        .font(.body.weight(.semibold))
+                        .frame(width: 32, height: 32)
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .disabled(app.isMutatingFavorites)
+                .accessibilityLabel(app.isFavorite(track) ? "Usuń z ulubionych" : "Dodaj do ulubionych")
 
                 Button {
                     app.skip()
                 } label: {
                     Image(systemName: "forward.end.fill")
-                        .font(.title3)
-                        .frame(width: 36, height: 36)
+                        .font(.body.weight(.semibold))
+                        .frame(width: 32, height: 32)
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
                 .disabled(app.isMutating)
+                .accessibilityLabel("Pomiń utwór")
             }
-            .contentShape(Rectangle())
-            .onTapGesture(perform: openPlayer)
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, minHeight: 56, maxHeight: 56, alignment: .center)
 
             TimelineView(.periodic(from: .now, by: 0.25)) { context in
                 let position = playbackPosition(queue: queue, now: context.date) ?? 0
                 let duration = max(Double(track.durationMilliseconds) / 1_000, 1)
                 ProgressView(value: position, total: duration)
                     .progressViewStyle(.linear)
+                    .controlSize(.mini)
             }
+            .padding(.horizontal, 12)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, minHeight: 58, maxHeight: 58)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: openPlayer)
     }
 }

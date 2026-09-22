@@ -1,3 +1,4 @@
+import Nuke
 import NukeUI
 import SwiftUI
 
@@ -6,10 +7,54 @@ enum ArtworkLayout: Equatable {
     case aspectRatio(CGFloat)
 }
 
+enum ArtworkRequestFactory {
+    static func make(urlString: String?, layout: ArtworkLayout) -> ImageRequest? {
+        guard let raw = urlString?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let url = URL(string: raw),
+              ["http", "https"].contains(url.scheme?.lowercased() ?? ""),
+              url.host != nil else { return nil }
+
+        var request = ImageRequest(url: url)
+        var thumbnail = ImageRequest.ThumbnailOptions(maxPixelSize: decodedPixelLimit(for: layout))
+        thumbnail.createThumbnailWithTransform = true
+        request.thumbnail = thumbnail
+        return request
+    }
+
+    private static func decodedPixelLimit(for layout: ArtworkLayout) -> Float {
+        switch layout {
+        case let .square(side):
+            return Float(max(CGFloat(96), ceil(side * 3)))
+        case .aspectRatio:
+            return 1_536
+        }
+    }
+}
+
+enum ArtworkPreloader {
+    @discardableResult
+    static func preloadHero(urlString: String?) async -> Bool {
+        guard let request = ArtworkRequestFactory.make(
+            urlString: urlString,
+            layout: .aspectRatio(16 / 9)
+        ) else { return true }
+
+        do {
+            _ = try await ImagePipeline.shared.imageTask(with: request).image
+            return true
+        } catch {
+            // A failed image request should not hold the app on the launch screen.
+            // ArtworkView will render its normal fallback once the player appears.
+            return true
+        }
+    }
+}
+
 struct ArtworkView: View {
     let urlString: String?
     let layout: ArtworkLayout
     var cornerRadius: CGFloat = 14
+    var onLoadCompleted: (() -> Void)? = nil
 
     var body: some View {
         switch layout {
@@ -32,28 +77,40 @@ struct ArtworkView: View {
 
     private var artworkContent: some View {
         ZStack {
-            Color.secondary.opacity(0.08)
+            Color(uiColor: .tertiarySystemFill)
 
-            if let url = validURL {
-                LazyImage(url: url) { state in
+            if let request = imageRequest {
+                LazyImage(request: request) { state in
                     if let image = state.image {
                         image
                             .resizable()
                             .scaledToFill()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .transition(.opacity)
+                            .onAppear { onLoadCompleted?() }
                     } else if state.error != nil {
                         missing
+                            .onAppear { onLoadCompleted?() }
                     } else {
-                        ProgressView()
-                            .controlSize(.small)
+                        Color(uiColor: .tertiarySystemFill)
+                            .overlay {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
                     }
                 }
+                .animation(.easeOut(duration: 0.18), value: validURL)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 missing
+                    .onAppear { onLoadCompleted?() }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var imageRequest: ImageRequest? {
+        ArtworkRequestFactory.make(urlString: urlString, layout: layout)
     }
 
     private var shape: RoundedRectangle {
@@ -70,7 +127,7 @@ struct ArtworkView: View {
 
     private var missing: some View {
         ZStack {
-            Color.secondary.opacity(0.08)
+            Color(uiColor: .tertiarySystemFill)
             Image(systemName: "music.note")
                 .font(.title2)
                 .foregroundStyle(.secondary)

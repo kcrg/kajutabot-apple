@@ -21,6 +21,8 @@ struct OnboardingView: View {
     @State private var page = 0
 
     private var selectionIndex: Int { onboardingPages.count }
+    private var showsBackButton: Bool { page > 0 }
+    private var isLastPage: Bool { page == selectionIndex }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,9 +31,17 @@ struct OnboardingView: View {
                     .font(.title2.bold())
                 Spacer()
                 if app.manualOnboardingRequested && app.onboardingCompleted {
-                    Button("Zamknij") { app.manualOnboardingRequested = false }
+                    Button("Zamknij") {
+                        withAnimation(.smooth(duration: 0.35)) {
+                            app.manualOnboardingRequested = false
+                        }
+                    }
                 } else if page < selectionIndex {
-                    Button("Pomiń") { withAnimation(.snappy) { page = selectionIndex } }
+                    Button("Pomiń") {
+                        withAnimation(.snappy(duration: 0.36)) {
+                            page = selectionIndex
+                        }
+                    }
                 }
             }
             .padding(.horizontal, 20)
@@ -52,30 +62,63 @@ struct OnboardingView: View {
                     Capsule()
                         .fill(index == page ? Color.accentColor : Color.secondary.opacity(0.25))
                         .frame(width: index == page ? 22 : 7, height: 7)
-                        .animation(.snappy, value: page)
                 }
             }
+            .animation(.snappy(duration: 0.3), value: page)
             .padding(.vertical, 14)
 
             HStack(spacing: 12) {
-                if page > 0 {
-                    Button("Wstecz") {
-                        withAnimation(.snappy) { page -= 1 }
+                if showsBackButton {
+                    Button {
+                        withAnimation(.snappy(duration: 0.36)) {
+                            page -= 1
+                        }
+                    } label: {
+                        Label("Wstecz", systemImage: "chevron.left")
+                            .font(.headline)
+                            .padding(.vertical, 2)
+                            .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
+                    .buttonBorderShape(.capsule)
+                    .controlSize(.large)
+                    .transition(
+                        .asymmetric(
+                            insertion: .move(edge: .leading).combined(with: .opacity),
+                            removal: .move(edge: .leading).combined(with: .opacity)
+                        )
+                    )
+                }
+
+                Button {
+                    if isLastPage {
+                        withAnimation(.smooth(duration: 0.45)) {
+                            app.completeOnboarding()
+                        }
+                    } else {
+                        withAnimation(.snappy(duration: 0.36)) {
+                            page += 1
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Text(isLastPage ? (app.manualOnboardingRequested ? "Gotowe" : "Zaczynamy") : "Dalej")
+                            .contentTransition(.opacity)
+
+                        Image(systemName: isLastPage ? "checkmark" : "chevron.right")
+                            .contentTransition(.symbolEffect(.replace))
+                    }
+                    .font(.headline)
+                    .padding(.vertical, 2)
                     .frame(maxWidth: .infinity)
                 }
-                Button(page == selectionIndex ? (app.manualOnboardingRequested ? "Gotowe" : "Zaczynamy") : "Dalej") {
-                    if page == selectionIndex {
-                        app.completeOnboarding()
-                    } else {
-                        withAnimation(.snappy) { page += 1 }
-                    }
-                }
                 .buttonStyle(.borderedProminent)
-                .frame(maxWidth: .infinity)
-                .disabled(page == selectionIndex && !app.hasDiscordTarget)
+                .buttonBorderShape(.capsule)
+                .controlSize(.large)
+                .disabled(isLastPage && !app.hasDiscordTarget)
             }
+            .animation(.snappy(duration: 0.36), value: showsBackButton)
+            .animation(.snappy(duration: 0.3), value: isLastPage)
             .padding(.horizontal, 20)
             .padding(.bottom, 14)
         }

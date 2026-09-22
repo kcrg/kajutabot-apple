@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>KAJUTABOT_API_BASE_URL</key>
+    <string>$(KAJUTABOT_API_BASE_URL)</string>
+    <key>KAJUTABOT_DISCORD_CLIENT_ID</key>
+    <string>$(KAJUTABOT_DISCORD_CLIENT_ID)</string>
+</dict>
+</plist>

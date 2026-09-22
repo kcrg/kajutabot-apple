@@ -46,7 +46,7 @@ struct AddTrackView: View {
                     }
                     .padding(.vertical, 22)
                 }
-            } else if !app.searchResults.isEmpty {
+            } else if app.lastCompletedSearchQuery == trimmedQuery && !app.searchResults.isEmpty {
                 Section("Wyniki") {
                     ForEach(app.searchResults) { item in
                         SearchResultRow(item: item) {
@@ -55,12 +55,12 @@ struct AddTrackView: View {
                         }
                     }
                 }
-            } else if !trimmedQuery.isEmpty && !isURL {
+            } else if app.lastCompletedSearchQuery == trimmedQuery && !trimmedQuery.isEmpty && !isURL {
                 Section {
                     ContentUnavailableView(
                         "Brak wyników",
                         systemImage: "magnifyingglass",
-                        description: Text("Uruchom wyszukiwanie dla wpisanej frazy.")
+                        description: Text("Nie znaleziono niczego dla „\(trimmedQuery)”.")
                     )
                 }
             }
