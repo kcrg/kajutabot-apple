@@ -26,20 +26,20 @@ final class RealtimeClient {
     private let hubURL: String
     private let tokenProvider: @Sendable () async throws -> String
 
-    private var connection: HubConnection?
-    private var connectionTask: Task<Void, Never>?
-    private var recoveryTask: Task<Void, Never>?
-    private var desiredGuildId: String?
-    private var generation = 0
-    private var subscriptionGeneration = 0
-    private var snapshotSubscriptionGeneration: Int?
+    @ObservationIgnored private var connection: HubConnection?
+    @ObservationIgnored private var connectionTask: Task<Void, Never>?
+    @ObservationIgnored private var recoveryTask: Task<Void, Never>?
+    @ObservationIgnored private var desiredGuildId: String?
+    @ObservationIgnored private var generation = 0
+    @ObservationIgnored private var subscriptionGeneration = 0
+    @ObservationIgnored private var snapshotSubscriptionGeneration: Int?
 
     var state: RealtimeConnectionState = .disconnected
     var lastFrameAt: Date?
     var lastQueueUpdateAt: Date?
     var reconnectAttempts = 0
-    var onSnapshot: ((QueueSnapshotResponse) -> Void)?
-    var onRecoveryNeeded: ((String) -> Void)?
+    @ObservationIgnored var onSnapshot: ((QueueSnapshotResponse) -> Void)?
+    @ObservationIgnored var onRecoveryNeeded: ((String) -> Void)?
 
     init(baseURL: URL, tokenProvider: @escaping @Sendable () async throws -> String) {
         hubURL = baseURL.appending(path: "hubs/playback").absoluteString
@@ -154,23 +154,23 @@ final class RealtimeClient {
     }
 
     private func registerHandlers(on connection: HubConnection, guildId: String, epoch: Int) async {
-        await connection.on("QueueUpdated") { [weak self] (snapshot: QueueSnapshotResponse) in
+        await connection.on("QueueUpdated") { @Sendable [weak self] (snapshot: QueueSnapshotResponse) in
             await self?.handleQueueUpdated(snapshot, guildId: guildId, epoch: epoch)
         }
 
-        await connection.on("RealtimeHeartbeat") { [weak self] (_: Int64) in
+        await connection.on("RealtimeHeartbeat") { @Sendable [weak self] (_: Int64) in
             await self?.handleHeartbeat(guildId: guildId, epoch: epoch)
         }
 
-        await connection.onReconnecting { [weak self] _ in
+        await connection.onReconnecting { @Sendable [weak self] _ in
             await self?.handleReconnecting(guildId: guildId, epoch: epoch)
         }
 
-        await connection.onReconnected { [weak self] in
+        await connection.onReconnected { @Sendable [weak self] in
             await self?.handleReconnected(guildId: guildId, epoch: epoch)
         }
 
-        await connection.onClosed { [weak self] _ in
+        await connection.onClosed { @Sendable [weak self] _ in
             await self?.handleClosed(guildId: guildId, epoch: epoch)
         }
     }

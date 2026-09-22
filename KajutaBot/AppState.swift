@@ -1,5 +1,6 @@
 import AuthenticationServices
 import Foundation
+import Nuke
 import Observation
 import SwiftUI
 
@@ -34,11 +35,18 @@ final class AppState {
     private let api: KajutaBotAPIClient
     private let oauth = DiscordOAuthService()
     private let defaults: UserDefaults
-    private var initialized = false
+    @ObservationIgnored private var initialized = false
     private var session: UserSession?
-    private var presentationRecoveryTask: Task<Void, Never>?
-    private var presentationIdleTask: Task<Void, Never>?
-    private var startupPresentationTask: Task<Void, Never>?
+    @ObservationIgnored private var presentationRecoveryTask: Task<Void, Never>?
+    @ObservationIgnored private var presentationIdleTask: Task<Void, Never>?
+    @ObservationIgnored private var startupPresentationTask: Task<Void, Never>?
+    @ObservationIgnored private var searchTask: Task<Void, Never>?
+    @ObservationIgnored private var searchGeneration = 0
+    @ObservationIgnored private let artworkPrefetcher = ImagePrefetcher(
+        pipeline: .shared,
+        destination: .memoryCache,
+        maxConcurrentRequestCount: 2
+    )
 
     var authState: AppAuthState = .restoring
     var isSigningIn = false
@@ -71,6 +79,7 @@ final class AppState {
     var lastCompletedSearchQuery: String?
 
     var favorites: [FavoriteResponse] = []
+    private var favoriteByIdentity: [String: FavoriteResponse] = [:]
     var isLoadingFavorites = false
     var isMutatingFavorites = false
     var favoritesShuffle = false
@@ -250,6 +259,10 @@ final class AppState {
         Task { await loadGuilds() }
     }
 
+    func refreshPlayer() async {
+        await loadGuilds()
+    }
+
     func selectGuild(_ guildId: String) {
         guard selectedGuildId != guildId else { return }
         selectedGuildId = guildId
@@ -261,10 +274,12 @@ final class AppState {
         hasResolvedQueueState = false
         initialHeroArtworkReady = false
         cancelPresentationRecovery()
+        artworkPrefetcher.stopPrefetching()
         realtime.connect(guildId: guildId)
         Task {
-            await loadVoiceChannels(guildId: guildId, preserveChannel: nil)
-            await refreshQueueAsync(guildId: guildId)
+            async let channels: Void = loadVoiceChannels(guildId: guildId, preserveChannel: nil)
+            async let queueRefresh: Void = refreshQueueAsync(guildId: guildId)
+            _ = await (channels, queueRefresh)
         }
     }
 
@@ -283,6 +298,7 @@ final class AppState {
     }
 
     func setSearchSource(_ source: SearchSourceOption) {
+        cancelSearch()
         searchSource = source
         searchResults = []
         lastCompletedSearchQuery = nil
@@ -290,23 +306,40 @@ final class AppState {
 
     func performSearch() {
         let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty, !isSearching else { return }
+        guard !query.isEmpty else { return }
         if looksLikeURL(query) {
+            cancelSearch()
             enqueueInputs([query])
             return
         }
+
+        searchTask?.cancel()
+        searchGeneration &+= 1
+        let generation = searchGeneration
+        let source = searchSource
         isSearching = true
         errorMessage = nil
         addSearchHistory(query)
-        Task {
-            defer { isSearching = false }
+
+        searchTask = Task { [weak self] in
+            guard let self else { return }
+            defer {
+                if self.searchGeneration == generation {
+                    self.isSearching = false
+                    self.searchTask = nil
+                }
+            }
             do {
-                let response = try await api.search(query: query, source: searchSource)
-                searchResults = response.items
-                lastCompletedSearchQuery = query
+                let response = try await self.api.search(query: query, source: source)
+                guard !Task.isCancelled, self.searchGeneration == generation else { return }
+                self.searchResults = response.items
+                self.lastCompletedSearchQuery = query
+            } catch is CancellationError {
+                return
             } catch {
-                lastCompletedSearchQuery = nil
-                errorMessage = userMessage(for: error)
+                guard !Task.isCancelled, self.searchGeneration == generation else { return }
+                self.lastCompletedSearchQuery = nil
+                self.errorMessage = self.userMessage(for: error)
             }
         }
     }
@@ -317,10 +350,10 @@ final class AppState {
     }
 
     func clearAddTrack() {
+        cancelSearch()
         searchQuery = ""
         searchResults = []
         lastCompletedSearchQuery = nil
-        isSearching = false
     }
 
     func enqueueSearchResult(_ item: SearchItemResponse) {
@@ -457,19 +490,21 @@ final class AppState {
         Task { await refreshFavoritesAsync() }
     }
 
+    func refreshFavoritesNow() async {
+        await refreshFavoritesAsync()
+    }
+
     func setFavoritesShuffle(_ enabled: Bool) {
         favoritesShuffle = enabled
         defaults.set(enabled, forKey: Keys.favoritesShufflePrefix + favoritesOwnerKey)
     }
 
     func isFavorite(_ track: TrackResponse) -> Bool {
-        let identities = favoriteIdentities(for: track)
-        return favorites.contains { identities.contains(favoriteIdentity($0.contentUrl)) }
+        favorite(for: track) != nil
     }
 
     func toggleFavorite(_ track: TrackResponse) {
-        let identities = favoriteIdentities(for: track)
-        if let existing = favorites.first(where: { identities.contains(favoriteIdentity($0.contentUrl)) }) {
+        if let existing = favorite(for: track) {
             deleteFavorite(existing.contentUrl)
         } else {
             addFavorite(contentURL: track.url, title: track.title, thumbnailURL: track.thumbnailUrl)
@@ -491,6 +526,7 @@ final class AppState {
                 try await api.deleteFavorite(contentURL: contentURL)
                 let identity = favoriteIdentity(contentURL)
                 favorites.removeAll { favoriteIdentity($0.contentUrl) == identity }
+                rebuildFavoriteIndex()
             } catch { errorMessage = userMessage(for: error) }
         }
     }
@@ -605,8 +641,9 @@ final class AppState {
             }
             if let guildId = self.selectedGuildId {
                 realtime.connect(guildId: guildId)
-                await loadVoiceChannels(guildId: guildId, preserveChannel: selectedVoiceChannelId)
-                await refreshQueueAsync(guildId: guildId)
+                async let channels: Void = loadVoiceChannels(guildId: guildId, preserveChannel: selectedVoiceChannelId)
+                async let queueRefresh: Void = refreshQueueAsync(guildId: guildId)
+                _ = await (channels, queueRefresh)
             } else {
                 hasResolvedQueueState = true
             }
@@ -654,10 +691,15 @@ final class AppState {
     }
 
     private func refreshFavoritesAsync() async {
+        guard !isLoadingFavorites else { return }
         isLoadingFavorites = true
         defer { isLoadingFavorites = false }
-        do { favorites = try await api.getFavorites() }
-        catch { errorMessage = userMessage(for: error) }
+        do {
+            favorites = try await api.getFavorites()
+            rebuildFavoriteIndex()
+        } catch {
+            errorMessage = userMessage(for: error)
+        }
     }
 
     private func addFavorite(contentURL: String, title: String?, thumbnailURL: String?) {
@@ -670,6 +712,7 @@ final class AppState {
                 let identity = favoriteIdentity(added.contentUrl)
                 favorites.removeAll { favoriteIdentity($0.contentUrl) == identity }
                 favorites.insert(added, at: 0)
+                rebuildFavoriteIndex()
             } catch { errorMessage = userMessage(for: error) }
         }
     }
@@ -713,7 +756,10 @@ final class AppState {
 
     private func applyQueueSnapshot(_ snapshot: QueueSnapshotResponse, forcePresentationIdle: Bool = false) {
         guard selectedGuildId == snapshot.guildId else { return }
-        if let current = queue, snapshot.version < current.version { return }
+        if let current = queue {
+            if snapshot.version < current.version { return }
+            if snapshot == current && !forcePresentationIdle { return }
+        }
 
         let previousQueue = queue
         let previousPresentation = presentationQueue
@@ -727,6 +773,7 @@ final class AppState {
 
         queue = snapshot
         hasResolvedQueueState = true
+        prefetchUpcomingArtwork(from: snapshot)
         if playbackChanged {
             presentationTrackRevision &+= 1
         }
@@ -794,6 +841,45 @@ final class AppState {
         presentationIdleTask = nil
     }
 
+    private func prefetchUpcomingArtwork(from snapshot: QueueSnapshotResponse) {
+        let requests = snapshot.pendingEntries.prefix(2).compactMap { entry in
+            ArtworkRequestFactory.make(
+                urlString: entry.track.thumbnailUrl,
+                layout: .aspectRatio(16 / 9)
+            )
+        }
+        guard !requests.isEmpty else { return }
+        artworkPrefetcher.startPrefetching(with: requests)
+    }
+
+    private func favorite(for track: TrackResponse) -> FavoriteResponse? {
+        switch track.contentType.lowercased() {
+        case "youtube":
+            if let favorite = favoriteByIdentity["youtube:\(track.contentId)"] { return favorite }
+        case "soundcloud":
+            if let favorite = favoriteByIdentity["soundcloud-id:\(track.contentId)"] { return favorite }
+        default:
+            break
+        }
+        return favoriteByIdentity[favoriteIdentity(track.url)]
+    }
+
+    private func rebuildFavoriteIndex() {
+        var index: [String: FavoriteResponse] = [:]
+        index.reserveCapacity(favorites.count)
+        for favorite in favorites {
+            index[favoriteIdentity(favorite.contentUrl)] = favorite
+        }
+        favoriteByIdentity = index
+    }
+
+    private func cancelSearch() {
+        searchGeneration &+= 1
+        searchTask?.cancel()
+        searchTask = nil
+        isSearching = false
+    }
+
     private func addSearchHistory(_ value: String) {
         searchHistory.removeAll { $0.caseInsensitiveCompare(value) == .orderedSame }
         searchHistory.insert(value, at: 0)
@@ -804,6 +890,8 @@ final class AppState {
     private func resetAuthenticatedState() {
         startupPresentationTask?.cancel()
         startupPresentationTask = nil
+        cancelSearch()
+        artworkPrefetcher.stopPrefetching()
         session = nil
         onboardingCompleted = false
         manualOnboardingRequested = false
@@ -816,6 +904,7 @@ final class AppState {
         presentationTrackRevision = 0
         cancelPresentationRecovery()
         favorites = []
+        favoriteByIdentity = [:]
         guildAccessState = .checking
         selectedGuildId = defaults.string(forKey: Keys.guildId)
         selectedVoiceChannelId = defaults.string(forKey: Keys.channelId)

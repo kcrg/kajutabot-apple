@@ -1,13 +1,13 @@
 import Foundation
 
 extension ISO8601DateFormatter {
-    static let kajutaBot: ISO8601DateFormatter = {
+    nonisolated(unsafe) static let kajutaBot: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
 
-    static let kajutaBotWithoutFraction: ISO8601DateFormatter = {
+    nonisolated(unsafe) static let kajutaBotWithoutFraction: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         return formatter
@@ -31,14 +31,22 @@ func formatDuration(_ milliseconds: Int64) -> String {
         : String(format: "%lld:%02lld", minutes, remaining)
 }
 
-func playbackPosition(queue: QueueSnapshotResponse, now: Date = .now) -> TimeInterval? {
-    guard
-        let track = queue.nowPlaying,
-        track.durationMilliseconds > 0,
-        let startedAt = parseISO8601(queue.nowPlayingStartedAt)
-    else { return nil }
+func playbackPosition(
+    startedAt: Date?,
+    durationMilliseconds: Int64,
+    now: Date = .now
+) -> TimeInterval? {
+    guard durationMilliseconds > 0, let startedAt else { return nil }
+    return min(max(now.timeIntervalSince(startedAt), 0), Double(durationMilliseconds) / 1_000)
+}
 
-    return min(max(now.timeIntervalSince(startedAt), 0), Double(track.durationMilliseconds) / 1_000)
+func playbackPosition(queue: QueueSnapshotResponse, now: Date = .now) -> TimeInterval? {
+    guard let track = queue.nowPlaying else { return nil }
+    return playbackPosition(
+        startedAt: parseISO8601(queue.nowPlayingStartedAt),
+        durationMilliseconds: track.durationMilliseconds,
+        now: now
+    )
 }
 
 func favoriteIdentity(_ raw: String?) -> String {
@@ -74,6 +82,8 @@ func favoriteIdentities(for track: TrackResponse) -> Set<String> {
     return values
 }
 
+private let youtubeVideoIDCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
+
 func favoriteArtworkURL(_ favorite: FavoriteResponse) -> URL? {
     if let raw = favorite.thumbnailUrl, let url = URL(string: raw), ["http", "https"].contains(url.scheme?.lowercased() ?? "") {
         return url
@@ -81,7 +91,7 @@ func favoriteArtworkURL(_ favorite: FavoriteResponse) -> URL? {
     let identity = favoriteIdentity(favorite.contentUrl)
     guard identity.hasPrefix("youtube:") else { return nil }
     let videoId = String(identity.dropFirst("youtube:".count))
-    guard videoId.range(of: #"^[A-Za-z0-9_-]{11}$"#, options: .regularExpression) != nil else { return nil }
+    guard videoId.count == 11, videoId.unicodeScalars.allSatisfy(youtubeVideoIDCharacters.contains) else { return nil }
     return URL(string: "https://i.ytimg.com/vi/\(videoId)/mqdefault.jpg")
 }
 

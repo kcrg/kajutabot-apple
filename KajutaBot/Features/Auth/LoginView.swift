@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LoginView: View {
-    @Bindable var app: AppState
+    let app: AppState
     let message: String?
 
     var body: some View {

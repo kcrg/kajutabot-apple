@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct DiscordTargetPicker: View {
-    @Bindable var app: AppState
+    let app: AppState
     var showGuildPicker = true
 
     var body: some View {

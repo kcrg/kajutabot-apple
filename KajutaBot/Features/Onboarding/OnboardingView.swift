@@ -17,7 +17,7 @@ private let onboardingPages: [OnboardingPage] = [
 ]
 
 struct OnboardingView: View {
-    @Bindable var app: AppState
+    let app: AppState
     @State private var page = 0
 
     private var selectionIndex: Int { onboardingPages.count }
@@ -155,7 +155,7 @@ private struct FeaturePage: View {
 }
 
 private struct SelectionPage: View {
-    @Bindable var app: AppState
+    let app: AppState
 
     var body: some View {
         ScrollView {

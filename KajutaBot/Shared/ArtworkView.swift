@@ -15,10 +15,18 @@ enum ArtworkRequestFactory {
               url.host != nil else { return nil }
 
         var request = ImageRequest(url: url)
+        request.priority = priority(for: layout)
         var thumbnail = ImageRequest.ThumbnailOptions(maxPixelSize: decodedPixelLimit(for: layout))
         thumbnail.createThumbnailWithTransform = true
         request.thumbnail = thumbnail
         return request
+    }
+
+    private static func priority(for layout: ArtworkLayout) -> ImageRequest.Priority {
+        switch layout {
+        case .square: .normal
+        case .aspectRatio: .high
+        }
     }
 
     private static func decodedPixelLimit(for layout: ArtworkLayout) -> Float {
@@ -57,9 +65,11 @@ struct ArtworkView: View {
     var onLoadCompleted: (() -> Void)? = nil
 
     var body: some View {
+        let request = ArtworkRequestFactory.make(urlString: urlString, layout: layout)
+
         switch layout {
         case let .square(side):
-            artworkContent
+            artworkContent(request: request)
                 .frame(width: side, height: side)
                 .clipped()
                 .clipShape(shape)
@@ -68,18 +78,18 @@ struct ArtworkView: View {
             Color.clear
                 .aspectRatio(ratio, contentMode: .fit)
                 .overlay {
-                    artworkContent
+                    artworkContent(request: request)
                 }
                 .clipped()
                 .clipShape(shape)
         }
     }
 
-    private var artworkContent: some View {
+    private func artworkContent(request: ImageRequest?) -> some View {
         ZStack {
             Color(uiColor: .tertiarySystemFill)
 
-            if let request = imageRequest {
+            if let request {
                 LazyImage(request: request) { state in
                     if let image = state.image {
                         image
@@ -92,14 +102,12 @@ struct ArtworkView: View {
                         missing
                             .onAppear { onLoadCompleted?() }
                     } else {
+                        // Keep scrolling cheap: dozens of animated ProgressViews in image
+                        // cells cost more than a neutral placeholder and add no information.
                         Color(uiColor: .tertiarySystemFill)
-                            .overlay {
-                                ProgressView()
-                                    .controlSize(.small)
-                            }
                     }
                 }
-                .animation(.easeOut(duration: 0.18), value: validURL)
+                .animation(.easeOut(duration: 0.18), value: urlString)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 missing
@@ -109,21 +117,10 @@ struct ArtworkView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var imageRequest: ImageRequest? {
-        ArtworkRequestFactory.make(urlString: urlString, layout: layout)
-    }
-
     private var shape: RoundedRectangle {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
     }
 
-    private var validURL: URL? {
-        guard let raw = urlString?.trimmingCharacters(in: .whitespacesAndNewlines),
-              let url = URL(string: raw),
-              ["http", "https"].contains(url.scheme?.lowercased() ?? ""),
-              url.host != nil else { return nil }
-        return url
-    }
 
     private var missing: some View {
         ZStack {

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct FavoritesView: View {
-    @Bindable var app: AppState
+    let app: AppState
     @State private var newFavoriteURL = ""
     @State private var showAddFavorite = false
 
@@ -54,7 +54,7 @@ struct FavoritesView: View {
                 }
             }
         }
-        .refreshable { app.refreshFavorites() }
+        .refreshable { await app.refreshFavoritesNow() }
         .sheet(isPresented: $showAddFavorite) {
             NavigationStack {
                 Form {
@@ -95,7 +95,7 @@ struct FavoritesView: View {
 }
 
 private struct FavoriteRow: View {
-    @Bindable var app: AppState
+    let app: AppState
     let favorite: FavoriteResponse
 
     var body: some View {

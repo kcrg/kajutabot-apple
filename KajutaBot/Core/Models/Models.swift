@@ -146,7 +146,7 @@ struct ApiOperationResponse: Codable, Sendable {
     let version: Int64?
 }
 
-struct RadioStateResponse: Codable, Sendable {
+struct RadioStateResponse: Codable, Hashable, Sendable {
     let isEnabled: Bool
     let minimumDurationSeconds: Int?
     let maximumDurationSeconds: Int?
@@ -161,7 +161,7 @@ struct QueueEntryResponse: Codable, Hashable, Identifiable, Sendable {
     var id: String { entryId }
 }
 
-struct QueueSnapshotResponse: Codable, Sendable {
+struct QueueSnapshotResponse: Codable, Hashable, Sendable {
     let guildId: String
     let voiceChannelId: String?
     let nowPlaying: TrackResponse?

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AddTrackView: View {
-    @Bindable var app: AppState
+    let app: AppState
     let queued: () -> Void
 
     private var trimmedQuery: String { app.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -67,7 +67,10 @@ struct AddTrackView: View {
         }
         .navigationTitle("Dodaj utwór")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $app.searchQuery, prompt: "Nazwa utworu lub link")
+        .searchable(text: Binding(
+                get: { app.searchQuery },
+                set: { app.searchQuery = $0 }
+            ), prompt: "Nazwa utworu lub link")
         .onSubmit(of: .search) {
             app.performSearch()
         }

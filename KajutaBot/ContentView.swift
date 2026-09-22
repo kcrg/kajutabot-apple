@@ -66,7 +66,7 @@ private struct StartupView: View {
 }
 
 private struct AuthenticatedRootView: View {
-    @Bindable var app: AppState
+    let app: AppState
 
     var body: some View {
         Group {

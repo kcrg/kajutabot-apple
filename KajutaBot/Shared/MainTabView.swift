@@ -8,7 +8,7 @@ enum AppTab: Hashable {
 }
 
 struct MainTabView: View {
-    @Bindable var app: AppState
+    let app: AppState
     @State private var selectedTab: AppTab = .player
 
     private var showsMiniPlayer: Bool {

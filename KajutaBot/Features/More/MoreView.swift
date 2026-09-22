@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MoreView: View {
-    @Bindable var app: AppState
+    let app: AppState
 
     var body: some View {
         Form {
@@ -34,7 +34,10 @@ struct MoreView: View {
             }
 
             Section("Motyw") {
-                Picker("Motyw", selection: $app.themeMode) {
+                Picker("Motyw", selection: Binding(
+                    get: { app.themeMode },
+                    set: { app.themeMode = $0 }
+                )) {
                     ForEach(ThemeMode.allCases) { mode in
                         Text(mode.label).tag(mode)
                     }
@@ -77,7 +80,7 @@ struct MoreView: View {
 }
 
 private struct RealtimeStatusView: View {
-    @Bindable var realtime: RealtimeClient
+    let realtime: RealtimeClient
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in

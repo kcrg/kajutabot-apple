@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MiniPlayerView: View {
-    @Bindable var app: AppState
+    let app: AppState
     let openPlayer: () -> Void
 
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
@@ -59,7 +59,13 @@ struct MiniPlayerView: View {
     }
 
     private func expandedPlayer(track: TrackResponse, queue: QueueSnapshotResponse) -> some View {
-        ZStack(alignment: .bottom) {
+        let startedAt = parseISO8601(queue.nowPlayingStartedAt)
+        let durationMilliseconds = track.durationMilliseconds
+        let duration = max(Double(durationMilliseconds) / 1_000, 1)
+        let durationLabel = formatDuration(durationMilliseconds)
+        let isFavorite = app.isFavorite(track)
+
+        return ZStack(alignment: .bottom) {
             HStack(spacing: 10) {
                 ArtworkView(
                     urlString: track.thumbnailUrl,
@@ -76,8 +82,12 @@ struct MiniPlayerView: View {
                         .truncationMode(.tail)
 
                     TimelineView(.periodic(from: .now, by: 1)) { context in
-                        let position = playbackPosition(queue: queue, now: context.date) ?? 0
-                        Text("\(formatDuration(Int64(position * 1_000))) / \(formatDuration(track.durationMilliseconds))")
+                        let position = playbackPosition(
+                            startedAt: startedAt,
+                            durationMilliseconds: durationMilliseconds,
+                            now: context.date
+                        ) ?? 0
+                        Text("\(formatDuration(Int64(position * 1_000))) / \(durationLabel)")
                             .font(.caption)
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
@@ -90,14 +100,14 @@ struct MiniPlayerView: View {
                 Button {
                     app.toggleFavorite(track)
                 } label: {
-                    Image(systemName: app.isFavorite(track) ? "heart.fill" : "heart")
+                    Image(systemName: isFavorite ? "heart.fill" : "heart")
                         .font(.body.weight(.semibold))
                         .frame(width: 32, height: 32)
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
                 .disabled(app.isMutatingFavorites)
-                .accessibilityLabel(app.isFavorite(track) ? "Usuń z ulubionych" : "Dodaj do ulubionych")
+                .accessibilityLabel(isFavorite ? "Usuń z ulubionych" : "Dodaj do ulubionych")
 
                 Button {
                     app.skip()
@@ -115,8 +125,11 @@ struct MiniPlayerView: View {
             .frame(maxWidth: .infinity, minHeight: 56, maxHeight: 56, alignment: .center)
 
             TimelineView(.periodic(from: .now, by: 0.25)) { context in
-                let position = playbackPosition(queue: queue, now: context.date) ?? 0
-                let duration = max(Double(track.durationMilliseconds) / 1_000, 1)
+                let position = playbackPosition(
+                    startedAt: startedAt,
+                    durationMilliseconds: durationMilliseconds,
+                    now: context.date
+                ) ?? 0
                 ProgressView(value: position, total: duration)
                     .progressViewStyle(.linear)
                     .controlSize(.mini)

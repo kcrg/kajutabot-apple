@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PlayerView: View {
-    @Bindable var app: AppState
+    let app: AppState
     @State private var showTargetPicker = false
     @State private var showStopConfirmation = false
     @State private var showClearQueueConfirmation = false
@@ -90,8 +90,7 @@ struct PlayerView: View {
             .presentationDetents([.medium, .large])
         }
         .refreshable {
-            app.refreshGuilds()
-            app.refreshQueue()
+            await app.refreshPlayer()
         }
         .confirmationDialog(
             "Zatrzymać odtwarzanie?",
@@ -125,7 +124,7 @@ struct PlayerView: View {
 }
 
 private struct NowPlayingCard: View {
-    @Bindable var app: AppState
+    let app: AppState
     let requestStop: () -> Void
 
     private var controlsBlocked: Bool {
@@ -139,6 +138,8 @@ private struct NowPlayingCard: View {
 
         VStack(alignment: .leading, spacing: 16) {
             if let track {
+                let isFavorite = app.isFavorite(track)
+
                 TrackPresentationView(
                     track: track,
                     queue: app.presentationQueue,
@@ -152,7 +153,7 @@ private struct NowPlayingCard: View {
                         PlayerCircleButton(systemName: "forward.end.fill", active: false, busy: app.activeControlAction == .skip, disabled: controlsBlocked, size: 52, symbolFont: .title2.weight(.bold)) { app.skip() }
                         PlayerCircleButton(systemName: "repeat", active: app.queue?.isRepeatEnabled == true, busy: app.activeControlAction == .repeatTrack, disabled: controlsBlocked) { app.toggleRepeat() }
                         PlayerCircleButton(systemName: "radio.fill", active: app.queue?.radio.isEnabled == true, busy: app.activeControlAction == .radio, disabled: controlsBlocked) { app.toggleRadio() }
-                        PlayerCircleButton(systemName: app.isFavorite(track) ? "heart.fill" : "heart", active: app.isFavorite(track), busy: app.isMutatingFavorites, disabled: app.isMutatingFavorites) { app.toggleFavorite(track) }
+                        PlayerCircleButton(systemName: isFavorite ? "heart.fill" : "heart", active: isFavorite, busy: app.isMutatingFavorites, disabled: app.isMutatingFavorites) { app.toggleFavorite(track) }
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -411,15 +412,23 @@ private struct PlaybackProgress: View {
     let track: TrackResponse
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 0.2)) { context in
-            let position = queue.flatMap { playbackPosition(queue: $0, now: context.date) } ?? 0
-            let duration = max(Double(track.durationMilliseconds) / 1_000, 1)
+        let startedAt = parseISO8601(queue?.nowPlayingStartedAt)
+        let durationMilliseconds = track.durationMilliseconds
+        let duration = max(Double(durationMilliseconds) / 1_000, 1)
+        let durationLabel = formatDuration(durationMilliseconds)
+
+        TimelineView(.periodic(from: .now, by: 0.25)) { context in
+            let position = playbackPosition(
+                startedAt: startedAt,
+                durationMilliseconds: durationMilliseconds,
+                now: context.date
+            ) ?? 0
             VStack(spacing: 6) {
                 ProgressView(value: position, total: duration)
                 HStack {
                     Text(formatDuration(Int64(position * 1_000)))
                     Spacer()
-                    Text(formatDuration(track.durationMilliseconds))
+                    Text(durationLabel)
                 }
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
@@ -460,7 +469,7 @@ private struct PlayerCircleButton: View {
 }
 
 private struct QueueRow: View {
-    @Bindable var app: AppState
+    let app: AppState
     let entry: QueueEntryResponse
 
     var body: some View {
