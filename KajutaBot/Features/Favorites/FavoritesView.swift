@@ -1,0 +1,128 @@
+import SwiftUI
+
+struct FavoritesView: View {
+    @Bindable var app: AppState
+    @State private var newFavoriteURL = ""
+    @State private var showAddFavorite = false
+
+    var body: some View {
+        List {
+            if app.isLoadingFavorites && app.favorites.isEmpty {
+                ForEach(0..<5, id: \.self) { _ in
+                    FavoriteSkeletonRow()
+                }
+            } else if app.favorites.isEmpty {
+                ContentUnavailableView("Brak ulubionych", systemImage: "heart", description: Text("Dodaj utwór z odtwarzacza albo wklej jego link."))
+                    .listRowBackground(Color.clear)
+            } else {
+                ForEach(app.favorites) { favorite in
+                    FavoriteRow(app: app, favorite: favorite)
+                }
+            }
+        }
+        .listStyle(.plain)
+        .navigationTitle("Ulubione")
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button { app.refreshFavorites() } label: { Image(systemName: "arrow.clockwise") }
+                Menu {
+                    Toggle("Losuj kolejność", isOn: Binding(
+                        get: { app.favoritesShuffle },
+                        set: app.setFavoritesShuffle
+                    ))
+                    Button {
+                        app.queueAllFavorites()
+                    } label: {
+                        Label("Dodaj wszystkie (\(app.favorites.count))", systemImage: "text.badge.plus")
+                    }
+                    .disabled(app.favorites.isEmpty || app.isMutatingFavorites)
+                    Divider()
+                    Button { showAddFavorite = true } label: {
+                        Label("Dodaj przez URL", systemImage: "heart.badge.plus")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+        .refreshable { app.refreshFavorites() }
+        .sheet(isPresented: $showAddFavorite) {
+            NavigationStack {
+                Form {
+                    TextField("https://…", text: $newFavoriteURL)
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.URL)
+                }
+                .navigationTitle("Dodaj do ulubionych")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Anuluj") { showAddFavorite = false } }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Dodaj") {
+                            app.addFavoriteByURL(newFavoriteURL)
+                            newFavoriteURL = ""
+                            showAddFavorite = false
+                        }
+                        .disabled(newFavoriteURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                }
+            }
+            .presentationDetents([.medium])
+        }
+    }
+}
+
+private struct FavoriteRow: View {
+    @Bindable var app: AppState
+    let favorite: FavoriteResponse
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ArtworkView(
+                urlString: favoriteArtworkURL(favorite)?.absoluteString,
+                layout: .square(64),
+                cornerRadius: 10
+            )
+            VStack(alignment: .leading, spacing: 4) {
+                Text(favorite.title)
+                    .lineLimit(2)
+                if let date = parseISO8601(favorite.addedAt) {
+                    Text("Zapisano \(date.formatted(date: .numeric, time: .omitted))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer(minLength: 4)
+            Button { app.playFavorite(favorite) } label: {
+                Image(systemName: "text.badge.plus")
+                    .font(.title3)
+            }
+            .buttonStyle(.borderless)
+            Button(role: .destructive) { app.deleteFavorite(favorite.contentUrl) } label: {
+                Image(systemName: "trash")
+                    .font(.title3)
+            }
+            .buttonStyle(.borderless)
+        }
+        .padding(.vertical, 5)
+        .contextMenu {
+            if let url = URL(string: favorite.contentUrl) {
+                Link(destination: url) { Label("Otwórz źródło", systemImage: "safari") }
+            }
+        }
+    }
+}
+
+private struct FavoriteSkeletonRow: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 10).fill(.quaternary).frame(width: 64, height: 64)
+            VStack(alignment: .leading, spacing: 8) {
+                RoundedRectangle(cornerRadius: 4).fill(.quaternary).frame(height: 16)
+                RoundedRectangle(cornerRadius: 4).fill(.quaternary).frame(width: 120, height: 12)
+            }
+        }
+        .redacted(reason: .placeholder)
+        .padding(.vertical, 5)
+    }
+}
