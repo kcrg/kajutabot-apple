@@ -21,9 +21,7 @@ struct KajutaBotTests {
     func playbackProgressClamps() throws {
         let track = PlaybackTrackResponse(
             contentId: "1", contentType: "youtube", title: "Test", url: "https://example.com",
-            durationMilliseconds: 10_000, artworkUrl: nil, playCount: 0, cachedAt: nil,
-            lastPlayedAt: nil, hasCachedThumbnail: false, artworkReference: nil,
-            artworkAccentColor: nil, thumbnailVersion: nil
+            durationMilliseconds: 10_000, artworkUrl: nil, playCount: 0, artworkAccentColor: nil
         )
         let queue = QueueSnapshotResponse(
             guildId: "g", voiceChannelId: "c", nowPlaying: track, nowPlayingFromRadio: false,
@@ -48,9 +46,7 @@ struct KajutaBotTests {
             "url": "https://example.com",
             "durationMilliseconds": 10000,
             "artworkUrl": null,
-            "playCount": 0,
-            "cachedAt": null,
-            "lastPlayedAt": null
+            "playCount": 0
           },
           "nowPlayingFromRadio": false,
           "radio": { "isEnabled": false },
@@ -66,4 +62,32 @@ struct KajutaBotTests {
         #expect(queue.nowPlaying?.artworkUrl == nil)
     }
 
+    @Test("Publiczne DTO nie wysyłają technicznych pól i powtórzonego ID")
+    func publicDTOShape() throws {
+        let move = MoveQueueEntryRequest(newPosition: 2, expectedVersion: 7)
+        let moveData = try JSONEncoder().encode(move)
+        let moveJSON = try #require(JSONSerialization.jsonObject(with: moveData) as? [String: Any])
+        #expect(moveJSON["entryId"] == nil)
+        #expect(moveJSON["newPosition"] as? Int == 2)
+
+        let track = PlaybackTrackResponse(
+            contentId: "id", contentType: "YouTube", title: "Title", url: "https://example.com",
+            durationMilliseconds: 10_000, artworkUrl: "https://example.com/art.jpg", playCount: 4,
+            artworkAccentColor: nil
+        )
+        let trackData = try JSONEncoder().encode(track)
+        let trackJSON = try #require(JSONSerialization.jsonObject(with: trackData) as? [String: Any])
+        #expect(trackJSON["artworkUrl"] as? String == "https://example.com/art.jpg")
+        #expect(trackJSON["artworkReference"] == nil)
+        #expect(trackJSON["cachedAt"] == nil)
+        #expect(trackJSON["thumbnailVersion"] == nil)
+    }
+
+    @Test("Wynik wyszukiwania dekoduje pojedynczą datę bez Source")
+    func searchDTOShape() throws {
+        let json = #"{"query":"test","items":[{"input":"url","track":{"contentId":"id","contentType":"YouTube","title":"Title","url":"url","durationMilliseconds":1000,"artworkUrl":null},"metricCount":2,"metricCaption":"views","dateLabel":"2026"}]}"#.data(using: .utf8)!
+        let response = try JSONDecoder().decode(SearchResponse.self, from: json)
+        #expect(response.items.first?.dateLabel == "2026")
+        #expect(response.items.first?.track.contentId == "id")
+    }
 }

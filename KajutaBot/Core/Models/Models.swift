@@ -92,6 +92,7 @@ struct SearchTrackResponse: Codable, Hashable, Identifiable, Sendable {
 
     var id: String { "\(contentType):\(contentId)" }
 }
+
 struct RadioStateResponse: Codable, Hashable, Sendable {
     let isEnabled: Bool
     let minimumDurationSeconds: Int?
@@ -174,7 +175,6 @@ struct QueueMutationRequest: Codable, Sendable {
 }
 
 struct MoveQueueEntryRequest: Codable, Sendable {
-    let entryId: String
     let newPosition: Int
     let expectedVersion: Int64?
 }
@@ -198,7 +198,7 @@ struct EnableRadioRequest: Codable, Sendable {
 
 struct SearchItemResponse: Codable, Hashable, Identifiable, Sendable {
     let input: String
-    let track: PlaybackTrackResponse
+    let track: SearchTrackResponse
     let metricCount: Int64
     let metricCaption: String
     let dateLabel: String?
