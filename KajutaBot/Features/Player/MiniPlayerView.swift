@@ -21,12 +21,12 @@ struct MiniPlayerView: View {
         }
     }
 
-    private func inlinePlayer(track: TrackResponse) -> some View {
+    private func inlinePlayer(track: PlaybackTrackResponse) -> some View {
         HStack(spacing: 4) {
             Button(action: openPlayer) {
                 HStack(spacing: 7) {
                     ArtworkView(
-                        urlString: track.thumbnailUrl,
+                        urlString: track.artworkUrl,
                         layout: .square(24),
                         cornerRadius: 6
                     )
@@ -63,7 +63,7 @@ struct MiniPlayerView: View {
         .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
     }
 
-    private func expandedPlayer(track: TrackResponse, queue: QueueSnapshotResponse) -> some View {
+    private func expandedPlayer(track: PlaybackTrackResponse, queue: QueueSnapshotResponse) -> some View {
         let startedAt = parseISO8601(queue.nowPlayingStartedAt)
         let durationMilliseconds = track.durationMilliseconds
         let duration = max(Double(durationMilliseconds) / 1_000, 1)
@@ -75,7 +75,7 @@ struct MiniPlayerView: View {
                 Button(action: openPlayer) {
                     HStack(spacing: 10) {
                         ArtworkView(
-                            urlString: track.thumbnailUrl,
+                            urlString: track.artworkUrl,
                             layout: .square(42),
                             cornerRadius: 9
                         )

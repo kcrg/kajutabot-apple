@@ -22,11 +22,11 @@ struct KajutaBotAPIClient: Sendable {
         try await send(method: "GET", path: "guilds/\(guildId)/queue")
     }
 
-    func enqueue(guildId: String, request body: EnqueueRequest) async throws -> EnqueueResponse {
+    func enqueue(guildId: String, request body: EnqueueRequest) async throws -> QueueSnapshotResponse {
         try await send(method: "POST", path: "guilds/\(guildId)/queue/items", body: body)
     }
 
-    func removeQueueEntry(guildId: String, entryId: String, expectedVersion: Int64?) async throws -> QueueMutationResponse {
+    func removeQueueEntry(guildId: String, entryId: String, expectedVersion: Int64?) async throws -> QueueSnapshotResponse {
         try await send(
             method: "DELETE",
             path: "guilds/\(guildId)/queue/items/\(entryId)",
@@ -34,11 +34,11 @@ struct KajutaBotAPIClient: Sendable {
         )
     }
 
-    func moveQueueEntry(guildId: String, entryId: String, request body: MoveQueueEntryRequest) async throws -> QueueMutationResponse {
+    func moveQueueEntry(guildId: String, entryId: String, request body: MoveQueueEntryRequest) async throws -> QueueSnapshotResponse {
         try await send(method: "PUT", path: "guilds/\(guildId)/queue/items/\(entryId)/position", body: body)
     }
 
-    func clearPendingQueue(guildId: String, expectedVersion: Int64?) async throws -> QueueMutationResponse {
+    func clearPendingQueue(guildId: String, expectedVersion: Int64?) async throws -> QueueSnapshotResponse {
         try await send(
             method: "DELETE",
             path: "guilds/\(guildId)/queue/items",
@@ -46,23 +46,23 @@ struct KajutaBotAPIClient: Sendable {
         )
     }
 
-    func skip(guildId: String, request body: SkipQueueRequest) async throws -> QueueMutationResponse {
+    func skip(guildId: String, request body: SkipQueueRequest) async throws -> QueueSnapshotResponse {
         try await send(method: "POST", path: "guilds/\(guildId)/queue/skip", body: body)
     }
 
-    func setRepeat(guildId: String, request body: SetQueueRepeatRequest) async throws -> QueueMutationResponse {
+    func setRepeat(guildId: String, request body: SetQueueRepeatRequest) async throws -> QueueSnapshotResponse {
         try await send(method: "PUT", path: "guilds/\(guildId)/queue/repeat", body: body)
     }
 
-    func stop(guildId: String, request body: QueueMutationRequest) async throws -> QueueMutationResponse {
+    func stop(guildId: String, request body: QueueMutationRequest) async throws -> QueueSnapshotResponse {
         try await send(method: "POST", path: "guilds/\(guildId)/queue/stop", body: body)
     }
 
-    func enableRadio(guildId: String, request body: EnableRadioRequest) async throws -> QueueMutationResponse {
+    func enableRadio(guildId: String, request body: EnableRadioRequest) async throws -> QueueSnapshotResponse {
         try await send(method: "PUT", path: "guilds/\(guildId)/radio", body: body)
     }
 
-    func disableRadio(guildId: String, expectedVersion: Int64?) async throws -> QueueMutationResponse {
+    func disableRadio(guildId: String, expectedVersion: Int64?) async throws -> QueueSnapshotResponse {
         try await send(
             method: "DELETE",
             path: "guilds/\(guildId)/radio",
@@ -94,7 +94,7 @@ struct KajutaBotAPIClient: Sendable {
         try await sendVoid(method: "DELETE", path: "users/me/favorites", query: [URLQueryItem(name: "contentUrl", value: contentURL)])
     }
 
-    func queueFavorites(_ body: QueueFavoritesRequest) async throws -> QueueMutationResponse {
+    func queueFavorites(_ body: QueueFavoritesRequest) async throws -> QueueSnapshotResponse {
         try await send(method: "POST", path: "users/me/favorites/queue", body: body)
     }
 
@@ -127,7 +127,7 @@ struct KajutaBotAPIClient: Sendable {
     }
 
     private func execute(method: String, path: String, query: [URLQueryItem], body: Data?, accessToken: String) async throws -> (Data, HTTPURLResponse) {
-        var components = URLComponents(url: baseURL.appending(path: "api/v1").appending(path: path), resolvingAgainstBaseURL: false)!
+        var components = URLComponents(url: baseURL.appending(path: "api/v1/app").appending(path: path), resolvingAgainstBaseURL: false)!
         if !query.isEmpty { components.queryItems = query }
         guard let url = components.url else { throw APIError.invalidResponse }
         var request = URLRequest(url: url)

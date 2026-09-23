@@ -19,9 +19,9 @@ struct KajutaBotTests {
 
     @Test("Pozycja odtwarzania jest ograniczona do długości utworu")
     func playbackProgressClamps() throws {
-        let track = TrackResponse(
+        let track = PlaybackTrackResponse(
             contentId: "1", contentType: "youtube", title: "Test", url: "https://example.com",
-            durationMilliseconds: 10_000, thumbnailUrl: nil, playCount: 0, cachedAt: nil,
+            durationMilliseconds: 10_000, artworkUrl: nil, playCount: 0, cachedAt: nil,
             lastPlayedAt: nil, hasCachedThumbnail: false, artworkReference: nil,
             artworkAccentColor: nil, thumbnailVersion: nil
         )
@@ -47,7 +47,7 @@ struct KajutaBotTests {
             "title": "Test",
             "url": "https://example.com",
             "durationMilliseconds": 10000,
-            "thumbnailUrl": null,
+            "artworkUrl": null,
             "playCount": 0,
             "cachedAt": null,
             "lastPlayedAt": null
@@ -63,7 +63,7 @@ struct KajutaBotTests {
 
         let queue = try JSONDecoder().decode(QueueSnapshotResponse.self, from: json)
         #expect(queue.isRepeatEnabled == false)
-        #expect(queue.nowPlaying?.hasCachedThumbnail == false)
+        #expect(queue.nowPlaying?.artworkUrl == nil)
     }
 
 }

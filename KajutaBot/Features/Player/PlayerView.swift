@@ -227,22 +227,22 @@ private struct NowPlayingCard: View {
 /// This avoids the "new image appears instantly over the old animation" effect:
 /// both complete track presentations coexist briefly and crossfade inside the card.
 private struct TrackPresentationView: View {
-    let track: TrackResponse
+    let track: PlaybackTrackResponse
     let queue: QueueSnapshotResponse?
     let revision: Int
     let initiallyReady: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var displayedTrack: TrackResponse
+    @State private var displayedTrack: PlaybackTrackResponse
     @State private var displayedQueue: QueueSnapshotResponse?
-    @State private var incomingTrack: TrackResponse?
+    @State private var incomingTrack: PlaybackTrackResponse?
     @State private var incomingQueue: QueueSnapshotResponse?
     @State private var initialArtworkReady: Bool
     @State private var transitionProgress: CGFloat = 0
     @State private var transitionTask: Task<Void, Never>?
 
     init(
-        track: TrackResponse,
+        track: PlaybackTrackResponse,
         queue: QueueSnapshotResponse?,
         revision: Int,
         initiallyReady: Bool
@@ -385,7 +385,7 @@ private struct TrackPresentationView: View {
 }
 
 private struct NowPlayingTrackContent: View {
-    let track: TrackResponse
+    let track: PlaybackTrackResponse
     let queue: QueueSnapshotResponse?
     var onArtworkLoaded: (() -> Void)? = nil
 
@@ -429,7 +429,7 @@ private struct PlayerCardContentSkeleton: View {
 }
 
 private struct ArtworkHero: View {
-    let track: TrackResponse
+    let track: PlaybackTrackResponse
     var onLoadCompleted: (() -> Void)? = nil
 
     var body: some View {
@@ -447,7 +447,7 @@ private struct ArtworkHero: View {
             }
 
             ArtworkView(
-                urlString: track.thumbnailUrl,
+                urlString: track.artworkUrl,
                 layout: .aspectRatio(16 / 9),
                 cornerRadius: 20,
                 onLoadCompleted: onLoadCompleted
@@ -462,7 +462,7 @@ private struct ArtworkHero: View {
 
 private struct PlaybackProgress: View {
     let queue: QueueSnapshotResponse?
-    let track: TrackResponse
+    let track: PlaybackTrackResponse
 
     var body: some View {
         let startedAt = parseISO8601(queue?.nowPlayingStartedAt)
@@ -541,7 +541,7 @@ private struct QueueRow: View {
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
                 .frame(width: 24)
-            ArtworkView(urlString: entry.track.thumbnailUrl, layout: .square(54), cornerRadius: 10)
+            ArtworkView(urlString: entry.track.artworkUrl, layout: .square(54), cornerRadius: 10)
             VStack(alignment: .leading, spacing: 4) {
                 Text(entry.track.title)
                     .lineLimit(2)

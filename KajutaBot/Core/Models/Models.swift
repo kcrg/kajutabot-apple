@@ -69,83 +69,29 @@ struct DiscordVoiceChannelResponse: Codable, Hashable, Identifiable, Sendable {
     let isConnected: Bool
 }
 
-struct TrackResponse: Codable, Hashable, Identifiable, Sendable {
+struct PlaybackTrackResponse: Codable, Hashable, Identifiable, Sendable {
     let contentId: String
     let contentType: String
     let title: String
     let url: String
     let durationMilliseconds: Int64
-    let thumbnailUrl: String?
+    let artworkUrl: String?
     let playCount: Int64
-    let cachedAt: String?
-    let lastPlayedAt: String?
-    let hasCachedThumbnail: Bool
-    let artworkReference: String?
     let artworkAccentColor: String?
-    let thumbnailVersion: String?
 
     var id: String { "\(contentType):\(contentId)" }
-
-    init(
-        contentId: String,
-        contentType: String,
-        title: String,
-        url: String,
-        durationMilliseconds: Int64,
-        thumbnailUrl: String?,
-        playCount: Int64,
-        cachedAt: String?,
-        lastPlayedAt: String?,
-        hasCachedThumbnail: Bool = false,
-        artworkReference: String? = nil,
-        artworkAccentColor: String? = nil,
-        thumbnailVersion: String? = nil
-    ) {
-        self.contentId = contentId
-        self.contentType = contentType
-        self.title = title
-        self.url = url
-        self.durationMilliseconds = durationMilliseconds
-        self.thumbnailUrl = thumbnailUrl
-        self.playCount = playCount
-        self.cachedAt = cachedAt
-        self.lastPlayedAt = lastPlayedAt
-        self.hasCachedThumbnail = hasCachedThumbnail
-        self.artworkReference = artworkReference
-        self.artworkAccentColor = artworkAccentColor
-        self.thumbnailVersion = thumbnailVersion
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case contentId, contentType, title, url, durationMilliseconds, thumbnailUrl, playCount
-        case cachedAt, lastPlayedAt, hasCachedThumbnail, artworkReference, artworkAccentColor, thumbnailVersion
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        contentId = try container.decode(String.self, forKey: .contentId)
-        contentType = try container.decode(String.self, forKey: .contentType)
-        title = try container.decode(String.self, forKey: .title)
-        url = try container.decode(String.self, forKey: .url)
-        durationMilliseconds = try container.decode(Int64.self, forKey: .durationMilliseconds)
-        thumbnailUrl = try container.decodeIfPresent(String.self, forKey: .thumbnailUrl)
-        playCount = try container.decode(Int64.self, forKey: .playCount)
-        cachedAt = try container.decodeIfPresent(String.self, forKey: .cachedAt)
-        lastPlayedAt = try container.decodeIfPresent(String.self, forKey: .lastPlayedAt)
-        hasCachedThumbnail = try container.decodeIfPresent(Bool.self, forKey: .hasCachedThumbnail) ?? false
-        artworkReference = try container.decodeIfPresent(String.self, forKey: .artworkReference)
-        artworkAccentColor = try container.decodeIfPresent(String.self, forKey: .artworkAccentColor)
-        thumbnailVersion = try container.decodeIfPresent(String.self, forKey: .thumbnailVersion)
-    }
 }
 
-struct ApiOperationResponse: Codable, Sendable {
-    let succeeded: Bool
-    let errorCode: String?
-    let message: String?
-    let version: Int64?
-}
+struct SearchTrackResponse: Codable, Hashable, Identifiable, Sendable {
+    let contentId: String
+    let contentType: String
+    let title: String
+    let url: String
+    let durationMilliseconds: Int64
+    let artworkUrl: String?
 
+    var id: String { "\(contentType):\(contentId)" }
+}
 struct RadioStateResponse: Codable, Hashable, Sendable {
     let isEnabled: Bool
     let minimumDurationSeconds: Int?
@@ -156,7 +102,7 @@ struct RadioStateResponse: Codable, Hashable, Sendable {
 struct QueueEntryResponse: Codable, Hashable, Identifiable, Sendable {
     let entryId: String
     let position: Int
-    let track: TrackResponse
+    let track: PlaybackTrackResponse
 
     var id: String { entryId }
 }
@@ -164,7 +110,7 @@ struct QueueEntryResponse: Codable, Hashable, Identifiable, Sendable {
 struct QueueSnapshotResponse: Codable, Hashable, Sendable {
     let guildId: String
     let voiceChannelId: String?
-    let nowPlaying: TrackResponse?
+    let nowPlaying: PlaybackTrackResponse?
     let nowPlayingFromRadio: Bool
     let radio: RadioStateResponse
     let pendingEntries: [QueueEntryResponse]
@@ -176,7 +122,7 @@ struct QueueSnapshotResponse: Codable, Hashable, Sendable {
     init(
         guildId: String,
         voiceChannelId: String?,
-        nowPlaying: TrackResponse?,
+        nowPlaying: PlaybackTrackResponse?,
         nowPlayingFromRadio: Bool,
         radio: RadioStateResponse,
         pendingEntries: [QueueEntryResponse],
@@ -206,7 +152,7 @@ struct QueueSnapshotResponse: Codable, Hashable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         guildId = try container.decode(String.self, forKey: .guildId)
         voiceChannelId = try container.decodeIfPresent(String.self, forKey: .voiceChannelId)
-        nowPlaying = try container.decodeIfPresent(TrackResponse.self, forKey: .nowPlaying)
+        nowPlaying = try container.decodeIfPresent(PlaybackTrackResponse.self, forKey: .nowPlaying)
         nowPlayingFromRadio = try container.decode(Bool.self, forKey: .nowPlayingFromRadio)
         radio = try container.decode(RadioStateResponse.self, forKey: .radio)
         pendingEntries = try container.decode([QueueEntryResponse].self, forKey: .pendingEntries)
@@ -221,11 +167,6 @@ struct EnqueueRequest: Codable, Sendable {
     let voiceChannelId: String
     let inputs: [String]
     let expectedVersion: Int64?
-}
-
-struct EnqueueResponse: Codable, Sendable {
-    let operation: ApiOperationResponse
-    let snapshot: QueueSnapshotResponse
 }
 
 struct QueueMutationRequest: Codable, Sendable {
@@ -248,11 +189,6 @@ struct SetQueueRepeatRequest: Codable, Sendable {
     let expectedVersion: Int64?
 }
 
-struct QueueMutationResponse: Codable, Sendable {
-    let operation: ApiOperationResponse
-    let snapshot: QueueSnapshotResponse
-}
-
 struct EnableRadioRequest: Codable, Sendable {
     let voiceChannelId: String
     let minimumDurationSeconds: Int
@@ -262,9 +198,8 @@ struct EnableRadioRequest: Codable, Sendable {
 
 struct SearchItemResponse: Codable, Hashable, Identifiable, Sendable {
     let input: String
-    let track: TrackResponse
+    let track: PlaybackTrackResponse
     let metricCount: Int64
-    let metricLabel: String?
     let metricCaption: String
     let dateLabel: String?
 
@@ -273,12 +208,10 @@ struct SearchItemResponse: Codable, Hashable, Identifiable, Sendable {
 
 struct SearchResponse: Codable, Sendable {
     let query: String
-    let source: String
     let items: [SearchItemResponse]
 }
 
 struct FavoriteResponse: Codable, Hashable, Identifiable, Sendable {
-    let discordUserId: String
     let contentUrl: String
     let title: String
     let addedAt: String

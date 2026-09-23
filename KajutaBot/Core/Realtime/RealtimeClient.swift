@@ -42,7 +42,7 @@ final class RealtimeClient {
     @ObservationIgnored var onRecoveryNeeded: ((String) -> Void)?
 
     init(baseURL: URL, tokenProvider: @escaping @Sendable () async throws -> String) {
-        hubURL = baseURL.appending(path: "hubs/playback").absoluteString
+        hubURL = baseURL.appending(path: "api/v1/app/hubs/playback").absoluteString
         self.tokenProvider = tokenProvider
     }
 

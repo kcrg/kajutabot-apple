@@ -97,7 +97,7 @@ private struct SearchResultRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            ArtworkView(urlString: item.track.thumbnailUrl, layout: .square(60), cornerRadius: 10)
+            ArtworkView(urlString: item.track.artworkUrl, layout: .square(60), cornerRadius: 10)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.track.title)

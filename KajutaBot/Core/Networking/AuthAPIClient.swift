@@ -60,7 +60,7 @@ struct AuthAPIClient: Sendable {
     }
 
     private func apiURL(_ path: String) -> URL {
-        baseURL.appending(path: "api/v1").appending(path: path)
+        baseURL.appending(path: "api/v1/app").appending(path: path)
     }
 
     private func decodeResponse<T: Decodable>(_ request: URLRequest) async throws -> T {

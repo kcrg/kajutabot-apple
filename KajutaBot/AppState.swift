@@ -123,7 +123,7 @@ final class AppState {
     var selectedGuild: DiscordGuildResponse? { guilds.first { $0.id == selectedGuildId } }
     var selectedVoiceChannel: DiscordVoiceChannelResponse? { voiceChannels.first { $0.id == selectedVoiceChannelId } }
     var hasDiscordTarget: Bool { selectedGuildId != nil && selectedVoiceChannelId != nil }
-    var nowPlaying: TrackResponse? { presentationQueue?.nowPlaying }
+    var nowPlaying: PlaybackTrackResponse? { presentationQueue?.nowPlaying }
 
     var shouldShowOnboarding: Bool {
         guard session != nil, guildAccessState == .available else { return false }
@@ -403,11 +403,7 @@ final class AppState {
                     guildId: guildId,
                     request: EnqueueRequest(voiceChannelId: channelId, inputs: inputs, expectedVersion: queue?.version)
                 )
-                applyQueueSnapshot(response.snapshot)
-                if !response.operation.succeeded {
-                    // API operation messages are intentionally displayed verbatim.
-                    errorMessage = response.operation.message ?? String(localized: .addTrackFailed)
-                }
+                applyQueueSnapshot(response)
             } catch {
                 await handleMutationError(error)
             }
@@ -462,8 +458,7 @@ final class AppState {
             defer { isMutating = false }
             do {
                 let response = try await api.removeQueueEntry(guildId: guildId, entryId: entryId, expectedVersion: queue?.version)
-                applyQueueSnapshot(response.snapshot)
-                if !response.operation.succeeded { errorMessage = response.operation.message ?? String(localized: .removeTrackFailed) }
+                applyQueueSnapshot(response)
             } catch { await handleMutationError(error) }
         }
     }
@@ -495,12 +490,9 @@ final class AppState {
                 let response = try await api.moveQueueEntry(
                     guildId: current.guildId,
                     entryId: moved.entryId,
-                    request: MoveQueueEntryRequest(entryId: moved.entryId, newPosition: newPosition, expectedVersion: current.version)
+                    request: MoveQueueEntryRequest(newPosition: newPosition, expectedVersion: current.version)
                 )
-                applyQueueSnapshot(response.snapshot)
-                if !response.operation.succeeded {
-                    errorMessage = response.operation.message ?? String(localized: .moveTrackFailed)
-                }
+                applyQueueSnapshot(response)
             } catch {
                 queue = current
                 await handleMutationError(error)
@@ -528,15 +520,15 @@ final class AppState {
         defaults.set(enabled, forKey: Keys.favoritesShufflePrefix + favoritesOwnerKey)
     }
 
-    func isFavorite(_ track: TrackResponse) -> Bool {
+    func isFavorite(_ track: PlaybackTrackResponse) -> Bool {
         favorite(for: track) != nil
     }
 
-    func toggleFavorite(_ track: TrackResponse) {
+    func toggleFavorite(_ track: PlaybackTrackResponse) {
         if let existing = favorite(for: track) {
             deleteFavorite(existing.contentUrl)
         } else {
-            addFavorite(contentURL: track.url, title: track.title, thumbnailURL: track.thumbnailUrl)
+            addFavorite(contentURL: track.url, title: track.title, thumbnailURL: track.artworkUrl)
         }
     }
 
@@ -582,10 +574,7 @@ final class AppState {
                         shuffle: favoritesShuffle
                     )
                 )
-                applyQueueSnapshot(response.snapshot)
-                if !response.operation.succeeded {
-                    errorMessage = response.operation.message ?? String(localized: .addFavoritesFailed)
-                }
+                applyQueueSnapshot(response)
             } catch { errorMessage = userMessage(for: error) }
         }
     }
@@ -633,7 +622,7 @@ final class AppState {
             initialHeroArtworkReady = true
             return
         }
-        initialHeroArtworkReady = await ArtworkPreloader.preloadHero(urlString: track.thumbnailUrl)
+        initialHeroArtworkReady = await ArtworkPreloader.preloadHero(urlString: track.artworkUrl)
     }
 
     private func loadGuilds() async {
@@ -805,7 +794,7 @@ final class AppState {
     private func performControl(
         _ action: PlayerControlAction?,
         forcePresentationIdleOnSuccess: Bool = false,
-        operation: @escaping (KajutaBotAPIClient, String, Int64?) async throws -> QueueMutationResponse
+        operation: @escaping (KajutaBotAPIClient, String, Int64?) async throws -> QueueSnapshotResponse
     ) {
         guard let guildId = selectedGuildId, !isMutating else { return }
         isMutating = true
@@ -818,10 +807,7 @@ final class AppState {
             }
             do {
                 let response = try await operation(api, guildId, queue?.version)
-                applyQueueSnapshot(response.snapshot, forcePresentationIdle: forcePresentationIdleOnSuccess)
-                if !response.operation.succeeded {
-                    errorMessage = response.operation.message ?? String(localized: .operationFailed)
-                }
+                applyQueueSnapshot(response, forcePresentationIdle: forcePresentationIdleOnSuccess)
             } catch { await handleMutationError(error) }
         }
     }
@@ -928,7 +914,7 @@ final class AppState {
 
     private func prefetchUpcomingArtwork(from snapshot: QueueSnapshotResponse) {
         let candidates = Array(snapshot.pendingEntries.prefix(2))
-        let keys = candidates.map { $0.track.thumbnailUrl ?? "" }
+        let keys = candidates.map { $0.track.artworkUrl ?? "" }
         guard keys != prefetchedArtworkKeys else { return }
 
         if !prefetchedArtworkRequests.isEmpty {
@@ -937,7 +923,7 @@ final class AppState {
 
         let requests = candidates.compactMap { entry in
             ArtworkRequestFactory.make(
-                urlString: entry.track.thumbnailUrl,
+                urlString: entry.track.artworkUrl,
                 layout: .aspectRatio(16 / 9)
             )
         }
@@ -947,7 +933,7 @@ final class AppState {
         artworkPrefetcher.startPrefetching(with: requests)
     }
 
-    private func favorite(for track: TrackResponse) -> FavoriteResponse? {
+    private func favorite(for track: PlaybackTrackResponse) -> FavoriteResponse? {
         switch track.contentType.lowercased() {
         case "youtube":
             if let favorite = favoriteByIdentity["youtube:\(track.contentId)"] { return favorite }
