@@ -9,7 +9,7 @@ struct PlayerView: View {
     var body: some View {
         List {
             Section {
-                if !app.hasResolvedQueueState || (app.isLoadingQueue && app.queue == nil) {
+                if !app.hasResolvedQueueState || (app.queue == nil && app.isLoadingQueue) {
                     PlayerSkeleton()
                         .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 8, trailing: 16))
                         .listRowBackground(Color.clear)
@@ -42,19 +42,26 @@ struct PlayerView: View {
                     }
                     .onMove(perform: app.moveQueueEntry)
                 } else {
-                    ContentUnavailableView("Kolejka jest pusta", systemImage: "music.note.list", description: Text("Dodaj utwór, aby rozpocząć odtwarzanie."))
+                    ContentUnavailableView {
+                        Label(.queueEmptyTitle, systemImage: "music.note.list")
+                    } description: {
+                        Text(.queueEmptyDescription)
+                    }
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                 }
             } header: {
                 HStack {
-                    Text("Kolejka")
+                    Text(.queueTitle)
                     Spacer()
                     if !(app.queue?.pendingEntries.isEmpty ?? true) {
                         Button(role: .destructive) { showClearQueueConfirmation = true } label: {
-                            Label("Wyczyść", systemImage: "trash")
+                            Label(.clear, systemImage: "trash")
                                 .labelStyle(.iconOnly)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
+                        .accessibilityLabel(Text(.clearQueue))
                     }
                 }
             }
@@ -62,8 +69,9 @@ struct PlayerView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .adaptiveContentWidth(AppLayout.primaryContentMaxWidth)
         .background(Color(uiColor: .systemGroupedBackground))
-        .navigationTitle("Odtwarzacz")
+        .navigationTitle(.playerTitle)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -71,20 +79,21 @@ struct PlayerView: View {
                 } label: {
                     Image(systemName: "headphones")
                 }
-                .accessibilityLabel("Zmień serwer i kanał głosowy")
-                .accessibilityValue(app.selectedVoiceChannel?.name ?? app.selectedGuild?.name ?? "Nie wybrano")
+                .accessibilityLabel(Text(.changeServerChannel))
+                .accessibilityValue(app.selectedVoiceChannel?.name ?? app.selectedGuild?.name ?? String(localized: .notSelected))
             }
         }
         .sheet(isPresented: $showTargetPicker) {
             NavigationStack {
                 Form {
-                    Section("Sterowanie") {
+                    Section(.controlsSection) {
                         DiscordTargetPicker(app: app, showGuildPicker: !app.isGuest)
                     }
                 }
-                .navigationTitle("Serwer i kanał")
+                .adaptiveContentWidth(AppLayout.settingsContentMaxWidth)
+                .navigationTitle(.serverChannelTitle)
                 .toolbar {
-                    ToolbarItem(placement: .confirmationAction) { Button("Gotowe") { showTargetPicker = false } }
+                    ToolbarItem(placement: .confirmationAction) { Button(.done) { showTargetPicker = false } }
                 }
             }
             .presentationDetents([.medium, .large])
@@ -93,30 +102,30 @@ struct PlayerView: View {
             await app.refreshPlayer()
         }
         .confirmationDialog(
-            "Zatrzymać odtwarzanie?",
+            String(localized: .stopPlaybackQuestion),
             isPresented: $showStopConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Zatrzymaj bota", role: .destructive) { app.stop() }
-            Button("Anuluj", role: .cancel) {}
+            Button(.stopBot, role: .destructive) { app.stop() }
+            Button(.cancel, role: .cancel) {}
         } message: {
-            Text("Odtwarzanie zostanie zatrzymane, a aktualny utwór przerwany.")
+            Text(.stopPlaybackMessage)
         }
         .confirmationDialog(
-            "Wyczyścić kolejkę?",
+            String(localized: .clearQueueQuestion),
             isPresented: $showClearQueueConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Wyczyść kolejkę", role: .destructive) { app.clearQueue() }
-            Button("Anuluj", role: .cancel) {}
+            Button(.clearQueue, role: .destructive) { app.clearQueue() }
+            Button(.cancel, role: .cancel) {}
         } message: {
-            Text("Wszystkie oczekujące utwory zostaną usunięte. Aktualnie odtwarzany utwór nie zostanie zatrzymany.")
+            Text(.clearQueueMessage)
         }
-        .alert("Błąd", isPresented: Binding(
+        .alert(String(localized: .errorTitle), isPresented: Binding(
             get: { app.errorMessage != nil },
             set: { if !$0 { app.dismissError() } }
         )) {
-            Button("OK") { app.dismissError() }
+            Button(.ok) { app.dismissError() }
         } message: {
             Text(app.errorMessage ?? "")
         }
@@ -149,11 +158,47 @@ private struct NowPlayingCard: View {
 
                 GlassEffectContainer(spacing: 8) {
                     HStack(spacing: 12) {
-                        PlayerCircleButton(systemName: "stop.fill", role: .destructive, active: false, busy: app.activeControlAction == .stop, disabled: controlsBlocked, action: requestStop)
-                        PlayerCircleButton(systemName: "forward.end.fill", active: false, busy: app.activeControlAction == .skip, disabled: controlsBlocked, size: 52, symbolFont: .title2.weight(.bold)) { app.skip() }
-                        PlayerCircleButton(systemName: "repeat", active: app.queue?.isRepeatEnabled == true, busy: app.activeControlAction == .repeatTrack, disabled: controlsBlocked) { app.toggleRepeat() }
-                        PlayerCircleButton(systemName: "radio.fill", active: app.queue?.radio.isEnabled == true, busy: app.activeControlAction == .radio, disabled: controlsBlocked) { app.toggleRadio() }
-                        PlayerCircleButton(systemName: isFavorite ? "heart.fill" : "heart", active: isFavorite, busy: app.isMutatingFavorites, disabled: app.isMutatingFavorites) { app.toggleFavorite(track) }
+                        PlayerCircleButton(
+                            systemName: "stop.fill",
+                            role: .destructive,
+                            active: false,
+                            busy: app.activeControlAction == .stop,
+                            disabled: controlsBlocked,
+                            accessibilityLabel: .stopPlayback,
+                            action: requestStop
+                        )
+                        PlayerCircleButton(
+                            systemName: "forward.end.fill",
+                            active: false,
+                            busy: app.activeControlAction == .skip,
+                            disabled: controlsBlocked,
+                            size: 52,
+                            symbolFont: .title2.weight(.bold),
+                            accessibilityLabel: .skipTrack
+                        ) { app.skip() }
+                        PlayerCircleButton(
+                            systemName: "repeat",
+                            active: app.queue?.isRepeatEnabled == true,
+                            busy: app.activeControlAction == .repeatTrack,
+                            disabled: controlsBlocked,
+                            accessibilityLabel: .repeatPlayback,
+                            accessibilityValue: app.queue?.isRepeatEnabled == true ? .enabled : .disabled
+                        ) { app.toggleRepeat() }
+                        PlayerCircleButton(
+                            systemName: "radio.fill",
+                            active: app.queue?.radio.isEnabled == true,
+                            busy: app.activeControlAction == .radio,
+                            disabled: controlsBlocked,
+                            accessibilityLabel: .radio,
+                            accessibilityValue: app.queue?.radio.isEnabled == true ? .enabled : .disabled
+                        ) { app.toggleRadio() }
+                        PlayerCircleButton(
+                            systemName: isFavorite ? "heart.fill" : "heart",
+                            active: isFavorite,
+                            busy: app.isMutatingFavorites,
+                            disabled: app.isMutatingFavorites,
+                            accessibilityLabel: isFavorite ? .removeFavorite : .addFavorite
+                        ) { app.toggleFavorite(track) }
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -162,9 +207,9 @@ private struct NowPlayingCard: View {
                     Image(systemName: "music.note")
                         .font(.system(size: 42))
                         .foregroundStyle(.secondary)
-                    Text("Nic nie gra")
+                    Text(.nothingPlaying)
                         .font(.title2.bold())
-                    Text(app.queue == nil ? "Połącz aplikację z serwerem i wybierz kanał głosowy." : "Kolejka oczekuje na utwory.")
+                    Text(app.queue == nil ? String(localized: .connectAndSelectChannel) : String(localized: .queueWaiting))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -187,6 +232,7 @@ private struct TrackPresentationView: View {
     let revision: Int
     let initiallyReady: Bool
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var displayedTrack: TrackResponse
     @State private var displayedQueue: QueueSnapshotResponse?
     @State private var incomingTrack: TrackResponse?
@@ -223,8 +269,8 @@ private struct TrackPresentationView: View {
                 onArtworkLoaded: revealInitialArtwork
             )
             .opacity(displayedOpacity)
-            .offset(y: incomingTrack == nil ? 0 : -18 * transitionProgress)
-            .scaleEffect(incomingTrack == nil ? 1 : 1 - (0.01 * transitionProgress))
+            .offset(y: reduceMotion ? 0 : (incomingTrack == nil ? 0 : -18 * transitionProgress))
+            .scaleEffect(reduceMotion ? 1 : (incomingTrack == nil ? 1 : 1 - (0.01 * transitionProgress)))
             .zIndex(0)
 
             if let incomingTrack {
@@ -236,8 +282,8 @@ private struct TrackPresentationView: View {
                 // Keep the new hierarchy alive so Nuke can load it, but visually
                 // hidden until the hero bitmap is ready.
                 .opacity(max(0.001, transitionProgress))
-                .offset(y: 18 * (1 - transitionProgress))
-                .scaleEffect(0.985 + (0.015 * transitionProgress))
+                .offset(y: reduceMotion ? 0 : 18 * (1 - transitionProgress))
+                .scaleEffect(reduceMotion ? 1 : 0.985 + (0.015 * transitionProgress))
                 .zIndex(1)
                 .allowsHitTesting(false)
                 .accessibilityHidden(transitionProgress < 1)
@@ -317,12 +363,17 @@ private struct TrackPresentationView: View {
             return
         }
 
-        withAnimation(.snappy(duration: 0.20, extraBounce: 0.015)) {
+        let transitionAnimation: Animation = reduceMotion
+            ? .easeOut(duration: 0.14)
+            : .snappy(duration: 0.20, extraBounce: 0.015)
+        let transitionDuration = reduceMotion ? 150 : 215
+
+        withAnimation(transitionAnimation) {
             transitionProgress = 1
         }
 
         transitionTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(215))
+            try? await Task.sleep(for: .milliseconds(transitionDuration))
             guard !Task.isCancelled, let stagedTrack = incomingTrack else { return }
 
             displayedTrack = stagedTrack
@@ -341,7 +392,7 @@ private struct NowPlayingTrackContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             ArtworkHero(track: track, onLoadCompleted: onArtworkLoaded)
-            Text("TERAZ ODTWARZANE")
+            Text(.nowPlaying)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.tint)
             Text(track.title)
@@ -384,13 +435,15 @@ private struct ArtworkHero: View {
     var body: some View {
         ZStack {
             if let color = Color(hex: track.artworkAccentColor) {
+                // The gradient is soft enough on its own. Avoiding a large live blur
+                // prevents an extra offscreen-rendering pass while the player scrolls
+                // and while two hero presentations overlap during a track transition.
                 RadialGradient(
-                    colors: [color.opacity(0.45), color.opacity(0.05), .clear],
+                    colors: [color.opacity(0.38), color.opacity(0.10), .clear],
                     center: .bottom,
-                    startRadius: 10,
-                    endRadius: 260
+                    startRadius: 8,
+                    endRadius: 300
                 )
-                .blur(radius: 26)
             }
 
             ArtworkView(
@@ -426,9 +479,9 @@ private struct PlaybackProgress: View {
             VStack(spacing: 6) {
                 ProgressView(value: position, total: duration)
                 HStack {
-                    Text(formatDuration(Int64(position * 1_000)))
+                    Text(verbatim: formatDuration(Int64(position * 1_000)))
                     Spacer()
-                    Text(durationLabel)
+                    Text(verbatim: durationLabel)
                 }
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
@@ -443,9 +496,17 @@ private struct PlayerCircleButton: View {
     let active: Bool
     let busy: Bool
     var disabled = false
-    var size: CGFloat = 42
+    var size: CGFloat = 44
     var symbolFont: Font = .body.weight(.semibold)
+    let accessibilityLabel: LocalizedStringResource
+    var accessibilityValue: LocalizedStringResource? = nil
     let action: () -> Void
+
+    private var accessibilityValueText: Text {
+        if busy { return Text(.inProgress) }
+        if let accessibilityValue { return Text(accessibilityValue) }
+        return Text(verbatim: "")
+    }
 
     var body: some View {
         Button(role: role, action: action) {
@@ -459,11 +520,13 @@ private struct PlayerCircleButton: View {
                         .foregroundStyle(active ? Color.accentColor : Color.primary)
                 }
             }
-            .frame(width: size, height: size)
+            .frame(width: max(size, 44), height: max(size, 44))
         }
         .buttonStyle(.glass)
         .buttonBorderShape(.circle)
         .disabled(busy || disabled)
+        .accessibilityLabel(Text(accessibilityLabel))
+        .accessibilityValue(accessibilityValueText)
         .accessibilityAddTraits(active ? .isSelected : [])
     }
 }
@@ -474,7 +537,7 @@ private struct QueueRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text("\(entry.position)")
+            Text(verbatim: "\(entry.position)")
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
                 .frame(width: 24)
@@ -482,19 +545,26 @@ private struct QueueRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(entry.track.title)
                     .lineLimit(2)
-                Text(formatDuration(entry.track.durationMilliseconds))
+                Text(verbatim: formatDuration(entry.track.durationMilliseconds))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
             Button { app.toggleFavorite(entry.track) } label: {
                 Image(systemName: app.isFavorite(entry.track) ? "heart.fill" : "heart")
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
+            .accessibilityLabel(Text(app.isFavorite(entry.track) ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
+
             Button(role: .destructive) { app.removeQueueEntry(entry.entryId) } label: {
                 Image(systemName: "trash")
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
+            .accessibilityLabel(Text(.removeFromQueue))
         }
         .padding(12)
         .background(
@@ -538,7 +608,7 @@ private struct PlayerSkeleton: View {
             PlayerCardContentSkeleton()
 
             HStack(spacing: 12) {
-                ForEach(Array([42, 52, 42, 42, 42].enumerated()), id: \.offset) { _, size in
+                ForEach(Array([44, 52, 44, 44, 44].enumerated()), id: \.offset) { _, size in
                     Circle()
                         .fill(Color(uiColor: .tertiarySystemFill))
                         .frame(width: CGFloat(size), height: CGFloat(size))

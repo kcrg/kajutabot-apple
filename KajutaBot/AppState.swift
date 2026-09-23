@@ -2,7 +2,6 @@ import AuthenticationServices
 import Foundation
 import Nuke
 import Observation
-import SwiftUI
 
 enum AppAuthState: Equatable {
     case restoring
@@ -11,7 +10,7 @@ enum AppAuthState: Equatable {
     case recoverableError(String)
 }
 
-enum GuildAccessState {
+enum GuildAccessState: Equatable {
     case checking
     case available
     case none
@@ -42,11 +41,18 @@ final class AppState {
     @ObservationIgnored private var startupPresentationTask: Task<Void, Never>?
     @ObservationIgnored private var searchTask: Task<Void, Never>?
     @ObservationIgnored private var searchGeneration = 0
+    @ObservationIgnored private var queueRefreshTask: Task<QueueSnapshotResponse, Error>?
+    @ObservationIgnored private var queueRefreshGuildId: String?
+    @ObservationIgnored private var queueRefreshGeneration = 0
+    @ObservationIgnored private var wasBackgrounded = false
+    @ObservationIgnored private var foregroundRefreshTask: Task<Void, Never>?
     @ObservationIgnored private let artworkPrefetcher = ImagePrefetcher(
         pipeline: .shared,
         destination: .memoryCache,
         maxConcurrentRequestCount: 2
     )
+    @ObservationIgnored private var prefetchedArtworkRequests: [ImageRequest] = []
+    @ObservationIgnored private var prefetchedArtworkKeys: [String] = []
 
     var authState: AppAuthState = .restoring
     var isSigningIn = false
@@ -87,10 +93,6 @@ final class AppState {
     var manualOnboardingRequested = false
     var onboardingCompleted = false
 
-    var themeMode: ThemeMode {
-        didSet { defaults.set(themeMode.rawValue, forKey: Keys.themeMode) }
-    }
-
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         config = AppConfig()
@@ -104,7 +106,6 @@ final class AppState {
         selectedGuildId = defaults.string(forKey: Keys.guildId)
         selectedVoiceChannelId = defaults.string(forKey: Keys.channelId)
         searchHistory = defaults.stringArray(forKey: Keys.searchHistory) ?? []
-        themeMode = ThemeMode(rawValue: defaults.string(forKey: Keys.themeMode) ?? "") ?? .system
         realtime.onSnapshot = { [weak self] snapshot in
             self?.applyQueueSnapshot(snapshot)
         }
@@ -123,14 +124,6 @@ final class AppState {
     var selectedVoiceChannel: DiscordVoiceChannelResponse? { voiceChannels.first { $0.id == selectedVoiceChannelId } }
     var hasDiscordTarget: Bool { selectedGuildId != nil && selectedVoiceChannelId != nil }
     var nowPlaying: TrackResponse? { presentationQueue?.nowPlaying }
-
-    var preferredColorScheme: ColorScheme? {
-        switch themeMode {
-        case .system: nil
-        case .light: .light
-        case .dark: .dark
-        }
-    }
 
     var shouldShowOnboarding: Bool {
         guard session != nil, guildAccessState == .available else { return false }
@@ -156,7 +149,7 @@ final class AppState {
             favoritesShuffle = defaults.bool(forKey: Keys.favoritesShufflePrefix + favoritesOwnerKey)
             await bootstrapAndPresentAuthenticatedState(user: restored.user)
         } catch {
-            authState = .recoverableError("Nie można odczytać bezpiecznego magazynu sesji.")
+            authState = .recoverableError(String(localized: .secureSessionReadFailed))
         }
     }
 
@@ -176,9 +169,9 @@ final class AppState {
                 let newSession = try await sessionManager.exchangeDiscord(exchange)
                 await finishSignIn(newSession)
             } catch let error as ASWebAuthenticationSessionError where error.code == .canceledLogin {
-                authState = .signedOut("Logowanie przez Discord zostało anulowane.")
+                authState = .signedOut(String(localized: .discordLoginCancelled))
             } catch OAuthError.cancelled {
-                authState = .signedOut("Logowanie przez Discord zostało anulowane.")
+                authState = .signedOut(String(localized: .discordLoginCancelled))
             } catch {
                 authState = .signedOut(userMessage(for: error))
             }
@@ -229,23 +222,52 @@ final class AppState {
                 }
                 try await sessionManager.clear()
                 resetAuthenticatedState()
-                withAnimation(.smooth(duration: 0.32)) {
-                    authState = .signedOut()
-                }
+                authState = .signedOut()
             } catch {
-                errorMessage = "Serwer nie potwierdził wylogowania. Sesja pozostała aktywna."
+                errorMessage = String(localized: .logoutNotConfirmed)
                 if let session { authState = .signedIn(session.user) }
             }
         }
     }
 
-    func sceneBecameActive() {
-        guard case .signedIn = authState else { return }
-        if let guildId = selectedGuildId { realtime.connect(guildId: guildId) }
+    func sceneWillBecomeActive() {
+        // On the background -> inactive transition iOS gives us a short head start
+        // before the scene is fully visible. Use it to refresh the player immediately.
+        guard wasBackgrounded else { return }
+        guard case .signedIn = authState, let guildId = selectedGuildId else { return }
+
+        wasBackgrounded = false
+        realtime.connect(guildId: guildId)
+        startForegroundPlayerRefresh(guildId: guildId)
     }
 
-    func sceneBecameInactive() {
+    func sceneBecameActive() {
+        let shouldRefreshAfterBackground = wasBackgrounded
+        wasBackgrounded = false
+
+        guard case .signedIn = authState, let guildId = selectedGuildId else { return }
+        realtime.connect(guildId: guildId)
+
+        // Fallback for lifecycle paths that move directly from background to active.
+        if shouldRefreshAfterBackground {
+            startForegroundPlayerRefresh(guildId: guildId)
+        }
+    }
+
+    func sceneEnteredBackground() {
+        wasBackgrounded = true
+        foregroundRefreshTask?.cancel()
+        foregroundRefreshTask = nil
         realtime.stop()
+    }
+
+    private func startForegroundPlayerRefresh(guildId: String) {
+        foregroundRefreshTask?.cancel()
+        foregroundRefreshTask = Task(priority: .userInitiated) { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            await self.refreshQueueAsync(guildId: guildId, reportErrors: false)
+            self.foregroundRefreshTask = nil
+        }
     }
 
     func completeOnboarding() {
@@ -260,7 +282,11 @@ final class AppState {
     }
 
     func refreshPlayer() async {
-        await loadGuilds()
+        guard let guildId = selectedGuildId else {
+            await loadGuilds()
+            return
+        }
+        await refreshQueueAsync(guildId: guildId)
     }
 
     func selectGuild(_ guildId: String) {
@@ -274,7 +300,14 @@ final class AppState {
         hasResolvedQueueState = false
         initialHeroArtworkReady = false
         cancelPresentationRecovery()
+        queueRefreshGeneration &+= 1
+        queueRefreshTask?.cancel()
+        queueRefreshTask = nil
+        queueRefreshGuildId = nil
+        isLoadingQueue = false
         artworkPrefetcher.stopPrefetching()
+        prefetchedArtworkRequests = []
+        prefetchedArtworkKeys = []
         realtime.connect(guildId: guildId)
         Task {
             async let channels: Void = loadVoiceChannels(guildId: guildId, preserveChannel: nil)
@@ -286,11 +319,6 @@ final class AppState {
     func selectVoiceChannel(_ channelId: String) {
         selectedVoiceChannelId = channelId
         defaults.set(channelId, forKey: Keys.channelId)
-    }
-
-    func refreshQueue() {
-        guard let guildId = selectedGuildId else { return }
-        Task { await refreshQueueAsync(guildId: guildId) }
     }
 
     func dismissError() {
@@ -362,7 +390,7 @@ final class AppState {
 
     func enqueueInputs(_ inputs: [String]) {
         guard let guildId = selectedGuildId, let channelId = selectedVoiceChannelId else {
-            errorMessage = "Najpierw wybierz serwer i kanał głosowy."
+            errorMessage = String(localized: .selectServerChannelFirst)
             return
         }
         guard !isMutating else { return }
@@ -377,7 +405,8 @@ final class AppState {
                 )
                 applyQueueSnapshot(response.snapshot)
                 if !response.operation.succeeded {
-                    errorMessage = response.operation.message ?? "Nie udało się dodać utworu."
+                    // API operation messages are intentionally displayed verbatim.
+                    errorMessage = response.operation.message ?? String(localized: .addTrackFailed)
                 }
             } catch {
                 await handleMutationError(error)
@@ -408,7 +437,7 @@ final class AppState {
             return
         }
         guard let channelId = selectedVoiceChannelId else {
-            errorMessage = "Najpierw wybierz serwer i kanał głosowy."
+            errorMessage = String(localized: .selectServerChannelFirst)
             return
         }
         let minDuration = queue.radio.minimumDurationSeconds ?? 60
@@ -434,7 +463,7 @@ final class AppState {
             do {
                 let response = try await api.removeQueueEntry(guildId: guildId, entryId: entryId, expectedVersion: queue?.version)
                 applyQueueSnapshot(response.snapshot)
-                if !response.operation.succeeded { errorMessage = response.operation.message ?? "Nie udało się usunąć utworu." }
+                if !response.operation.succeeded { errorMessage = response.operation.message ?? String(localized: .removeTrackFailed) }
             } catch { await handleMutationError(error) }
         }
     }
@@ -470,7 +499,7 @@ final class AppState {
                 )
                 applyQueueSnapshot(response.snapshot)
                 if !response.operation.succeeded {
-                    errorMessage = response.operation.message ?? "Nie udało się zmienić pozycji utworu."
+                    errorMessage = response.operation.message ?? String(localized: .moveTrackFailed)
                 }
             } catch {
                 queue = current
@@ -537,7 +566,7 @@ final class AppState {
 
     func queueAllFavorites() {
         guard let guildId = selectedGuildId, let channelId = selectedVoiceChannelId else {
-            errorMessage = "Wybierz serwer i kanał głosowy w Odtwarzaczu, aby dodać ulubione."
+            errorMessage = String(localized: .favoritesNeedTarget)
             return
         }
         guard !isMutatingFavorites else { return }
@@ -555,7 +584,7 @@ final class AppState {
                 )
                 applyQueueSnapshot(response.snapshot)
                 if !response.operation.succeeded {
-                    errorMessage = response.operation.message ?? "Nie udało się dodać ulubionych."
+                    errorMessage = response.operation.message ?? String(localized: .addFavoritesFailed)
                 }
             } catch { errorMessage = userMessage(for: error) }
         }
@@ -596,9 +625,7 @@ final class AppState {
     private func presentAuthenticatedUI(user: AuthUserResponse) {
         guard session?.user.discordUserId == user.discordUserId else { return }
         if case .signedIn = authState { return }
-        withAnimation(.smooth(duration: 0.24)) {
-            authState = .signedIn(user)
-        }
+        authState = .signedIn(user)
     }
 
     private func preloadInitialPlayerArtwork() async {
@@ -610,8 +637,12 @@ final class AppState {
     }
 
     private func loadGuilds() async {
+        guard !isLoadingGuilds else { return }
+        let hadWorkingAccess = guildAccessState == .available && !guilds.isEmpty
         isLoadingGuilds = true
-        guildAccessState = .checking
+        if !hadWorkingAccess {
+            guildAccessState = .checking
+        }
         guildAccessError = nil
         defer { isLoadingGuilds = false }
         do {
@@ -641,52 +672,106 @@ final class AppState {
             }
             if let guildId = self.selectedGuildId {
                 realtime.connect(guildId: guildId)
-                async let channels: Void = loadVoiceChannels(guildId: guildId, preserveChannel: selectedVoiceChannelId)
-                async let queueRefresh: Void = refreshQueueAsync(guildId: guildId)
-                _ = await (channels, queueRefresh)
+
+                // Voice-channel metadata is not required to render the player. Let it
+                // load independently so a slow Discord endpoint doesn't hold up the
+                // initial queue snapshot and hero-artwork preload.
+                let preservedChannel = selectedVoiceChannelId
+                Task { [weak self] in
+                    await self?.loadVoiceChannels(guildId: guildId, preserveChannel: preservedChannel)
+                }
+                await refreshQueueAsync(guildId: guildId)
             } else {
                 hasResolvedQueueState = true
             }
         } catch {
-            guildAccessState = .error
-            guildAccessError = userMessage(for: error)
+            let message = userMessage(for: error)
+            if hadWorkingAccess {
+                // A transient guild refresh failure must not tear down a working
+                // authenticated UI. Keep the current guild selection and surface
+                // the failure as a normal error instead.
+                guildAccessState = .available
+                errorMessage = message
+            } else {
+                guildAccessState = .error
+                guildAccessError = message
+            }
         }
     }
 
     private func loadVoiceChannels(guildId: String, preserveChannel: String?) async {
         isLoadingVoiceChannels = true
-        defer { isLoadingVoiceChannels = false }
+        defer {
+            if selectedGuildId == guildId {
+                isLoadingVoiceChannels = false
+            }
+        }
         do {
             let channels = try await api.getVoiceChannels(guildId: guildId).sorted { lhs, rhs in
                 lhs.position == rhs.position ? lhs.name < rhs.name : lhs.position < rhs.position
             }
+            // A response for a previously selected guild must never overwrite the
+            // current picker after a fast guild switch.
+            guard selectedGuildId == guildId else { return }
+
             voiceChannels = channels
             var channel = preserveChannel
-            if channel != nil && !channels.contains(where: { $0.id == channel! }) { channel = nil }
+            if let candidate = channel, !channels.contains(where: { $0.id == candidate }) {
+                channel = nil
+            }
             if channel == nil, channels.count == 1 { channel = channels[0].id }
             selectedVoiceChannelId = channel
             if let channel { defaults.set(channel, forKey: Keys.channelId) }
             else { defaults.removeObject(forKey: Keys.channelId) }
+        } catch is CancellationError {
+            return
         } catch {
+            guard selectedGuildId == guildId else { return }
             voiceChannels = []
             selectedVoiceChannelId = nil
             errorMessage = userMessage(for: error)
         }
     }
 
-    private func refreshQueueAsync(guildId: String) async {
+    private func refreshQueueAsync(guildId: String, reportErrors: Bool = true) async {
+        if queueRefreshGuildId == guildId, let queueRefreshTask {
+            _ = try? await queueRefreshTask.value
+            return
+        }
+
+        queueRefreshTask?.cancel()
+        queueRefreshGeneration &+= 1
+        let generation = queueRefreshGeneration
+        queueRefreshGuildId = guildId
         isLoadingQueue = true
+
+        let task = Task { [api] in
+            try await api.getQueue(guildId: guildId)
+        }
+        queueRefreshTask = task
+
         defer {
-            isLoadingQueue = false
-            if selectedGuildId == guildId {
-                hasResolvedQueueState = true
+            if queueRefreshGeneration == generation {
+                queueRefreshTask = nil
+                queueRefreshGuildId = nil
+                isLoadingQueue = false
+                if selectedGuildId == guildId {
+                    hasResolvedQueueState = true
+                }
             }
         }
+
         do {
-            let snapshot = try await api.getQueue(guildId: guildId)
+            let snapshot = try await task.value
+            guard queueRefreshGeneration == generation else { return }
             applyQueueSnapshot(snapshot)
+        } catch is CancellationError {
+            return
         } catch {
-            errorMessage = userMessage(for: error)
+            guard queueRefreshGeneration == generation, selectedGuildId == guildId else { return }
+            if reportErrors {
+                errorMessage = userMessage(for: error)
+            }
         }
     }
 
@@ -735,7 +820,7 @@ final class AppState {
                 let response = try await operation(api, guildId, queue?.version)
                 applyQueueSnapshot(response.snapshot, forcePresentationIdle: forcePresentationIdleOnSuccess)
                 if !response.operation.succeeded {
-                    errorMessage = response.operation.message ?? "Operacja nie powiodła się."
+                    errorMessage = response.operation.message ?? String(localized: .operationFailed)
                 }
             } catch { await handleMutationError(error) }
         }
@@ -747,7 +832,7 @@ final class AppState {
            let guildId = selectedGuildId {
             if let fresh = try? await api.getQueue(guildId: guildId) {
                 applyQueueSnapshot(fresh)
-                errorMessage = "Kolejka zmieniła się w międzyczasie. Odświeżono stan."
+                errorMessage = String(localized: .queueChangedRefreshed)
                 return
             }
         }
@@ -842,12 +927,22 @@ final class AppState {
     }
 
     private func prefetchUpcomingArtwork(from snapshot: QueueSnapshotResponse) {
-        let requests = snapshot.pendingEntries.prefix(2).compactMap { entry in
+        let candidates = Array(snapshot.pendingEntries.prefix(2))
+        let keys = candidates.map { $0.track.thumbnailUrl ?? "" }
+        guard keys != prefetchedArtworkKeys else { return }
+
+        if !prefetchedArtworkRequests.isEmpty {
+            artworkPrefetcher.stopPrefetching(with: prefetchedArtworkRequests)
+        }
+
+        let requests = candidates.compactMap { entry in
             ArtworkRequestFactory.make(
                 urlString: entry.track.thumbnailUrl,
                 layout: .aspectRatio(16 / 9)
             )
         }
+        prefetchedArtworkKeys = keys
+        prefetchedArtworkRequests = requests
         guard !requests.isEmpty else { return }
         artworkPrefetcher.startPrefetching(with: requests)
     }
@@ -891,7 +986,13 @@ final class AppState {
         startupPresentationTask?.cancel()
         startupPresentationTask = nil
         cancelSearch()
+        queueRefreshGeneration &+= 1
+        queueRefreshTask?.cancel()
+        queueRefreshTask = nil
+        queueRefreshGuildId = nil
         artworkPrefetcher.stopPrefetching()
+        prefetchedArtworkRequests = []
+        prefetchedArtworkKeys = []
         session = nil
         onboardingCompleted = false
         manualOnboardingRequested = false
@@ -922,14 +1023,14 @@ final class AppState {
 
     private func userMessage(for error: Error) -> String {
         if error is SessionError {
-            let message = "Sesja wygasła. Zaloguj się ponownie."
+            let message = String(localized: .sessionExpired)
             realtime.stop()
             resetAuthenticatedState()
             authState = .signedOut(message)
             return message
         }
         if let apiError = error as? APIError { return apiError.localizedDescription }
-        if error is URLError { return "Brak połączenia z serwerem. Spróbuj ponownie." }
+        if error is URLError { return String(localized: .networkUnavailable) }
         return error.localizedDescription
     }
 
@@ -937,7 +1038,6 @@ final class AppState {
         static let guildId = "selection.guildId"
         static let channelId = "selection.voiceChannelId"
         static let searchHistory = "search.history"
-        static let themeMode = "theme.mode"
         static let onboardingPrefix = "onboarding.completed."
         static let favoritesShufflePrefix = "favorites.shuffle."
     }

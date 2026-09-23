@@ -20,12 +20,12 @@ enum OAuthError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .notConfigured: "Brak konfiguracji Discord Client ID."
-        case .invalidCallback: "Nieprawidłowa odpowiedź logowania Discord."
-        case .cancelled: "Logowanie przez Discord zostało anulowane."
-        case .stateMismatch: "Stan logowania nie zgadza się z rozpoczętą próbą."
-        case .missingCode: "Discord nie zwrócił kodu autoryzacji."
-        case .randomGenerationFailed: "Nie udało się wygenerować bezpiecznych danych logowania."
+        case .notConfigured: String(localized: .oauthNotConfigured)
+        case .invalidCallback: String(localized: .oauthInvalidCallback)
+        case .cancelled: String(localized: .discordLoginCancelled)
+        case .stateMismatch: String(localized: .oauthStateMismatch)
+        case .missingCode: String(localized: .oauthMissingCode)
+        case .randomGenerationFailed: String(localized: .oauthRandomGenerationFailed)
         }
     }
 }
@@ -83,13 +83,13 @@ final class DiscordOAuthService: NSObject, ASWebAuthenticationPresentationContex
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         if let keyWindow = scenes.flatMap(\.windows).first(where: \.isKeyWindow) { return keyWindow }
-        if let windowScene = scenes.first, let window = windowScene.windows.first {
+        if let window = scenes.first?.windows.first {
             return window
         }
-        if let windowScene = scenes.first {
-            return ASPresentationAnchor(windowScene: windowScene)
+        guard let windowScene = scenes.first else {
+            preconditionFailure("No active window scene for authentication presentation")
         }
-        return ASPresentationAnchor()
+        return ASPresentationAnchor(windowScene: windowScene)
     }
 
     private func makePKCE() throws -> PKCEData {

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var app = AppState()
 
     var body: some View {
@@ -12,14 +13,14 @@ struct ContentView: View {
                     .transition(.opacity)
             case let .signedOut(message):
                 LoginView(app: app, message: message)
-                    .transition(.opacity.combined(with: .scale(scale: 0.985)))
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.985)))
             case let .recoverableError(message):
                 ContentUnavailableView {
-                    Label("Nie można przywrócić sesji", systemImage: "exclamationmark.triangle")
+                    Label(.restoreSessionFailedTitle, systemImage: "exclamationmark.triangle")
                 } description: {
                     Text(message)
                 } actions: {
-                    Button("Spróbuj ponownie") { app.retryRestore() }
+                    Button(.retry) { app.retryRestore() }
                 }
                 .transition(.opacity)
             case .signedIn:
@@ -27,13 +28,13 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.smooth(duration: 0.32), value: app.authState)
-        .preferredColorScheme(app.preferredColorScheme)
+        .animation(reduceMotion ? .easeOut(duration: 0.16) : .smooth(duration: 0.32), value: app.authState)
         .task { await app.initializeIfNeeded() }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
             case .active: app.sceneBecameActive()
-            case .inactive, .background: app.sceneBecameInactive()
+            case .inactive: app.sceneWillBecomeActive()
+            case .background: app.sceneEnteredBackground()
             @unknown default: break
             }
         }
@@ -57,7 +58,7 @@ private struct StartupView: View {
                 .controlSize(.small)
                 .tint(.accentColor)
                 .offset(y: 55)
-                .accessibilityLabel("Przywracanie sesji")
+                .accessibilityLabel(Text(.restoringSessionAccessibility))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
@@ -67,43 +68,50 @@ private struct StartupView: View {
 
 private struct AuthenticatedRootView: View {
     let app: AppState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Group {
+        ZStack {
             switch app.guildAccessState {
             case .checking:
                 if app.onboardingCompleted && !app.manualOnboardingRequested {
                     MainTabView(app: app)
+                        .transition(.opacity)
                 } else {
-                    ProgressView(app.isGuest ? "Łączenie z serwerem demonstracyjnym…" : "Sprawdzanie serwerów Discord…")
+                    ProgressView { Text(app.isGuest ? String(localized: .connectingDemoServer) : String(localized: .checkingDiscordServers)) }
+                        .transition(.opacity)
                 }
             case .error:
                 ContentUnavailableView {
-                    Label("Nie udało się pobrać serwerów", systemImage: "wifi.exclamationmark")
+                    Label(.loadGuildsFailedTitle, systemImage: "wifi.exclamationmark")
                 } description: {
-                    Text(app.guildAccessError ?? "Spróbuj ponownie.")
+                    Text(app.guildAccessError ?? String(localized: .retryDefaultMessage))
                 } actions: {
-                    Button("Spróbuj ponownie") { app.refreshGuilds() }
-                    Button("Wyloguj", role: .destructive) { app.logout() }
+                    Button(.retry) { app.refreshGuilds() }
+                    Button(.logout, role: .destructive) { app.logout() }
                 }
+                .transition(reduceMotion ? .opacity : .scale(scale: 0.97).combined(with: .opacity))
             case .none:
                 ContentUnavailableView {
-                    Label("Brak dostępu", systemImage: "person.crop.circle.badge.exclamationmark")
+                    Label(.noAccessTitle, systemImage: "person.crop.circle.badge.exclamationmark")
                 } description: {
-                    Text(app.isGuest ? "Tryb gościa nie ma teraz dostępu do serwera demonstracyjnego." : "KajutaBot nie jest dostępny na żadnym z Twoich serwerów Discord.")
+                    Text(app.isGuest ? String(localized: .guestDemoUnavailable) : String(localized: .noDiscordGuildAccess))
                 } actions: {
-                    Button("Odśwież") { app.refreshGuilds() }
-                    Button("Wyloguj", role: .destructive) { app.logout() }
+                    Button(.refresh) { app.refreshGuilds() }
+                    Button(.logout, role: .destructive) { app.logout() }
                 }
+                .transition(reduceMotion ? .opacity : .scale(scale: 0.97).combined(with: .opacity))
             case .available:
                 ZStack {
                     if app.shouldShowOnboarding {
                         OnboardingView(app: app)
                             .transition(
-                                .asymmetric(
-                                    insertion: .opacity,
-                                    removal: .move(edge: .top).combined(with: .opacity)
-                                )
+                                reduceMotion
+                                    ? .opacity
+                                    : .asymmetric(
+                                        insertion: .opacity,
+                                        removal: .move(edge: .top).combined(with: .opacity)
+                                    )
                             )
                             .zIndex(1)
                     } else {
@@ -111,9 +119,10 @@ private struct AuthenticatedRootView: View {
                             .transition(.opacity)
                     }
                 }
-                .animation(.smooth(duration: 0.45), value: app.shouldShowOnboarding)
+                .animation(reduceMotion ? .easeOut(duration: 0.16) : .smooth(duration: 0.45), value: app.shouldShowOnboarding)
             }
         }
+        .animation(reduceMotion ? .easeOut(duration: 0.16) : .smooth(duration: 0.28), value: app.guildAccessState)
     }
 }
 

@@ -13,7 +13,7 @@ struct AddTrackView: View {
     var body: some View {
         List {
             Section {
-                Picker("Źródło", selection: Binding(
+                Picker(String(localized: .searchSource), selection: Binding(
                     get: { app.searchSource },
                     set: { app.setSearchSource($0) }
                 )) {
@@ -25,7 +25,7 @@ struct AddTrackView: View {
             }
 
             if !app.searchHistory.isEmpty && trimmedQuery.isEmpty {
-                Section("Ostatnie wyszukiwania") {
+                Section(.recentSearches) {
                     ForEach(app.searchHistory, id: \.self) { query in
                         Button {
                             app.searchFromHistory(query)
@@ -41,13 +41,13 @@ struct AddTrackView: View {
                 Section {
                     HStack {
                         Spacer()
-                        ProgressView("Wyszukiwanie…")
+                        ProgressView { Text(.searching) }
                         Spacer()
                     }
                     .padding(.vertical, 22)
                 }
             } else if app.lastCompletedSearchQuery == trimmedQuery && !app.searchResults.isEmpty {
-                Section("Wyniki") {
+                Section(.results) {
                     ForEach(app.searchResults) { item in
                         SearchResultRow(item: item) {
                             app.enqueueSearchResult(item)
@@ -57,26 +57,29 @@ struct AddTrackView: View {
                 }
             } else if app.lastCompletedSearchQuery == trimmedQuery && !trimmedQuery.isEmpty && !isURL {
                 Section {
-                    ContentUnavailableView(
-                        "Brak wyników",
-                        systemImage: "magnifyingglass",
-                        description: Text("Nie znaleziono niczego dla „\(trimmedQuery)”.")
-                    )
+                    ContentUnavailableView {
+                        Label(.noResultsTitle, systemImage: "magnifyingglass")
+                    } description: {
+                        Text(.noResultsForQuery(query: trimmedQuery))
+                    }
                 }
             }
         }
-        .navigationTitle("Dodaj utwór")
+        .scrollContentBackground(.hidden)
+        .adaptiveContentWidth(AppLayout.primaryContentMaxWidth)
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle(.addTrackTitle)
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: Binding(
                 get: { app.searchQuery },
                 set: { app.searchQuery = $0 }
-            ), prompt: "Nazwa utworu lub link")
+            ), prompt: Text(.searchPrompt))
         .onSubmit(of: .search) {
             app.performSearch()
         }
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button(isURL ? "Dodaj" : "Szukaj") {
+                Button(isURL ? String(localized: .add) : String(localized: .search)) {
                     app.performSearch()
                     if isURL {
                         queued()
@@ -112,8 +115,11 @@ private struct SearchResultRow: View {
             Button(action: add) {
                 Image(systemName: "text.badge.plus")
                     .font(.title3)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
+            .accessibilityLabel(Text(.addToQueue))
         }
         .padding(.vertical, 4)
     }

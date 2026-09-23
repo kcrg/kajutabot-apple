@@ -9,13 +9,13 @@ enum RealtimeConnectionState: String, Sendable {
     case connected
     case reconnecting
 
-    var label: String {
+    var label: LocalizedStringResource {
         switch self {
-        case .disconnected: "Rozłączono"
-        case .connecting: "Łączenie…"
-        case .subscribing: "Subskrybowanie serwera…"
-        case .connected: "Połączono"
-        case .reconnecting: "Ponowne łączenie…"
+        case .disconnected: .realtimeDisconnected
+        case .connecting: .realtimeConnecting
+        case .subscribing: .realtimeSubscribing
+        case .connected: .realtimeConnected
+        case .reconnecting: .realtimeReconnecting
         }
     }
 }
@@ -218,7 +218,7 @@ final class RealtimeClient {
                 guard let self else { return }
                 try? await Task.sleep(for: .seconds(1))
                 guard !Task.isCancelled else { return }
-                await self.restartIfCurrent(guildId: guildId, epoch: epoch)
+                self.restartIfCurrent(guildId: guildId, epoch: epoch)
             }
         }
     }

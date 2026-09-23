@@ -200,6 +200,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				pl,
 				Base,
 			);
 			mainGroup = 9EA60AA63062D101006DA601;
@@ -439,6 +440,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.tryniecki.KajutaBot.KajutaBot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 
 				SWIFT_EMIT_LOC_STRINGS = YES;

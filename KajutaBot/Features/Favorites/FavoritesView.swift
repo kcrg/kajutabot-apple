@@ -7,7 +7,7 @@ struct FavoritesView: View {
 
     var body: some View {
         List {
-            if app.isLoadingFavorites && app.favorites.isEmpty {
+            if app.favorites.isEmpty && app.isLoadingFavorites {
                 ForEach(0..<5, id: \.self) { _ in
                     FavoriteSkeletonRow()
                         .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 5, trailing: 16))
@@ -15,7 +15,11 @@ struct FavoritesView: View {
                         .listRowSeparator(.hidden)
                 }
             } else if app.favorites.isEmpty {
-                ContentUnavailableView("Brak ulubionych", systemImage: "heart", description: Text("Dodaj utwór z odtwarzacza albo wklej jego link."))
+                ContentUnavailableView {
+                    Label(.noFavoritesTitle, systemImage: "heart")
+                } description: {
+                    Text(.noFavoritesDescription)
+                }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
             } else {
@@ -29,25 +33,26 @@ struct FavoritesView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .adaptiveContentWidth(AppLayout.primaryContentMaxWidth)
         .background(Color(uiColor: .systemGroupedBackground))
-        .navigationTitle("Ulubione")
+        .navigationTitle(.favoritesTitle)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button { app.refreshFavorites() } label: { Image(systemName: "arrow.clockwise") }
                 Menu {
-                    Toggle("Losuj kolejność", isOn: Binding(
+                    Toggle(String(localized: .shuffleOrder), isOn: Binding(
                         get: { app.favoritesShuffle },
                         set: app.setFavoritesShuffle
                     ))
                     Button {
                         app.queueAllFavorites()
                     } label: {
-                        Label("Dodaj wszystkie (\(app.favorites.count))", systemImage: "text.badge.plus")
+                        Label(.favoritesAddAll(count: app.favorites.count), systemImage: "text.badge.plus")
                     }
                     .disabled(app.favorites.isEmpty || app.isMutatingFavorites)
                     Divider()
                     Button { showAddFavorite = true } label: {
-                        Label("Dodaj przez URL", systemImage: "heart.badge.plus")
+                        Label(.addByURL, systemImage: "heart.badge.plus")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -58,10 +63,10 @@ struct FavoritesView: View {
         .sheet(isPresented: $showAddFavorite) {
             NavigationStack {
                 Form {
-                    Section("Link do utworu") {
+                    Section(.trackLink) {
                         ZStack(alignment: .leading) {
                             if newFavoriteURL.isEmpty {
-                                Text("https://youtube.com/…")
+                                Text(verbatim: "https://youtube.com/…")
                                     .foregroundStyle(.primary.opacity(0.62))
                                     .allowsHitTesting(false)
                             }
@@ -71,16 +76,16 @@ struct FavoritesView: View {
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .keyboardType(.URL)
-                                .accessibilityLabel("Link do utworu")
+                                .accessibilityLabel(Text(.trackLink))
                         }
                     }
                 }
-                .navigationTitle("Dodaj do ulubionych")
+                .navigationTitle(.addToFavoritesTitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Anuluj") { showAddFavorite = false } }
+                    ToolbarItem(placement: .cancellationAction) { Button(.cancel) { showAddFavorite = false } }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Dodaj") {
+                        Button(.add) {
                             app.addFavoriteByURL(newFavoriteURL)
                             newFavoriteURL = ""
                             showAddFavorite = false
@@ -109,7 +114,7 @@ private struct FavoriteRow: View {
                 Text(favorite.title)
                     .lineLimit(2)
                 if let date = parseISO8601(favorite.addedAt) {
-                    Text("Zapisano \(date.formatted(date: .numeric, time: .omitted))")
+                    Text(.favoriteSaved(date: date.formatted(date: .numeric, time: .omitted)))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -118,13 +123,20 @@ private struct FavoriteRow: View {
             Button { app.playFavorite(favorite) } label: {
                 Image(systemName: "text.badge.plus")
                     .font(.title3)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
+            .accessibilityLabel(Text(.addToQueue))
+
             Button(role: .destructive) { app.deleteFavorite(favorite.contentUrl) } label: {
                 Image(systemName: "trash")
                     .font(.title3)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
+            .accessibilityLabel(Text(.removeFavorite))
         }
         .padding(12)
         .background(
@@ -133,7 +145,7 @@ private struct FavoriteRow: View {
         )
         .contextMenu {
             if let url = URL(string: favorite.contentUrl) {
-                Link(destination: url) { Label("Otwórz źródło", systemImage: "safari") }
+                Link(destination: url) { Label(.openSource, systemImage: "safari") }
             }
         }
     }

@@ -17,19 +17,19 @@ struct MainTabView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Odtwarzacz", systemImage: "music.note.list", value: .player) {
+            Tab(String(localized: .playerTitle), systemImage: "music.note.list", value: .player) {
                 NavigationStack {
                     PlayerView(app: app)
                 }
             }
 
-            Tab("Ulubione", systemImage: "heart.text.square", value: .favorites) {
+            Tab(String(localized: .favoritesTitle), systemImage: "heart.text.square", value: .favorites) {
                 NavigationStack {
                     FavoritesView(app: app)
                 }
             }
 
-            Tab("Więcej", systemImage: "ellipsis", value: .more) {
+            Tab(String(localized: .moreTitle), systemImage: "ellipsis", value: .more) {
                 NavigationStack {
                     MoreView(app: app)
                 }
@@ -49,11 +49,20 @@ struct MainTabView: View {
                 selectedTab = .player
             }
         }
-        .tabBarMinimizeBehavior(selectedTab == .player ? .never : .onScrollDown)
+        .tabBarMinimizeBehavior(tabBarMinimizeBehavior)
         .onChange(of: selectedTab) { previousTab, newTab in
             if previousTab == .search && newTab != .search {
                 app.clearAddTrack()
             }
+        }
+    }
+
+    private var tabBarMinimizeBehavior: TabBarMinimizeBehavior {
+        switch selectedTab {
+        case .favorites, .more:
+            return .onScrollDown
+        case .player, .search:
+            return .never
         }
     }
 }

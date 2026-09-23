@@ -12,7 +12,6 @@ struct KajutaBotAPIClient: Sendable {
     }
 
     func logout() async throws { try await sendVoid(method: "POST", path: "auth/logout") }
-    func getMe() async throws -> AuthUserResponse { try await send(method: "GET", path: "auth/me") }
     func getMyGuilds() async throws -> [DiscordGuildResponse] { try await send(method: "GET", path: "users/me/guilds") }
 
     func getVoiceChannels(guildId: String) async throws -> [DiscordVoiceChannelResponse] {
@@ -57,10 +56,6 @@ struct KajutaBotAPIClient: Sendable {
 
     func stop(guildId: String, request body: QueueMutationRequest) async throws -> QueueMutationResponse {
         try await send(method: "POST", path: "guilds/\(guildId)/queue/stop", body: body)
-    }
-
-    func getRadioState(guildId: String) async throws -> RadioStateResponse {
-        try await send(method: "GET", path: "guilds/\(guildId)/radio")
     }
 
     func enableRadio(guildId: String, request body: EnableRadioRequest) async throws -> QueueMutationResponse {

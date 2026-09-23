@@ -67,22 +67,25 @@ struct ArtworkView: View {
     var body: some View {
         let request = ArtworkRequestFactory.make(urlString: urlString, layout: layout)
 
-        switch layout {
-        case let .square(side):
-            artworkContent(request: request)
-                .frame(width: side, height: side)
-                .clipped()
-                .clipShape(shape)
+        Group {
+            switch layout {
+            case let .square(side):
+                artworkContent(request: request)
+                    .frame(width: side, height: side)
+                    .clipped()
+                    .clipShape(shape)
 
-        case let .aspectRatio(ratio):
-            Color.clear
-                .aspectRatio(ratio, contentMode: .fit)
-                .overlay {
-                    artworkContent(request: request)
-                }
-                .clipped()
-                .clipShape(shape)
+            case let .aspectRatio(ratio):
+                Color.clear
+                    .aspectRatio(ratio, contentMode: .fit)
+                    .overlay {
+                        artworkContent(request: request)
+                    }
+                    .clipped()
+                    .clipShape(shape)
+            }
         }
+        .accessibilityHidden(true)
     }
 
     private func artworkContent(request: ImageRequest?) -> some View {
@@ -137,20 +140,10 @@ struct BrandMark: View {
     var size: CGFloat = 88
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.accentColor, Color.accentColor.opacity(0.7)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-            Image(systemName: "music.note.list")
-                .font(.system(size: size * 0.42, weight: .bold))
-                .foregroundStyle(.white)
-        }
-        .frame(width: size, height: size)
-        .shadow(color: .black.opacity(0.12), radius: 18, y: 8)
+        Image("LaunchLogo")
+            .resizable()
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .accessibilityHidden(true)
     }
 }

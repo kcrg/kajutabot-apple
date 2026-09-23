@@ -1,19 +1,8 @@
 {
   "images": [
     {
-      "filename": "LaunchLogo-Light@1x.png",
-      "idiom": "universal",
-      "scale": "1x"
-    },
-    {
-      "filename": "LaunchLogo-Light@2x.png",
-      "idiom": "universal",
-      "scale": "2x"
-    },
-    {
-      "filename": "LaunchLogo-Light@3x.png",
-      "idiom": "universal",
-      "scale": "3x"
+      "filename": "LaunchLogo-Light.svg",
+      "idiom": "universal"
     },
     {
       "appearances": [
@@ -22,35 +11,15 @@
           "value": "dark"
         }
       ],
-      "filename": "LaunchLogo-Dark@1x.png",
-      "idiom": "universal",
-      "scale": "1x"
-    },
-    {
-      "appearances": [
-        {
-          "appearance": "luminosity",
-          "value": "dark"
-        }
-      ],
-      "filename": "LaunchLogo-Dark@2x.png",
-      "idiom": "universal",
-      "scale": "2x"
-    },
-    {
-      "appearances": [
-        {
-          "appearance": "luminosity",
-          "value": "dark"
-        }
-      ],
-      "filename": "LaunchLogo-Dark@3x.png",
-      "idiom": "universal",
-      "scale": "3x"
+      "filename": "LaunchLogo-Dark.svg",
+      "idiom": "universal"
     }
   ],
   "info": {
     "author": "xcode",
     "version": 1
+  },
+  "properties": {
+    "preserves-vector-representation": true
   }
 }

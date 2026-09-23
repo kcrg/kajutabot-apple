@@ -2,155 +2,184 @@ import SwiftUI
 
 private struct OnboardingPage: Identifiable {
     let id: String
-    let title: String
-    let description: String
-    let image: String
+    let title: LocalizedStringResource
+    let description: LocalizedStringResource
+    let symbol: String
 }
 
 private let onboardingPages: [OnboardingPage] = [
-    .init(id: "player", title: "Steruj tym, co gra na Discordzie", description: "Telefon działa jak pilot do KajutaBota na wybranym kanale głosowym. Widzisz aktualny utwór i postęp, możesz pominąć lub zatrzymać odtwarzanie, włączyć powtarzanie i zapisać utwór do ulubionych.", image: "onboarding_player"),
-    .init(id: "queue", title: "Kolejka pod pełną kontrolą", description: "Zmieniaj kolejność utworów, usuwaj pojedyncze pozycje, wyczyść kolejkę albo szybko otwórz wyszukiwanie z poziomu odtwarzacza.", image: "onboarding_queue"),
-    .init(id: "share", title: "Dodawaj muzykę na swój sposób", description: "Wpisz nazwę utworu albo wklej bezpośredni link. Wyniki możesz pobierać z YouTube, SoundCloud albo z bazy KajutaBota.", image: "onboarding_share"),
-    .init(id: "favorites", title: "Ulubione zawsze pod ręką", description: "Zapisuj utwory na później, dodawaj je pojedynczo lub wrzuć wszystkie ulubione do kolejki naraz — również w losowej kolejności.", image: "onboarding_favorites"),
-    .init(id: "radio", title: "Radio, gdy skończy się kolejka", description: "Gdy zwykła kolejka się opróżni, radio może automatycznie dobrać kolejny utwór z cache KajutaBota.", image: "onboarding_radio"),
-    .init(id: "mini", title: "Sterowanie zostaje z Tobą", description: "Miniplayer pozostaje nad dolną nawigacją na pozostałych ekranach, więc aktualny utwór i szybkie akcje są zawsze pod ręką.", image: "onboarding_miniplayer"),
+    .init(
+        id: "player",
+        title: .onboardingPlayerTitle,
+        description: .onboardingPlayerDescription,
+        symbol: "play.circle.fill"
+    ),
+    .init(
+        id: "search",
+        title: .onboardingSearchTitle,
+        description: .onboardingSearchDescription,
+        symbol: "magnifyingglass.circle.fill"
+    ),
+    .init(
+        id: "favorites",
+        title: .onboardingFavoritesTitle,
+        description: .onboardingFavoritesDescription,
+        symbol: "heart.circle.fill"
+    ),
 ]
 
 struct OnboardingView: View {
     let app: AppState
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var page = 0
 
     private var selectionIndex: Int { onboardingPages.count }
     private var showsBackButton: Bool { page > 0 }
     private var isLastPage: Bool { page == selectionIndex }
+    private var isManualGuide: Bool { app.manualOnboardingRequested && app.onboardingCompleted }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("KajutaBot")
-                    .font(.title2.bold())
-                Spacer()
-                if app.manualOnboardingRequested && app.onboardingCompleted {
-                    Button("Zamknij") {
-                        withAnimation(.smooth(duration: 0.35)) {
-                            app.manualOnboardingRequested = false
-                        }
+        NavigationStack {
+            VStack(spacing: 0) {
+                TabView(selection: $page) {
+                    ForEach(Array(onboardingPages.enumerated()), id: \.element.id) { index, item in
+                        FeaturePage(page: item, showsGuestNote: app.isGuest && index == 0)
+                            .tag(index)
                     }
-                } else if page < selectionIndex {
-                    Button("Pomiń") {
-                        withAnimation(.snappy(duration: 0.36)) {
-                            page = selectionIndex
+
+                    SelectionPage(app: app)
+                        .tag(selectionIndex)
+                }
+                .tabViewStyle(.page(indexDisplayMode: .always))
+
+                navigationButtons
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
+                    .padding(.bottom, 14)
+                    .adaptiveContentWidth(AppLayout.settingsContentMaxWidth)
+            }
+            .navigationTitle(isManualGuide ? String(localized: .guideTitle) : "KajutaBot")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if isManualGuide {
+                        Button(.done) {
+                            performAnimated {
+                                app.manualOnboardingRequested = false
+                            }
+                        }
+                    } else if page < selectionIndex {
+                        Button(.configure) {
+                            setPage(selectionIndex)
                         }
                     }
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
+        }
+    }
 
-            TabView(selection: $page) {
-                ForEach(Array(onboardingPages.enumerated()), id: \.offset) { index, item in
-                    FeaturePage(page: item, guestIntro: app.isGuest && index == 0)
-                        .tag(index)
-                }
-                SelectionPage(app: app)
-                    .tag(selectionIndex)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-
-            HStack(spacing: 7) {
-                ForEach(0...selectionIndex, id: \.self) { index in
-                    Capsule()
-                        .fill(index == page ? Color.accentColor : Color.secondary.opacity(0.25))
-                        .frame(width: index == page ? 22 : 7, height: 7)
-                }
-            }
-            .animation(.snappy(duration: 0.3), value: page)
-            .padding(.vertical, 14)
-
-            HStack(spacing: 12) {
-                if showsBackButton {
-                    Button {
-                        withAnimation(.snappy(duration: 0.36)) {
-                            page -= 1
-                        }
-                    } label: {
-                        Label("Wstecz", systemImage: "chevron.left")
-                            .font(.headline)
-                            .padding(.vertical, 2)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.capsule)
-                    .controlSize(.large)
-                    .transition(
-                        .asymmetric(
-                            insertion: .move(edge: .leading).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        )
-                    )
-                }
-
+    private var navigationButtons: some View {
+        HStack(spacing: 12) {
+            if showsBackButton {
                 Button {
-                    if isLastPage {
-                        withAnimation(.smooth(duration: 0.45)) {
-                            app.completeOnboarding()
-                        }
-                    } else {
-                        withAnimation(.snappy(duration: 0.36)) {
-                            page += 1
-                        }
-                    }
+                    setPage(page - 1)
                 } label: {
-                    HStack(spacing: 8) {
-                        Text(isLastPage ? (app.manualOnboardingRequested ? "Gotowe" : "Zaczynamy") : "Dalej")
-                            .contentTransition(.opacity)
-
-                        Image(systemName: isLastPage ? "checkmark" : "chevron.right")
-                            .contentTransition(.symbolEffect(.replace))
-                    }
-                    .font(.headline)
-                    .padding(.vertical, 2)
-                    .frame(maxWidth: .infinity)
+                    Label(.back, systemImage: "chevron.left")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, minHeight: 46)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.bordered)
                 .buttonBorderShape(.capsule)
-                .controlSize(.large)
-                .disabled(isLastPage && !app.hasDiscordTarget)
+                .transition(reduceMotion ? .opacity : .move(edge: .leading).combined(with: .opacity))
             }
-            .animation(.snappy(duration: 0.36), value: showsBackButton)
-            .animation(.snappy(duration: 0.3), value: isLastPage)
-            .padding(.horizontal, 20)
-            .padding(.bottom, 14)
+
+            Button {
+                if isLastPage {
+                    performAnimated {
+                        app.completeOnboarding()
+                    }
+                } else {
+                    setPage(page + 1)
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Text(isLastPage ? (isManualGuide ? String(localized: .done) : String(localized: .getStarted)) : String(localized: .next))
+                    Image(systemName: isLastPage ? "checkmark" : "chevron.right")
+                }
+                .font(.headline)
+                .frame(maxWidth: .infinity, minHeight: 46)
+            }
+            .buttonStyle(.borderedProminent)
+            .buttonBorderShape(.capsule)
+            .disabled(isLastPage && !app.hasDiscordTarget)
+        }
+        .animation(reduceMotion ? .easeOut(duration: 0.15) : .snappy(duration: 0.28), value: showsBackButton)
+        .animation(reduceMotion ? .easeOut(duration: 0.15) : .snappy(duration: 0.24), value: isLastPage)
+    }
+
+    private func setPage(_ newPage: Int) {
+        performAnimated {
+            page = newPage
+        }
+    }
+
+    private func performAnimated(_ changes: @escaping () -> Void) {
+        withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .snappy(duration: 0.28)) {
+            changes()
         }
     }
 }
 
 private struct FeaturePage: View {
     let page: OnboardingPage
-    let guestIntro: Bool
+    let showsGuestNote: Bool
 
     var body: some View {
-        VStack(spacing: 16) {
-            Spacer(minLength: 8)
-            Image(page.image)
-                .resizable()
-                .scaledToFit()
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                .shadow(color: .black.opacity(0.12), radius: 18, y: 8)
-                .frame(maxWidth: 520, maxHeight: 330)
-                .padding(.horizontal, 24)
-            Spacer(minLength: 4)
-            Text(guestIntro ? "Wypróbuj KajutaBota bez konta" : page.title)
-                .font(.title2.bold())
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-            Text(guestIntro ? "Tryb gościa daje dostęp do serwera demonstracyjnego i większości funkcji aplikacji bez logowania przez Discord." : page.description)
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-            Spacer(minLength: 12)
+        ScrollView {
+            VStack(spacing: 22) {
+                Spacer(minLength: 18)
+
+                ZStack {
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .fill(Color(uiColor: .secondarySystemGroupedBackground))
+
+                    Image(systemName: page.symbol)
+                        .font(.system(size: 78, weight: .medium))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.tint)
+                        .accessibilityHidden(true)
+                }
+                .aspectRatio(16 / 9, contentMode: .fit)
+                .frame(maxWidth: 520)
+
+                VStack(spacing: 10) {
+                    Text(page.title)
+                        .font(.title2.bold())
+                        .multilineTextAlignment(.center)
+
+                    Text(page.description)
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    if showsGuestNote {
+                        Label(.guestDemoNote, systemImage: "person.crop.circle.badge.checkmark")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 4)
+                    }
+                }
+                .frame(maxWidth: 560)
+
+                Spacer(minLength: 24)
+            }
+            .padding(.horizontal, 24)
+            .adaptiveContentWidth(AppLayout.onboardingContentMaxWidth)
+            .frame(maxWidth: .infinity)
         }
+        .scrollBounceBehavior(.basedOnSize)
     }
 }
 
@@ -160,21 +189,29 @@ private struct SelectionPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Spacer(minLength: 16)
+                Spacer(minLength: 18)
+
                 Image(systemName: "headphones.circle.fill")
-                    .font(.system(size: 92))
+                    .font(.system(size: 82))
                     .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(.tint)
                     .frame(maxWidth: .infinity)
-                Text("Gdzie chcesz sterować botem?")
+                    .accessibilityHidden(true)
+
+                Text(.targetQuestion)
                     .font(.title2.bold())
-                Text(app.isGuest
-                     ? "Serwer demonstracyjny jest już wybrany. Wybierz kanał głosowy; możesz go później zmienić z ekranu odtwarzacza."
-                     : "Wybierz serwer Discord, a potem kanał głosowy. Ten wybór możesz później zmienić z ekranu odtwarzacza.")
+
+                Text(app.isGuest ? String(localized: .guestTargetDescription) : String(localized: .discordTargetDescription))
                     .foregroundStyle(.secondary)
+
                 DiscordTargetPicker(app: app, showGuildPicker: !app.isGuest)
+
+                Spacer(minLength: 24)
             }
             .padding(.horizontal, 20)
+            .adaptiveContentWidth(AppLayout.settingsContentMaxWidth)
+            .frame(maxWidth: .infinity)
         }
+        .scrollBounceBehavior(.basedOnSize)
     }
 }

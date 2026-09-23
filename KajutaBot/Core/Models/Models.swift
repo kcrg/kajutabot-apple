@@ -315,26 +315,12 @@ enum SearchSourceOption: String, CaseIterable, Identifiable, Sendable {
     case database = "Database"
 
     var id: String { rawValue }
-    var displayName: String {
+    var displayName: LocalizedStringResource {
         switch self {
-        case .youtube: "YouTube"
-        case .soundCloud: "SoundCloud"
-        case .database: "Baza danych"
+        case .youtube: .searchSourceYouTube
+        case .soundCloud: .searchSourceSoundCloud
+        case .database: .searchSourceDatabase
         }
     }
 }
 
-enum ThemeMode: String, CaseIterable, Identifiable, Sendable {
-    case system
-    case light
-    case dark
-
-    var id: String { rawValue }
-    var label: String {
-        switch self {
-        case .system: "Systemowy"
-        case .light: "Jasny"
-        case .dark: "Ciemny"
-        }
-    }
-}

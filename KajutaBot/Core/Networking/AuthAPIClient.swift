@@ -7,9 +7,12 @@ enum APIError: LocalizedError, Sendable {
 
     var errorDescription: String? {
         switch self {
-        case .invalidResponse: "Nieprawidłowa odpowiedź serwera."
-        case let .http(status, problem): problem?.detail ?? problem?.title ?? "Błąd serwera (HTTP \(status))."
-        case let .decoding(error): "Nie można odczytać odpowiedzi serwera: \(error.localizedDescription)"
+        case .invalidResponse: String(localized: .apiInvalidResponse)
+        case let .http(status, problem):
+            // Server-provided text is user data from the API. Preserve it verbatim;
+            // localize only the client-side fallback when the API returned no message.
+            problem?.detail ?? problem?.title ?? String(localized: .apiServerHttpError(status: status))
+        case let .decoding(error): String(localized: .apiDecodeError(error: error.localizedDescription))
         }
     }
 

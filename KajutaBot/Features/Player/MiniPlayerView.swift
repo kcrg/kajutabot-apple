@@ -22,40 +22,45 @@ struct MiniPlayerView: View {
     }
 
     private func inlinePlayer(track: TrackResponse) -> some View {
-        HStack(spacing: 7) {
-            ArtworkView(
-                urlString: track.thumbnailUrl,
-                layout: .square(24),
-                cornerRadius: 6
-            )
-            .fixedSize()
-            .accessibilityHidden(true)
+        HStack(spacing: 4) {
+            Button(action: openPlayer) {
+                HStack(spacing: 7) {
+                    ArtworkView(
+                        urlString: track.thumbnailUrl,
+                        layout: .square(24),
+                        cornerRadius: 6
+                    )
+                    .fixedSize()
 
-            Text(track.title)
-                .font(.caption.weight(.semibold))
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .layoutPriority(1)
+                    Text(track.title)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
 
-            Spacer(minLength: 2)
+                    Spacer(minLength: 2)
+                }
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(.openPlayer))
+            .accessibilityValue(track.title)
 
             Button {
                 app.skip()
             } label: {
                 Image(systemName: "forward.end.fill")
                     .font(.caption.weight(.semibold))
-                    .frame(width: 24, height: 24)
-                    .contentShape(Circle())
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(app.isMutating)
-            .accessibilityLabel("Pomiń utwór")
+            .accessibilityLabel(Text(.skipTrack))
         }
-        .padding(.leading, 10)
-        .padding(.trailing, 12)
-        .frame(maxWidth: .infinity, minHeight: 34, maxHeight: 34, alignment: .center)
-        .contentShape(Rectangle())
-        .onTapGesture(perform: openPlayer)
+        .padding(.leading, 8)
+        .padding(.trailing, 6)
+        .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center)
     }
 
     private func expandedPlayer(track: TrackResponse, queue: QueueSnapshotResponse) -> some View {
@@ -66,63 +71,71 @@ struct MiniPlayerView: View {
         let isFavorite = app.isFavorite(track)
 
         return ZStack(alignment: .bottom) {
-            HStack(spacing: 10) {
-                ArtworkView(
-                    urlString: track.thumbnailUrl,
-                    layout: .square(42),
-                    cornerRadius: 9
-                )
-                .fixedSize()
-                .accessibilityHidden(true)
+            HStack(spacing: 4) {
+                Button(action: openPlayer) {
+                    HStack(spacing: 10) {
+                        ArtworkView(
+                            urlString: track.thumbnailUrl,
+                            layout: .square(42),
+                            cornerRadius: 9
+                        )
+                        .fixedSize()
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(track.title)
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                        .truncationMode(.tail)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(track.title)
+                                .font(.subheadline.weight(.semibold))
+                                .lineLimit(1)
+                                .truncationMode(.tail)
 
-                    TimelineView(.periodic(from: .now, by: 1)) { context in
-                        let position = playbackPosition(
-                            startedAt: startedAt,
-                            durationMilliseconds: durationMilliseconds,
-                            now: context.date
-                        ) ?? 0
-                        Text("\(formatDuration(Int64(position * 1_000))) / \(durationLabel)")
-                            .font(.caption)
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
+                            TimelineView(.periodic(from: .now, by: 1)) { context in
+                                let position = playbackPosition(
+                                    startedAt: startedAt,
+                                    durationMilliseconds: durationMilliseconds,
+                                    now: context.date
+                                ) ?? 0
+                                Text(verbatim: "\(formatDuration(Int64(position * 1_000))) / \(durationLabel)")
+                                    .font(.caption)
+                                    .monospacedDigit()
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+
+                        Spacer(minLength: 2)
                     }
+                    .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
                 .layoutPriority(1)
-
-                Spacer(minLength: 4)
+                .accessibilityLabel(Text(.openPlayer))
+                .accessibilityValue(track.title)
 
                 Button {
                     app.toggleFavorite(track)
                 } label: {
                     Image(systemName: isFavorite ? "heart.fill" : "heart")
                         .font(.body.weight(.semibold))
-                        .frame(width: 32, height: 32)
-                        .contentShape(Circle())
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(app.isMutatingFavorites)
-                .accessibilityLabel(isFavorite ? "Usuń z ulubionych" : "Dodaj do ulubionych")
+                .accessibilityLabel(Text(isFavorite ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
 
                 Button {
                     app.skip()
                 } label: {
                     Image(systemName: "forward.end.fill")
                         .font(.body.weight(.semibold))
-                        .frame(width: 32, height: 32)
-                        .contentShape(Circle())
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(app.isMutating)
-                .accessibilityLabel("Pomiń utwór")
+                .accessibilityLabel(Text(.skipTrack))
             }
-            .padding(.horizontal, 12)
-            .frame(maxWidth: .infinity, minHeight: 56, maxHeight: 56, alignment: .center)
+            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, minHeight: 58, maxHeight: 58, alignment: .center)
 
             TimelineView(.periodic(from: .now, by: 0.25)) { context in
                 let position = playbackPosition(
@@ -133,11 +146,10 @@ struct MiniPlayerView: View {
                 ProgressView(value: position, total: duration)
                     .progressViewStyle(.linear)
                     .controlSize(.mini)
+                    .accessibilityHidden(true)
             }
             .padding(.horizontal, 12)
         }
         .frame(maxWidth: .infinity, minHeight: 58, maxHeight: 58)
-        .contentShape(Rectangle())
-        .onTapGesture(perform: openPlayer)
     }
 }

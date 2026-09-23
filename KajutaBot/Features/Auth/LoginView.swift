@@ -9,17 +9,17 @@ struct LoginView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     BrandMark()
-                    Text("KajutaBot")
+                    Text(verbatim: "KajutaBot")
                         .font(.largeTitle.bold())
                         .padding(.top, 20)
-                    Text("Steruj muzyką na Discordzie z telefonu. Zaloguj się przez Discord albo wypróbuj aplikację od razu w trybie gościa.")
+                    Text(.loginSubtitle)
                         .font(.body)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
 
                     if !app.config.isOAuthConfigured {
-                        MessageCard(text: "Brak konfiguracji Discord Client ID. Uzupełnij KAJUTABOT_DISCORD_CLIENT_ID w Build Settings.")
+                        MessageCard(text: String(localized: .discordClientIdMissing))
                             .padding(.top, 24)
                     }
                     if let message {
@@ -32,7 +32,7 @@ struct LoginView: View {
                     } label: {
                         HStack {
                             if app.isSigningIn && !app.isGuestSigningIn { ProgressView().controlSize(.small) }
-                            Text(app.isSigningIn && !app.isGuestSigningIn ? "Logowanie…" : "Zaloguj przez Discord")
+                            Text(app.isSigningIn && !app.isGuestSigningIn ? String(localized: .signingIn) : String(localized: .signInDiscord))
                                 .frame(maxWidth: .infinity)
                         }
                         .frame(minHeight: 48)
@@ -46,7 +46,7 @@ struct LoginView: View {
                     } label: {
                         HStack {
                             if app.isGuestSigningIn { ProgressView().controlSize(.small) }
-                            Text(app.isGuestSigningIn ? "Logowanie…" : "Wypróbuj jako gość")
+                            Text(app.isGuestSigningIn ? String(localized: .signingIn) : String(localized: .tryAsGuest))
                                 .frame(maxWidth: .infinity)
                         }
                         .frame(minHeight: 48)

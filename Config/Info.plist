@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
     <key>KAJUTABOT_API_BASE_URL</key>
     <string>$(KAJUTABOT_API_BASE_URL)</string>
     <key>KAJUTABOT_DISCORD_CLIENT_ID</key>

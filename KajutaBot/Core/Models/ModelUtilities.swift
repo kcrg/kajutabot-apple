@@ -72,16 +72,6 @@ func favoriteIdentity(_ raw: String?) -> String {
     return input
 }
 
-func favoriteIdentities(for track: TrackResponse) -> Set<String> {
-    var values = Set([favoriteIdentity(track.url)])
-    switch track.contentType.lowercased() {
-    case "youtube": values.insert(favoriteIdentity("yt:\(track.contentId)"))
-    case "soundcloud": values.insert(favoriteIdentity("sc:\(track.contentId)"))
-    default: break
-    }
-    return values
-}
-
 private let youtubeVideoIDCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
 
 func favoriteArtworkURL(_ favorite: FavoriteResponse) -> URL? {

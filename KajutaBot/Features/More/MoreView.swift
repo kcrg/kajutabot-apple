@@ -5,7 +5,7 @@ struct MoreView: View {
 
     var body: some View {
         Form {
-            Section("Konto") {
+            Section(.accountSection) {
                 HStack(spacing: 14) {
                     if !app.isGuest {
                         ArtworkView(urlString: app.currentUser?.avatarUrl, layout: .square(58), cornerRadius: 14)
@@ -13,44 +13,34 @@ struct MoreView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(app.currentUser?.displayName ?? "-")
                             .font(.headline)
-                        Text(app.isGuest ? "Tryb gościa" : "@\(app.currentUser?.username ?? "-")")
+                        Text(app.isGuest ? String(localized: .guestMode) : "@\(app.currentUser?.username ?? "-")")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("Wyloguj", role: .destructive) { app.logout() }
+                    Button(.logout, role: .destructive) { app.logout() }
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                         .disabled(app.isSigningIn)
                 }
                 .padding(.vertical, 4)
 
                 if app.isGuest {
-                    Link("Dołącz do serwera testowego", destination: URL(string: "https://discord.gg/7jV7j5djF")!)
-                    Button("Zaloguj przez Discord") { app.switchGuestToDiscord() }
+                    Link(String(localized: .joinTestServer), destination: URL(string: "https://discord.gg/7jV7j5djF")!)
+                    Button(.signInDiscord) { app.switchGuestToDiscord() }
                 }
             }
 
-            Section("Połączenie realtime") {
+            Section(.realtimeSection) {
                 RealtimeStatusView(realtime: app.realtime)
             }
 
-            Section("Motyw") {
-                Picker("Motyw", selection: Binding(
-                    get: { app.themeMode },
-                    set: { app.themeMode = $0 }
-                )) {
-                    ForEach(ThemeMode.allCases) { mode in
-                        Text(mode.label).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-
-            Section("Pomoc") {
+            Section(.helpSection) {
                 Button {
                     app.manualOnboardingRequested = true
                 } label: {
                     HStack(spacing: 12) {
-                        SettingsLabel(icon: "signpost.right", title: "Przewodnik po aplikacji", subtitle: "Uruchom onboarding ponownie")
+                        SettingsLabel(icon: "signpost.right", title: .appGuideTitle, subtitle: .appGuideSubtitle)
                         Spacer(minLength: 8)
                         Image(systemName: "chevron.right")
                             .font(.caption.weight(.semibold))
@@ -62,20 +52,23 @@ struct MoreView: View {
                 .buttonStyle(.plain)
             }
 
-            Section("O aplikacji") {
+            Section(.aboutSection) {
                 NavigationLink {
                     LibrariesView()
                 } label: {
-                    SettingsLabel(icon: "info.circle", title: "Użyte biblioteki", subtitle: "Komponenty i frameworki")
+                    SettingsLabel(icon: "info.circle", title: .librariesTitle, subtitle: .librariesSubtitle)
                 }
                 NavigationLink {
                     ContactView()
                 } label: {
-                    SettingsLabel(icon: "envelope", title: "Kontakt", subtitle: "Kacper Tryniecki")
+                    SettingsLabel(icon: "envelope", title: .contactTitle, subtitle: .contactSubtitle)
                 }
             }
         }
-        .navigationTitle("Więcej")
+        .scrollContentBackground(.hidden)
+        .adaptiveContentWidth(AppLayout.settingsContentMaxWidth)
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle(.moreTitle)
     }
 }
 
@@ -92,14 +85,14 @@ private struct RealtimeStatusView: View {
                     Text(realtime.state.label)
                         .font(.headline)
                 }
-                Text("Ostatnia ramka: \(ageLabel(realtime.lastFrameAt, now: context.date))")
+                Text(.lastFrame(value: ageLabel(realtime.lastFrameAt, now: context.date)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text("Ostatnia aktualizacja danych: \(ageLabel(realtime.lastQueueUpdateAt, now: context.date))")
+                Text(.lastDataUpdate(value: ageLabel(realtime.lastQueueUpdateAt, now: context.date)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if realtime.reconnectAttempts > 0 {
-                    Text("Próby ponownego połączenia: \(realtime.reconnectAttempts)")
+                    Text(.reconnectAttempts(count: realtime.reconnectAttempts))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -109,18 +102,18 @@ private struct RealtimeStatusView: View {
     }
 
     private func ageLabel(_ date: Date?, now: Date) -> String {
-        guard let date else { return "brak danych" }
+        guard let date else { return String(localized: .noData) }
         let seconds = max(Int(now.timeIntervalSince(date)), 0)
-        if seconds < 60 { return "\(seconds) s temu" }
-        if seconds < 3_600 { return "\(seconds / 60) min temu" }
-        return "\(seconds / 3_600) godz. temu"
+        if seconds < 60 { return String(localized: .secondsAgo(count: seconds)) }
+        if seconds < 3_600 { return String(localized: .minutesAgo(count: seconds / 60)) }
+        return String(localized: .hoursAgo(count: seconds / 3_600))
     }
 }
 
 private struct SettingsLabel: View {
     let icon: String
-    let title: String
-    let subtitle: String
+    let title: LocalizedStringResource
+    let subtitle: LocalizedStringResource
 
     var body: some View {
         HStack(spacing: 12) {
@@ -142,21 +135,21 @@ private struct SettingsLabel: View {
 
 private struct LibraryInfo: Identifiable {
     let name: String
-    let description: String
+    let description: LocalizedStringResource
     let license: String
     var id: String { name }
 }
 
 private struct LibrariesView: View {
     private let libraries: [LibraryInfo] = [
-        .init(name: "SwiftUI", description: "Deklaratywny interfejs i animacje", license: "Apple SDK"),
-        .init(name: "Observation", description: "Obserwowalny stan aplikacji", license: "Apple SDK"),
-        .init(name: "URLSession", description: "REST API", license: "Apple SDK"),
-        .init(name: "AuthenticationServices", description: "Discord OAuth przez ASWebAuthenticationSession", license: "Apple SDK"),
-        .init(name: "CryptoKit", description: "PKCE SHA-256", license: "Apple SDK"),
-        .init(name: "Security / Keychain", description: "Bezpieczne przechowywanie sesji", license: "Apple SDK"),
-        .init(name: "Nuke", description: "Ładowanie, cache i pipeline obrazów", license: "MIT"),
-        .init(name: "SignalRClient", description: "Oficjalny klient ASP.NET Core SignalR dla Swift", license: "MIT"),
+        .init(name: "SwiftUI", description: .librarySwiftUIDescription, license: "Apple SDK"),
+        .init(name: "Observation", description: .libraryObservationDescription, license: "Apple SDK"),
+        .init(name: "URLSession", description: .libraryURLSessionDescription, license: "Apple SDK"),
+        .init(name: "AuthenticationServices", description: .libraryAuthenticationServicesDescription, license: "Apple SDK"),
+        .init(name: "CryptoKit", description: .libraryCryptoKitDescription, license: "Apple SDK"),
+        .init(name: "Security / Keychain", description: .libraryKeychainDescription, license: "Apple SDK"),
+        .init(name: "Nuke", description: .libraryNukeDescription, license: "MIT"),
+        .init(name: "SignalRClient", description: .librarySignalRDescription, license: "MIT"),
     ]
 
     var body: some View {
@@ -171,7 +164,9 @@ private struct LibrariesView: View {
             }
             .padding(.vertical, 3)
         }
-        .navigationTitle("Użyte biblioteki")
+        .adaptiveContentWidth(AppLayout.settingsContentMaxWidth)
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle(.librariesTitle)
     }
 }
 
@@ -180,17 +175,19 @@ private struct ContactView: View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Kacper Tryniecki").font(.headline)
-                    Text("Autor KajutaBot").font(.caption).foregroundStyle(.secondary)
+                    Text(verbatim: "Kacper Tryniecki").font(.headline)
+                    Text(.authorKajutaBot).font(.caption).foregroundStyle(.secondary)
                 }
                 Link(destination: URL(string: "mailto:kacper@tryniecki.com")!) {
-                    Label("kacper@tryniecki.com", systemImage: "envelope")
+                    Label { Text(verbatim: "kacper@tryniecki.com") } icon: { Image(systemName: "envelope") }
                 }
                 Link(destination: URL(string: "https://github.com/kcrg")!) {
-                    Label("github.com/kcrg", systemImage: "link")
+                    Label { Text(verbatim: "github.com/kcrg") } icon: { Image(systemName: "link") }
                 }
             }
         }
-        .navigationTitle("Kontakt")
+        .adaptiveContentWidth(AppLayout.settingsContentMaxWidth)
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle(.contactTitle)
     }
 }

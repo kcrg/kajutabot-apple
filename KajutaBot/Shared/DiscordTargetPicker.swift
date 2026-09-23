@@ -22,8 +22,8 @@ struct DiscordTargetPicker: View {
                 } label: {
                     SelectionRow(
                         icon: "server.rack",
-                        title: "Serwer Discord",
-                        value: app.selectedGuild?.name ?? "Wybierz serwer"
+                        title: .discordServer,
+                        value: app.selectedGuild.map { SelectionValue.verbatim($0.name) } ?? .localized(.chooseServer)
                     )
                 }
                 .buttonStyle(.plain)
@@ -31,7 +31,7 @@ struct DiscordTargetPicker: View {
 
             Menu {
                 if app.voiceChannels.isEmpty {
-                    Text(app.isLoadingVoiceChannels ? "Ładowanie…" : "Brak kanałów głosowych")
+                    Text(app.isLoadingVoiceChannels ? String(localized: .loading) : String(localized: .noVoiceChannels))
                 } else {
                     ForEach(app.voiceChannels) { channel in
                         Button {
@@ -48,8 +48,8 @@ struct DiscordTargetPicker: View {
             } label: {
                 SelectionRow(
                     icon: "waveform.circle",
-                    title: "Kanał głosowy",
-                    value: app.selectedVoiceChannel?.name ?? (app.isLoadingVoiceChannels ? "Ładowanie…" : "Wybierz kanał")
+                    title: .voiceChannel,
+                    value: app.selectedVoiceChannel.map { SelectionValue.verbatim($0.name) } ?? .localized(app.isLoadingVoiceChannels ? LocalizedStringResource.loading : .chooseChannel)
                 )
             }
             .buttonStyle(.plain)
@@ -58,10 +58,23 @@ struct DiscordTargetPicker: View {
     }
 }
 
+private enum SelectionValue {
+    case localized(LocalizedStringResource)
+    case verbatim(String)
+
+    @ViewBuilder
+    var text: some View {
+        switch self {
+        case let .localized(resource): Text(resource)
+        case let .verbatim(value): Text(verbatim: value)
+        }
+    }
+}
+
 private struct SelectionRow: View {
     let icon: String
-    let title: String
-    let value: String
+    let title: LocalizedStringResource
+    let value: SelectionValue
 
     var body: some View {
         HStack(spacing: 14) {
@@ -73,7 +86,7 @@ private struct SelectionRow: View {
                 Text(title)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text(value)
+                value.text
                     .font(.body.weight(.medium))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
