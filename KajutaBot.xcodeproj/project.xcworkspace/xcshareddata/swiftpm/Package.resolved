@@ -1,5 +1,5 @@
 {
-  "originHash" : "fb523492b0319abc7ea551f555a35100b0bd296033c84067d79b15690d502728",
+  "originHash" : "50393e3f012db92511ca1e7c8b8954a37c7f20232d6adbc85057f7ef491b901e",
   "pins" : [
     {
       "identity" : "nuke",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "30f7a7e72e0607d304fbf69c799474bd5fb6d1ce",
         "version" : "13.2.0"
+      }
+    },
+    {
+      "identity" : "pulse",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kean/Pulse.git",
+      "state" : {
+        "revision" : "94b92731d370c129bb771e9c18f69b0a44ccca5c",
+        "version" : "5.2.3"
       }
     },
     {

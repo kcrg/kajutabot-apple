@@ -101,23 +101,15 @@ struct PlayerView: View {
         .refreshable {
             await app.refreshPlayer()
         }
-        .confirmationDialog(
-            String(localized: .stopPlaybackQuestion),
-            isPresented: $showStopConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button(.stopBot, role: .destructive) { app.stop() }
+        .alert(.stopPlaybackQuestion, isPresented: $showStopConfirmation) {
             Button(.cancel, role: .cancel) {}
+            Button(.stopBot, role: .destructive) { app.stop() }
         } message: {
             Text(.stopPlaybackMessage)
         }
-        .confirmationDialog(
-            String(localized: .clearQueueQuestion),
-            isPresented: $showClearQueueConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button(.clearQueue, role: .destructive) { app.clearQueue() }
+        .alert(.clearQueueQuestion, isPresented: $showClearQueueConfirmation) {
             Button(.cancel, role: .cancel) {}
+            Button(.clearQueue, role: .destructive) { app.clearQueue() }
         } message: {
             Text(.clearQueueMessage)
         }

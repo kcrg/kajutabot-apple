@@ -1,4 +1,5 @@
 import AuthenticationServices
+import DequeModule
 import Foundation
 import Nuke
 import Observation
@@ -34,6 +35,7 @@ final class AppState {
     private let api: KajutaBotAPIClient
     private let oauth = DiscordOAuthService()
     private let defaults: UserDefaults
+    private let targetDefaults: UserDefaults
     @ObservationIgnored private var initialized = false
     private var session: UserSession?
     @ObservationIgnored private var presentationRecoveryTask: Task<Void, Never>?
@@ -76,7 +78,7 @@ final class AppState {
     var searchQuery = ""
     var searchSource: SearchSourceOption = .youtube
     var searchResults: [SearchItemResponse] = []
-    var searchHistory: [String] = []
+    var searchHistory: Deque<String> = []
     var isSearching = false
     var lastCompletedSearchQuery: String?
 
@@ -91,6 +93,7 @@ final class AppState {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        targetDefaults = UserDefaults(suiteName: Keys.appGroup) ?? defaults
         let appConfig = AppConfig()
         config = appConfig
         let authAPI = AuthAPIClient(baseURL: appConfig.apiBaseURL)
@@ -109,9 +112,11 @@ final class AppState {
             destination: .memoryCache,
             maxConcurrentRequestCount: 2
         )
-        selectedGuildId = defaults.string(forKey: Keys.guildId)
-        selectedVoiceChannelId = defaults.string(forKey: Keys.channelId)
-        searchHistory = defaults.stringArray(forKey: Keys.searchHistory) ?? []
+        selectedGuildId = targetDefaults.string(forKey: Keys.guildId) ?? defaults.string(forKey: Keys.guildId)
+        selectedVoiceChannelId = targetDefaults.string(forKey: Keys.channelId) ?? defaults.string(forKey: Keys.channelId)
+        if let selectedGuildId { targetDefaults.set(selectedGuildId, forKey: Keys.guildId) }
+        if let selectedVoiceChannelId { targetDefaults.set(selectedVoiceChannelId, forKey: Keys.channelId) }
+        searchHistory = Deque(defaults.stringArray(forKey: Keys.searchHistory) ?? [])
         realtime.onSnapshot = { [weak self] snapshot in
             self?.applyQueueSnapshot(snapshot)
         }
@@ -151,6 +156,7 @@ final class AppState {
                 return
             }
             session = restored
+            Diagnostics.info("auth", "Session restored (type: \(restored.sessionType.rawValue))")
             onboardingCompleted = defaults.bool(forKey: onboardingKey(for: restored))
             favoritesShuffle = defaults.bool(forKey: Keys.favoritesShufflePrefix + favoritesOwnerKey)
             await bootstrapAndPresentAuthenticatedState(user: restored.user)
@@ -173,6 +179,7 @@ final class AppState {
             do {
                 let exchange = try await oauth.authenticate(config: config)
                 let newSession = try await sessionManager.exchangeDiscord(exchange)
+                Diagnostics.info("auth", "Discord sign-in succeeded")
                 await finishSignIn(newSession)
             } catch let error as ASWebAuthenticationSessionError where error.code == .canceledLogin {
                 authState = .signedOut(String(localized: .discordLoginCancelled))
@@ -195,6 +202,7 @@ final class AppState {
             }
             do {
                 let newSession = try await sessionManager.signInAsGuest()
+                Diagnostics.info("auth", "Guest sign-in succeeded")
                 await finishSignIn(newSession)
             } catch {
                 authState = .signedOut(userMessage(for: error))
@@ -209,6 +217,7 @@ final class AppState {
                 try await sessionManager.clear()
                 resetAuthenticatedState()
                 authState = .signedOut()
+                Diagnostics.info("auth", "Signed out")
                 signInWithDiscord()
             } catch {
                 errorMessage = userMessage(for: error)
@@ -229,6 +238,7 @@ final class AppState {
                 try await sessionManager.clear()
                 resetAuthenticatedState()
                 authState = .signedOut()
+                Diagnostics.info("auth", "Signed out")
             } catch {
                 errorMessage = String(localized: .logoutNotConfirmed)
                 if let session { authState = .signedIn(session.user) }
@@ -299,8 +309,8 @@ final class AppState {
         guard selectedGuildId != guildId else { return }
         selectedGuildId = guildId
         selectedVoiceChannelId = nil
-        defaults.set(guildId, forKey: Keys.guildId)
-        defaults.removeObject(forKey: Keys.channelId)
+        targetDefaults.set(guildId, forKey: Keys.guildId)
+        targetDefaults.removeObject(forKey: Keys.channelId)
         queue = nil
         presentationQueue = nil
         hasResolvedQueueState = false
@@ -324,7 +334,7 @@ final class AppState {
 
     func selectVoiceChannel(_ channelId: String) {
         selectedVoiceChannelId = channelId
-        defaults.set(channelId, forKey: Keys.channelId)
+        targetDefaults.set(channelId, forKey: Keys.channelId)
     }
 
     func dismissError() {
@@ -658,12 +668,12 @@ final class AppState {
             if let selectedGuildId, !guilds.contains(where: { $0.id == selectedGuildId }) {
                 self.selectedGuildId = nil
                 selectedVoiceChannelId = nil
-                defaults.removeObject(forKey: Keys.guildId)
-                defaults.removeObject(forKey: Keys.channelId)
+                targetDefaults.removeObject(forKey: Keys.guildId)
+                targetDefaults.removeObject(forKey: Keys.channelId)
             }
             if self.selectedGuildId == nil, guilds.count == 1 {
                 self.selectedGuildId = guilds[0].id
-                defaults.set(guilds[0].id, forKey: Keys.guildId)
+                targetDefaults.set(guilds[0].id, forKey: Keys.guildId)
             }
             if let guildId = self.selectedGuildId {
                 realtime.connect(guildId: guildId)
@@ -716,8 +726,8 @@ final class AppState {
             }
             if channel == nil, channels.count == 1 { channel = channels[0].id }
             selectedVoiceChannelId = channel
-            if let channel { defaults.set(channel, forKey: Keys.channelId) }
-            else { defaults.removeObject(forKey: Keys.channelId) }
+            if let channel { targetDefaults.set(channel, forKey: Keys.channelId) }
+            else { targetDefaults.removeObject(forKey: Keys.channelId) }
         } catch is CancellationError {
             return
         } catch {
@@ -880,7 +890,7 @@ final class AppState {
 
         if let channel = snapshot.voiceChannelId, selectedVoiceChannelId == nil {
             selectedVoiceChannelId = channel
-            defaults.set(channel, forKey: Keys.channelId)
+            targetDefaults.set(channel, forKey: Keys.channelId)
         }
     }
 
@@ -969,9 +979,9 @@ final class AppState {
 
     private func addSearchHistory(_ value: String) {
         searchHistory.removeAll { $0.caseInsensitiveCompare(value) == .orderedSame }
-        searchHistory.insert(value, at: 0)
-        if searchHistory.count > 8 { searchHistory.removeLast(searchHistory.count - 8) }
-        defaults.set(searchHistory, forKey: Keys.searchHistory)
+        searchHistory.prepend(value)
+        while searchHistory.count > 8 { _ = searchHistory.popLast() }
+        defaults.set(Array(searchHistory), forKey: Keys.searchHistory)
     }
 
     private func resetAuthenticatedState() {
@@ -999,8 +1009,8 @@ final class AppState {
         favorites = []
         favoriteByIdentity = [:]
         guildAccessState = .checking
-        selectedGuildId = defaults.string(forKey: Keys.guildId)
-        selectedVoiceChannelId = defaults.string(forKey: Keys.channelId)
+        selectedGuildId = targetDefaults.string(forKey: Keys.guildId)
+        selectedVoiceChannelId = targetDefaults.string(forKey: Keys.channelId)
     }
 
     private func onboardingKey(for session: UserSession) -> String {
@@ -1027,6 +1037,7 @@ final class AppState {
     }
 
     private enum Keys {
+        static let appGroup = "group.com.tryniecki.KajutaBot"
         static let guildId = "selection.guildId"
         static let channelId = "selection.voiceChannelId"
         static let searchHistory = "search.history"

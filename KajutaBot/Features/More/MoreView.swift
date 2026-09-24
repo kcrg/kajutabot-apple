@@ -1,7 +1,10 @@
+import PulseUI
 import SwiftUI
 
 struct MoreView: View {
     let app: AppState
+    @State private var isDiagnosticsPresented = false
+    @State private var isLogoutConfirmationPresented = false
 
     var body: some View {
         Form {
@@ -9,6 +12,11 @@ struct MoreView: View {
                 HStack(spacing: 14) {
                     if !app.isGuest {
                         ArtworkView(urlString: app.currentUser?.avatarUrl, layout: .square(58), cornerRadius: 14)
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 5) {
+                                Diagnostics.info("diagnostics", "Hidden diagnostics console opened")
+                                isDiagnosticsPresented = true
+                            }
                     }
                     VStack(alignment: .leading, spacing: 3) {
                         Text(app.currentUser?.displayName ?? "-")
@@ -18,10 +26,16 @@ struct MoreView: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button(.logout, role: .destructive) { app.logout() }
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
-                        .disabled(app.isSigningIn)
+                    Button(role: .destructive) {
+                        isLogoutConfirmationPresented = true
+                    } label: {
+                        Text(.logout)
+                            .fontWeight(.semibold)
+                            .padding(.vertical, 5)
+                    }
+                    .buttonStyle(.bordered)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .disabled(app.isSigningIn)
                 }
                 .padding(.vertical, 4)
 
@@ -69,6 +83,25 @@ struct MoreView: View {
         .adaptiveContentWidth(AppLayout.settingsContentMaxWidth)
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle(.moreTitle)
+        .alert(.logoutConfirmationTitle, isPresented: $isLogoutConfirmationPresented) {
+            Button(.cancel, role: .cancel) {}
+            Button(.logout, role: .destructive) {
+                app.logout()
+            }
+        } message: {
+            Text(.logoutConfirmationMessage)
+        }
+        .fullScreenCover(isPresented: $isDiagnosticsPresented) {
+            NavigationStack {
+                ConsoleView()
+                    .navigationTitle(.diagnosticsTitle)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button(.done) { isDiagnosticsPresented = false }
+                        }
+                    }
+            }
+        }
     }
 }
 
@@ -151,6 +184,8 @@ private struct LibrariesView: View {
         .init(name: "Nuke", description: .libraryNukeDescription, license: "MIT"),
         .init(name: "SignalRClient", description: .librarySignalRDescription, license: "MIT"),
         .init(name: "Swift Async Algorithms", description: .libraryAsyncAlgorithmsDescription, license: "Apache 2.0"),
+        .init(name: "Swift Collections", description: .librarySwiftCollectionsDescription, license: "Apache 2.0"),
+        .init(name: "Pulse", description: .libraryPulseDescription, license: "MIT"),
     ]
 
     var body: some View {

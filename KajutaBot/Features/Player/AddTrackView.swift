@@ -26,7 +26,7 @@ struct AddTrackView: View {
 
             if !app.searchHistory.isEmpty && trimmedQuery.isEmpty {
                 Section(.recentSearches) {
-                    ForEach(app.searchHistory, id: \.self) { query in
+                    ForEach(Array(app.searchHistory), id: \.self) { query in
                         Button {
                             app.searchFromHistory(query)
                         } label: {

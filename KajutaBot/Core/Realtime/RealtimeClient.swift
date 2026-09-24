@@ -82,6 +82,7 @@ final class RealtimeClient {
         }
 
         state = .connecting
+        Diagnostics.debug("realtime", "Connecting")
         connectionTask = Task { [weak self] in
             await self?.startConnection(guildId: guildId, epoch: epoch)
         }
@@ -145,6 +146,7 @@ final class RealtimeClient {
 
                 reconnectAttempts = 0
                 try await subscribe(guildId: guildId, epoch: epoch, on: hubConnection)
+                Diagnostics.info("realtime", "Connected and subscribed")
                 return
             } catch is CancellationError {
                 await hubConnection.stop()
@@ -155,6 +157,7 @@ final class RealtimeClient {
                 initialAttempt += 1
                 reconnectAttempts = initialAttempt
                 state = .reconnecting
+                Diagnostics.warning("realtime", "Connection attempt failed: \(error.localizedDescription)")
                 await hubConnection.stop()
 
                 let delay = KajutaBotRetryPolicy.delay(forAttempt: initialAttempt - 1)
@@ -217,6 +220,7 @@ final class RealtimeClient {
         recoveryTask?.cancel()
         recoveryTask = nil
         state = .reconnecting
+        Diagnostics.warning("realtime", "Transport reconnecting")
     }
 
     private func handleReconnected(guildId: String, epoch: Int) async {
@@ -227,6 +231,7 @@ final class RealtimeClient {
         } catch {
             guard isCurrent(guildId: guildId, epoch: epoch) else { return }
             state = .reconnecting
+            Diagnostics.error("realtime", "Resubscribe failed: \(error.localizedDescription)")
             await connection.stop()
 
             // Automatic reconnect covers transport loss. A failed hub subscription is a
@@ -247,6 +252,7 @@ final class RealtimeClient {
         recoveryTask?.cancel()
         recoveryTask = nil
         state = .disconnected
+        Diagnostics.warning("realtime", "Connection closed")
     }
 
     private func subscribe(guildId: String, epoch: Int, on connection: HubConnection) async throws {
@@ -295,6 +301,7 @@ final class RealtimeClient {
             guard self.isCurrent(guildId: guildId, epoch: epoch) else { return }
             guard self.subscriptionGeneration == subscriptionEpoch else { return }
             guard self.snapshotSubscriptionGeneration != subscriptionEpoch else { return }
+            Diagnostics.warning("realtime", "No initial snapshot received; requesting REST recovery")
             self.onRecoveryNeeded?(guildId)
         }
     }

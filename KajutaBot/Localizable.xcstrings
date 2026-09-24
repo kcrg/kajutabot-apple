@@ -669,7 +669,7 @@
       }
     },
     "done": {
-      "comment": "Done action.",
+      "comment": "Close/done action.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2734,6 +2734,96 @@
           "stringUnit": {
             "state": "translated",
             "value": "Algorytmy AsyncSequence i kanały dla Swift Concurrency"
+          }
+        }
+      }
+    },
+    "diagnosticsTitle": {
+      "comment": "Hidden Pulse diagnostics console title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostyka"
+          }
+        }
+      }
+    },
+    "libraryPulseDescription": {
+      "comment": "Pulse library description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On-device network inspector and application log console."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokalny inspektor ruchu sieciowego i konsola logów aplikacji."
+          }
+        }
+      }
+    },
+    "logoutConfirmationTitle": {
+      "comment": "Title for the sign-out confirmation alert.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign Out?"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wylogować się?"
+          }
+        }
+      }
+    },
+    "logoutConfirmationMessage": {
+      "comment": "Message for the sign-out confirmation alert.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to sign out of KajutaBot?"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Czy na pewno chcesz wylogować się z KajutaBota?"
+          }
+        }
+      }
+    },
+    "librarySwiftCollectionsDescription": {
+      "comment": "Description of Swift Collections.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High-performance data structures, including Deque for recent search history."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wydajne struktury danych, w tym Deque używany przez historię ostatnich wyszukiwań."
           }
         }
       }
