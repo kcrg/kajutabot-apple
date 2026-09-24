@@ -90,4 +90,15 @@ struct KajutaBotTests {
         #expect(response.items.first?.dateLabel == "2026")
         #expect(response.items.first?.track.contentId == "id")
     }
+    @Test("Artwork API URL jest rozwiązywany względem hosta API")
+    func relativeArtworkURL() throws {
+        let apiBaseURL = try #require(URL(string: "https://api.example.com"))
+        let resolved = ArtworkURLResolver.resolve(
+            "/api/v1/app/artwork/YouTube/video-id",
+            apiBaseURL: apiBaseURL
+        )
+        #expect(resolved?.absoluteString == "https://api.example.com/api/v1/app/artwork/YouTube/video-id")
+        #expect(ArtworkURLResolver.resolve("not a url", apiBaseURL: apiBaseURL) == nil)
+    }
+
 }

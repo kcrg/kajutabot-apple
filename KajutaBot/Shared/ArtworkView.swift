@@ -7,12 +7,40 @@ enum ArtworkLayout: Equatable {
     case aspectRatio(CGFloat)
 }
 
-enum ArtworkRequestFactory {
-    static func make(urlString: String?, layout: ArtworkLayout) -> ImageRequest? {
-        guard let raw = urlString?.trimmingCharacters(in: .whitespacesAndNewlines),
-              let url = URL(string: raw),
+enum ArtworkURLResolver {
+    private static let defaultAPIBaseURL = AppConfig().apiBaseURL
+
+    static func resolve(
+        _ urlString: String?,
+        apiBaseURL: URL = defaultAPIBaseURL
+    ) -> URL? {
+        guard let value = urlString?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !value.isEmpty else { return nil }
+
+        if value.hasPrefix("//") {
+            let scheme = apiBaseURL.scheme ?? "https"
+            return validatedHTTPURL(URL(string: "\(scheme):\(value)"))
+        }
+
+        if let absolute = validatedHTTPURL(URL(string: value)) {
+            return absolute
+        }
+
+        guard value.hasPrefix("/") else { return nil }
+        return validatedHTTPURL(URL(string: value, relativeTo: apiBaseURL)?.absoluteURL)
+    }
+
+    private static func validatedHTTPURL(_ url: URL?) -> URL? {
+        guard let url,
               ["http", "https"].contains(url.scheme?.lowercased() ?? ""),
               url.host != nil else { return nil }
+        return url
+    }
+}
+
+enum ArtworkRequestFactory {
+    static func make(urlString: String?, layout: ArtworkLayout) -> ImageRequest? {
+        guard let url = ArtworkURLResolver.resolve(urlString) else { return nil }
 
         var request = ImageRequest(url: url)
         request.priority = priority(for: layout)

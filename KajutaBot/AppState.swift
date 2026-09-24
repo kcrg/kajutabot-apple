@@ -46,11 +46,7 @@ final class AppState {
     @ObservationIgnored private var queueRefreshGeneration = 0
     @ObservationIgnored private var wasBackgrounded = false
     @ObservationIgnored private var foregroundRefreshTask: Task<Void, Never>?
-    @ObservationIgnored private let artworkPrefetcher = ImagePrefetcher(
-        pipeline: .shared,
-        destination: .memoryCache,
-        maxConcurrentRequestCount: 2
-    )
+    @ObservationIgnored private let artworkPrefetcher: ImagePrefetcher
     @ObservationIgnored private var prefetchedArtworkRequests: [ImageRequest] = []
     @ObservationIgnored private var prefetchedArtworkKeys: [String] = []
 
@@ -95,14 +91,24 @@ final class AppState {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        config = AppConfig()
-        let authAPI = AuthAPIClient(baseURL: config.apiBaseURL)
+        let appConfig = AppConfig()
+        config = appConfig
+        let authAPI = AuthAPIClient(baseURL: appConfig.apiBaseURL)
         let manager = SessionManager(store: KeychainSessionStore(), authAPI: authAPI)
         sessionManager = manager
-        api = KajutaBotAPIClient(baseURL: config.apiBaseURL, sessionManager: manager)
-        realtime = RealtimeClient(baseURL: config.apiBaseURL) {
+        api = KajutaBotAPIClient(baseURL: appConfig.apiBaseURL, sessionManager: manager)
+        realtime = RealtimeClient(baseURL: appConfig.apiBaseURL) {
             try await manager.accessToken()
         }
+        let artworkPipeline = ArtworkImagePipeline.make(apiBaseURL: appConfig.apiBaseURL) {
+            try await manager.accessToken()
+        }
+        ImagePipeline.shared = artworkPipeline
+        artworkPrefetcher = ImagePrefetcher(
+            pipeline: artworkPipeline,
+            destination: .memoryCache,
+            maxConcurrentRequestCount: 2
+        )
         selectedGuildId = defaults.string(forKey: Keys.guildId)
         selectedVoiceChannelId = defaults.string(forKey: Keys.channelId)
         searchHistory = defaults.stringArray(forKey: Keys.searchHistory) ?? []

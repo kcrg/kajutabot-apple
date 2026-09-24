@@ -75,7 +75,7 @@ func favoriteIdentity(_ raw: String?) -> String {
 private let youtubeVideoIDCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
 
 func favoriteArtworkURL(_ favorite: FavoriteResponse) -> URL? {
-    if let raw = favorite.thumbnailUrl, let url = URL(string: raw), ["http", "https"].contains(url.scheme?.lowercased() ?? "") {
+    if let url = ArtworkURLResolver.resolve(favorite.thumbnailUrl) {
         return url
     }
     let identity = favoriteIdentity(favorite.contentUrl)
