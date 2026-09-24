@@ -1,3 +1,4 @@
+import AsyncAlgorithms
 import Foundation
 import Observation
 import SignalRClient
@@ -33,6 +34,8 @@ final class RealtimeClient {
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var subscriptionGeneration = 0
     @ObservationIgnored private var snapshotSubscriptionGeneration: Int?
+    @ObservationIgnored private let snapshotChannel = AsyncChannel<QueueSnapshotResponse>()
+    @ObservationIgnored private var snapshotConsumerTask: Task<Void, Never>?
 
     var state: RealtimeConnectionState = .disconnected
     var lastFrameAt: Date?
@@ -44,6 +47,13 @@ final class RealtimeClient {
     init(baseURL: URL, tokenProvider: @escaping @Sendable () async throws -> String) {
         hubURL = baseURL.appending(path: "api/v1/app/hubs/playback").absoluteString
         self.tokenProvider = tokenProvider
+
+        snapshotConsumerTask = Task { [weak self, snapshotChannel] in
+            for await snapshot in snapshotChannel.removeDuplicates() {
+                guard !Task.isCancelled else { return }
+                self?.consumeQueueUpdated(snapshot)
+            }
+        }
     }
 
     func connect(guildId: String?) {
@@ -175,7 +185,7 @@ final class RealtimeClient {
         }
     }
 
-    private func handleQueueUpdated(_ snapshot: QueueSnapshotResponse, guildId: String, epoch: Int) {
+    private func handleQueueUpdated(_ snapshot: QueueSnapshotResponse, guildId: String, epoch: Int) async {
         guard isCurrent(guildId: guildId, epoch: epoch), snapshot.guildId == guildId else { return }
 
         lastFrameAt = .now
@@ -185,6 +195,15 @@ final class RealtimeClient {
         recoveryTask?.cancel()
         recoveryTask = nil
         state = .connected
+
+        // SignalR can deliver bursts of equivalent snapshots around reconnects and
+        // mutations. Route them through one AsyncSequence so delivery is ordered and
+        // adjacent duplicates are removed before AppState has to process them.
+        await snapshotChannel.send(snapshot)
+    }
+
+    private func consumeQueueUpdated(_ snapshot: QueueSnapshotResponse) {
+        guard snapshot.guildId == desiredGuildId else { return }
         onSnapshot?(snapshot)
     }
 

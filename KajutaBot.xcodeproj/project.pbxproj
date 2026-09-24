@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		7A0000000000000000000003 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A0000000000000000000002 /* NukeUI */; };
 		7B0000000000000000000003 /* SignalRClient in Frameworks */ = {isa = PBXBuildFile; productRef = 7B0000000000000000000002 /* SignalRClient */; };
+		7C0000000000000000000003 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7C0000000000000000000002 /* AsyncAlgorithms */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +60,7 @@
 			files = (
 				7A0000000000000000000003 /* NukeUI in Frameworks */,
 				7B0000000000000000000003 /* SignalRClient in Frameworks */,
+				7C0000000000000000000003 /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -121,6 +123,7 @@
 			packageProductDependencies = (
 				7A0000000000000000000002 /* NukeUI */,
 				7B0000000000000000000002 /* SignalRClient */,
+				7C0000000000000000000002 /* AsyncAlgorithms */,
 			);
 			productName = KajutaBot;
 			productReference = 9EA60AAF3062D101006DA601 /* KajutaBot.app */;
@@ -208,6 +211,7 @@
 			packageReferences = (
 				7A0000000000000000000001 /* XCRemoteSwiftPackageReference "Nuke" */,
 				7B0000000000000000000001 /* XCRemoteSwiftPackageReference "signalr-client-swift" */,
+				7C0000000000000000000001 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9EA60AB03062D101006DA601 /* Products */;
@@ -635,6 +639,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		7C0000000000000000000001 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.5;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -647,6 +659,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7B0000000000000000000001 /* XCRemoteSwiftPackageReference "signalr-client-swift" */;
 			productName = SignalRClient;
+		};
+		7C0000000000000000000002 /* AsyncAlgorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7C0000000000000000000001 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
+			productName = AsyncAlgorithms;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

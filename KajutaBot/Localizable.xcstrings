@@ -1,2727 +1,2743 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "" : {
-
+  "sourceLanguage": "en",
+  "strings": {
+    "": {},
+    "aboutSection": {
+      "comment": "About section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O aplikacji"
+          }
+        }
+      }
     },
-    "aboutSection" : {
-      "comment" : "About section title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "About"
+    "accountSection": {
+      "comment": "Account section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O aplikacji"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konto"
           }
         }
       }
     },
-    "accountSection" : {
-      "comment" : "Account section title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Account"
+    "add": {
+      "comment": "Add action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Konto"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj"
           }
         }
       }
     },
-    "add" : {
-      "comment" : "Add action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add"
+    "addByURL": {
+      "comment": "Add favorite by URL action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add by URL"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodaj"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj przez URL"
           }
         }
       }
     },
-    "addByURL" : {
-      "comment" : "Add favorite by URL action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add by URL"
+    "addFavorite": {
+      "comment": "Add favorite action/accessibility label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Favorites"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodaj przez URL"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj do ulubionych"
           }
         }
       }
     },
-    "addFavorite" : {
-      "comment" : "Add favorite action/accessibility label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to Favorites"
+    "addFavoritesFailed": {
+      "comment": "Fallback favorites enqueue error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t add favorites."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodaj do ulubionych"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się dodać ulubionych."
           }
         }
       }
     },
-    "addFavoritesFailed" : {
-      "comment" : "Fallback favorites enqueue error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t add favorites."
+    "addToFavoritesTitle": {
+      "comment": "Add favorite sheet title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Favorites"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie udało się dodać ulubionych."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj do ulubionych"
           }
         }
       }
     },
-    "addToFavoritesTitle" : {
-      "comment" : "Add favorite sheet title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to Favorites"
+    "addToQueue": {
+      "comment": "Accessibility/action label for adding a track to the queue.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Queue"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodaj do ulubionych"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj do kolejki"
           }
         }
       }
     },
-    "addToQueue" : {
-      "comment" : "Accessibility/action label for adding a track to the queue.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to Queue"
+    "addTrackFailed": {
+      "comment": "Fallback enqueue error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t add the track."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodaj do kolejki"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się dodać utworu."
           }
         }
       }
     },
-    "addTrackFailed" : {
-      "comment" : "Fallback enqueue error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t add the track."
+    "addTrackTitle": {
+      "comment": "Search/add track screen title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Track"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie udało się dodać utworu."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj utwór"
           }
         }
       }
     },
-    "addTrackTitle" : {
-      "comment" : "Search/add track screen title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add Track"
+    "apiDecodeError": {
+      "comment": "JSON decoding error with system error details.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t read the server response: %1$(error)@"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodaj utwór"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie można odczytać odpowiedzi serwera: %1$(error)@"
           }
         }
       }
     },
-    "apiDecodeError" : {
-      "comment" : "JSON decoding error with system error details.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t read the server response: %1$(error)@"
+    "apiInvalidResponse": {
+      "comment": "Invalid HTTP response error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid server response."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie można odczytać odpowiedzi serwera: %1$(error)@"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieprawidłowa odpowiedź serwera."
           }
         }
       }
     },
-    "apiInvalidResponse" : {
-      "comment" : "Invalid HTTP response error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid server response."
+    "apiServerHttpError": {
+      "comment": "HTTP server error with status code.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server error (HTTP %1$(status)lld)."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nieprawidłowa odpowiedź serwera."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Błąd serwera (HTTP %1$(status)lld)."
           }
         }
       }
     },
-    "apiServerHttpError" : {
-      "comment" : "HTTP server error with status code.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Server error (HTTP %1$(status)lld)."
+    "appGuideSubtitle": {
+      "comment": "Subtitle for reopening onboarding.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run onboarding again"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Błąd serwera (HTTP %1$(status)lld)."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uruchom onboarding ponownie"
           }
         }
       }
     },
-    "appGuideSubtitle" : {
-      "comment" : "Subtitle for reopening onboarding.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Run onboarding again"
+    "appGuideTitle": {
+      "comment": "Title for reopening onboarding.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Guide"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uruchom onboarding ponownie"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przewodnik po aplikacji"
           }
         }
       }
     },
-    "appGuideTitle" : {
-      "comment" : "Title for reopening onboarding.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App Guide"
+    "authorKajutaBot": {
+      "comment": "Contact screen subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KajutaBot Author"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Przewodnik po aplikacji"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autor KajutaBot"
           }
         }
       }
     },
-    "authorKajutaBot" : {
-      "comment" : "Contact screen subtitle.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "KajutaBot Author"
+    "back": {
+      "comment": "Back button in onboarding.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Autor KajutaBot"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wstecz"
           }
         }
       }
     },
-    "back" : {
-      "comment" : "Back button in onboarding.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back"
+    "cancel": {
+      "comment": "Cancel action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wstecz"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anuluj"
           }
         }
       }
     },
-    "cancel" : {
-      "comment" : "Cancel action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
+    "changeServerChannel": {
+      "comment": "Accessibility label for target picker.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change server and voice channel"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anuluj"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zmień serwer i kanał głosowy"
           }
         }
       }
     },
-    "changeServerChannel" : {
-      "comment" : "Accessibility label for target picker.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Change server and voice channel"
+    "checkingDiscordServers": {
+      "comment": "Progress message while checking Discord guild access.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking Discord servers…"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zmień serwer i kanał głosowy"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprawdzanie serwerów Discord…"
           }
         }
       }
     },
-    "checkingDiscordServers" : {
-      "comment" : "Progress message while checking Discord guild access.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Checking Discord servers…"
+    "chooseChannel": {
+      "comment": "Voice channel picker placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Channel"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sprawdzanie serwerów Discord…"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wybierz kanał"
           }
         }
       }
     },
-    "chooseChannel" : {
-      "comment" : "Voice channel picker placeholder.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose Channel"
+    "chooseServer": {
+      "comment": "Discord guild picker placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Server"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wybierz kanał"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wybierz serwer"
           }
         }
       }
     },
-    "chooseServer" : {
-      "comment" : "Discord guild picker placeholder.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose Server"
+    "clear": {
+      "comment": "Clear action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wybierz serwer"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyczyść"
           }
         }
       }
     },
-    "clear" : {
-      "comment" : "Clear action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear"
+    "clearQueue": {
+      "comment": "Clear queue action/accessibility label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Queue"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyczyść"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyczyść kolejkę"
           }
         }
       }
     },
-    "clearQueue" : {
-      "comment" : "Clear queue action/accessibility label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear Queue"
+    "clearQueueMessage": {
+      "comment": "Clear queue confirmation message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All queued tracks will be removed. The currently playing track will not be stopped."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyczyść kolejkę"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wszystkie oczekujące utwory zostaną usunięte. Aktualnie odtwarzany utwór nie zostanie zatrzymany."
           }
         }
       }
     },
-    "clearQueueMessage" : {
-      "comment" : "Clear queue confirmation message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All queued tracks will be removed. The currently playing track will not be stopped."
+    "clearQueueQuestion": {
+      "comment": "Clear queue confirmation title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear the Queue?"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wszystkie oczekujące utwory zostaną usunięte. Aktualnie odtwarzany utwór nie zostanie zatrzymany."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyczyścić kolejkę?"
           }
         }
       }
     },
-    "clearQueueQuestion" : {
-      "comment" : "Clear queue confirmation title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear the Queue?"
+    "configure": {
+      "comment": "Jump to onboarding configuration action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyczyścić kolejkę?"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfiguruj"
           }
         }
       }
     },
-    "configure" : {
-      "comment" : "Jump to onboarding configuration action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configure"
+    "connectAndSelectChannel": {
+      "comment": "Player idle description when no queue state exists.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect the app to a server and choose a voice channel."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Konfiguruj"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Połącz aplikację z serwerem i wybierz kanał głosowy."
           }
         }
       }
     },
-    "connectAndSelectChannel" : {
-      "comment" : "Player idle description when no queue state exists.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect the app to a server and choose a voice channel."
+    "connectingDemoServer": {
+      "comment": "Progress message while connecting a guest account.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting to the demo server…"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Połącz aplikację z serwerem i wybierz kanał głosowy."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Łączenie z serwerem demonstracyjnym…"
           }
         }
       }
     },
-    "connectingDemoServer" : {
-      "comment" : "Progress message while connecting a guest account.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connecting to the demo server…"
+    "contactSubtitle": {
+      "comment": "Contact row subtitle containing the author name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kacper Tryniecki"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Łączenie z serwerem demonstracyjnym…"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kacper Tryniecki"
           }
         }
       }
     },
-    "contactSubtitle" : {
-      "comment" : "Contact row subtitle containing the author name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kacper Tryniecki"
+    "contactTitle": {
+      "comment": "Contact screen title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kacper Tryniecki"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontakt"
           }
         }
       }
     },
-    "contactTitle" : {
-      "comment" : "Contact screen title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contact"
+    "controlsSection": {
+      "comment": "Player controls section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controls"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kontakt"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sterowanie"
           }
         }
       }
     },
-    "controlsSection" : {
-      "comment" : "Player controls section title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controls"
+    "disabled": {
+      "comment": "Accessibility value for a disabled toggle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sterowanie"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyłączone"
           }
         }
       }
     },
-    "disabled" : {
-      "comment" : "Accessibility value for a disabled toggle.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Off"
+    "discordClientIdMissing": {
+      "comment": "Developer configuration warning.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discord Client ID is not configured. Set KAJUTABOT_DISCORD_CLIENT_ID in Build Settings."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyłączone"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak konfiguracji Discord Client ID. Uzupełnij KAJUTABOT_DISCORD_CLIENT_ID w Build Settings."
           }
         }
       }
     },
-    "discordClientIdMissing" : {
-      "comment" : "Developer configuration warning.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Discord Client ID is not configured. Set KAJUTABOT_DISCORD_CLIENT_ID in Build Settings."
+    "discordLoginCancelled": {
+      "comment": "Discord sign-in cancellation message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discord sign-in was cancelled."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brak konfiguracji Discord Client ID. Uzupełnij KAJUTABOT_DISCORD_CLIENT_ID w Build Settings."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logowanie przez Discord zostało anulowane."
           }
         }
       }
     },
-    "discordLoginCancelled" : {
-      "comment" : "Discord sign-in cancellation message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Discord sign-in was cancelled."
+    "discordServer": {
+      "comment": "Discord guild picker label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discord Server"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Logowanie przez Discord zostało anulowane."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serwer Discord"
           }
         }
       }
     },
-    "discordServer" : {
-      "comment" : "Discord guild picker label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Discord Server"
+    "discordTargetDescription": {
+      "comment": "Discord onboarding target selection description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a Discord server, then a voice channel. You can change this later from the Player screen."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Serwer Discord"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wybierz serwer Discord, a potem kanał głosowy. Ten wybór możesz później zmienić z ekranu odtwarzacza."
           }
         }
       }
     },
-    "discordTargetDescription" : {
-      "comment" : "Discord onboarding target selection description.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a Discord server, then a voice channel. You can change this later from the Player screen."
+    "done": {
+      "comment": "Done action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wybierz serwer Discord, a potem kanał głosowy. Ten wybór możesz później zmienić z ekranu odtwarzacza."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gotowe"
           }
         }
       }
     },
-    "done" : {
-      "comment" : "Done action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
+    "enabled": {
+      "comment": "Accessibility value for an enabled toggle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gotowe"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Włączone"
           }
         }
       }
     },
-    "enabled" : {
-      "comment" : "Accessibility value for an enabled toggle.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On"
+    "errorTitle": {
+      "comment": "Generic error alert title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Włączone"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Błąd"
           }
         }
       }
     },
-    "errorTitle" : {
-      "comment" : "Generic error alert title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Error"
+    "favoritesAddAll": {
+      "comment": "Queue all favorites action with count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add All (%1$(count)lld)"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Błąd"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj wszystkie (%1$(count)lld)"
           }
         }
       }
     },
-    "favoritesAddAll" : {
-      "comment" : "Queue all favorites action with count.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add All (%1$(count)lld)"
+    "favoriteSaved": {
+      "comment": "Date when a favorite was saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved %1$(date)@"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodaj wszystkie (%1$(count)lld)"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapisano %1$(date)@"
           }
         }
       }
     },
-    "favoriteSaved" : {
-      "comment" : "Date when a favorite was saved.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saved %1$(date)@"
+    "favoritesNeedTarget": {
+      "comment": "Queue favorites requires a Discord target.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a server and voice channel in Player before adding favorites."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zapisano %1$(date)@"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wybierz serwer i kanał głosowy w Odtwarzaczu, aby dodać ulubione."
           }
         }
       }
     },
-    "favoritesNeedTarget" : {
-      "comment" : "Queue favorites requires a Discord target.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a server and voice channel in Player before adding favorites."
+    "favoritesTitle": {
+      "comment": "Favorites tab and screen title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorites"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wybierz serwer i kanał głosowy w Odtwarzaczu, aby dodać ulubione."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ulubione"
           }
         }
       }
     },
-    "favoritesTitle" : {
-      "comment" : "Favorites tab and screen title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favorites"
+    "getStarted": {
+      "comment": "Finish initial onboarding action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get Started"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ulubione"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaczynamy"
           }
         }
       }
     },
-    "getStarted" : {
-      "comment" : "Finish initial onboarding action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Get Started"
+    "guestDemoNote": {
+      "comment": "Onboarding note for guest accounts.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guest mode uses the demo server."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zaczynamy"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryb gościa korzysta z serwera demonstracyjnego."
           }
         }
       }
     },
-    "guestDemoNote" : {
-      "comment" : "Onboarding note for guest accounts.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guest mode uses the demo server."
+    "guestDemoUnavailable": {
+      "comment": "Guest access unavailable message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guest mode can’t access the demo server right now."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tryb gościa korzysta z serwera demonstracyjnego."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryb gościa nie ma teraz dostępu do serwera demonstracyjnego."
           }
         }
       }
     },
-    "guestDemoUnavailable" : {
-      "comment" : "Guest access unavailable message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guest mode can’t access the demo server right now."
+    "guestMode": {
+      "comment": "Guest account label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guest Mode"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tryb gościa nie ma teraz dostępu do serwera demonstracyjnego."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryb gościa"
           }
         }
       }
     },
-    "guestMode" : {
-      "comment" : "Guest account label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guest Mode"
+    "guestTargetDescription": {
+      "comment": "Guest onboarding target selection description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The demo server is already selected. Choose a voice channel; you can change it later from the Player screen."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tryb gościa"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serwer demonstracyjny jest już wybrany. Wybierz kanał głosowy; możesz go później zmienić z ekranu odtwarzacza."
           }
         }
       }
     },
-    "guestTargetDescription" : {
-      "comment" : "Guest onboarding target selection description.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The demo server is already selected. Choose a voice channel; you can change it later from the Player screen."
+    "guideTitle": {
+      "comment": "Manual onboarding navigation title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guide"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Serwer demonstracyjny jest już wybrany. Wybierz kanał głosowy; możesz go później zmienić z ekranu odtwarzacza."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przewodnik"
           }
         }
       }
     },
-    "guideTitle" : {
-      "comment" : "Manual onboarding navigation title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guide"
+    "helpSection": {
+      "comment": "Help section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Przewodnik"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomoc"
           }
         }
       }
     },
-    "helpSection" : {
-      "comment" : "Help section title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Help"
+    "hoursAgo": {
+      "comment": "Abbreviated relative time in hours.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$(count)lld hr ago"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pomoc"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$(count)lld godz. temu"
           }
         }
       }
     },
-    "hoursAgo" : {
-      "comment" : "Abbreviated relative time in hours.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$(count)lld hr ago"
+    "inProgress": {
+      "comment": "Accessibility value while an action is running.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In progress"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$(count)lld godz. temu"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "W toku"
           }
         }
       }
     },
-    "inProgress" : {
-      "comment" : "Accessibility value while an action is running.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In progress"
+    "joinTestServer": {
+      "comment": "Link to the Discord test server.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join the Test Server"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "W toku"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dołącz do serwera testowego"
           }
         }
       }
     },
-    "joinTestServer" : {
-      "comment" : "Link to the Discord test server.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Join the Test Server"
+    "lastDataUpdate": {
+      "comment": "Realtime diagnostic showing age of the last queue update.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last data update: %1$(value)@"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dołącz do serwera testowego"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostatnia aktualizacja danych: %1$(value)@"
           }
         }
       }
     },
-    "lastDataUpdate" : {
-      "comment" : "Realtime diagnostic showing age of the last queue update.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last data update: %1$(value)@"
+    "lastFrame": {
+      "comment": "Realtime diagnostic showing age of the last frame.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last frame: %1$(value)@"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ostatnia aktualizacja danych: %1$(value)@"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostatnia ramka: %1$(value)@"
           }
         }
       }
     },
-    "lastFrame" : {
-      "comment" : "Realtime diagnostic showing age of the last frame.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last frame: %1$(value)@"
+    "librariesSubtitle": {
+      "comment": "Libraries row subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Components and frameworks"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ostatnia ramka: %1$(value)@"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Komponenty i frameworki"
           }
         }
       }
     },
-    "librariesSubtitle" : {
-      "comment" : "Libraries row subtitle.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Components and frameworks"
+    "librariesTitle": {
+      "comment": "Libraries screen title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libraries"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Komponenty i frameworki"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Użyte biblioteki"
           }
         }
       }
     },
-    "librariesTitle" : {
-      "comment" : "Libraries screen title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Libraries"
+    "libraryAuthenticationServicesDescription": {
+      "comment": "Description of AuthenticationServices.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discord OAuth via ASWebAuthenticationSession"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Użyte biblioteki"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discord OAuth przez ASWebAuthenticationSession"
           }
         }
       }
     },
-    "libraryAuthenticationServicesDescription" : {
-      "comment" : "Description of AuthenticationServices.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Discord OAuth via ASWebAuthenticationSession"
+    "libraryCryptoKitDescription": {
+      "comment": "Description of CryptoKit.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PKCE SHA-256"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Discord OAuth przez ASWebAuthenticationSession"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PKCE SHA-256"
           }
         }
       }
     },
-    "libraryCryptoKitDescription" : {
-      "comment" : "Description of CryptoKit.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PKCE SHA-256"
+    "libraryKeychainDescription": {
+      "comment": "Description of Security/Keychain.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secure session storage"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PKCE SHA-256"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezpieczne przechowywanie sesji"
           }
         }
       }
     },
-    "libraryKeychainDescription" : {
-      "comment" : "Description of Security/Keychain.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Secure session storage"
+    "libraryNukeDescription": {
+      "comment": "Description of Nuke.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image loading, caching, and pipeline"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bezpieczne przechowywanie sesji"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ładowanie, cache i pipeline obrazów"
           }
         }
       }
     },
-    "libraryNukeDescription" : {
-      "comment" : "Description of Nuke.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Image loading, caching, and pipeline"
+    "libraryObservationDescription": {
+      "comment": "Description of Observation on the libraries screen.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observable app state"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ładowanie, cache i pipeline obrazów"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obserwowalny stan aplikacji"
           }
         }
       }
     },
-    "libraryObservationDescription" : {
-      "comment" : "Description of Observation on the libraries screen.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Observable app state"
+    "librarySignalRDescription": {
+      "comment": "Description of SignalRClient.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Official ASP.NET Core SignalR client for Swift"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Obserwowalny stan aplikacji"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oficjalny klient ASP.NET Core SignalR dla Swift"
           }
         }
       }
     },
-    "librarySignalRDescription" : {
-      "comment" : "Description of SignalRClient.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Official ASP.NET Core SignalR client for Swift"
+    "librarySwiftUIDescription": {
+      "comment": "Description of SwiftUI on the libraries screen.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declarative interface and animations"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Oficjalny klient ASP.NET Core SignalR dla Swift"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deklaratywny interfejs i animacje"
           }
         }
       }
     },
-    "librarySwiftUIDescription" : {
-      "comment" : "Description of SwiftUI on the libraries screen.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Declarative interface and animations"
+    "libraryURLSessionDescription": {
+      "comment": "Description of URLSession.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REST API"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deklaratywny interfejs i animacje"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REST API"
           }
         }
       }
     },
-    "libraryURLSessionDescription" : {
-      "comment" : "Description of URLSession.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "REST API"
+    "loadGuildsFailedTitle": {
+      "comment": "Title shown when Discord guilds cannot be loaded.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t Load Servers"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "REST API"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się pobrać serwerów"
           }
         }
       }
     },
-    "loadGuildsFailedTitle" : {
-      "comment" : "Title shown when Discord guilds cannot be loaded.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t Load Servers"
+    "loading": {
+      "comment": "Generic loading status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading…"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie udało się pobrać serwerów"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ładowanie…"
           }
         }
       }
     },
-    "loading" : {
-      "comment" : "Generic loading status.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loading…"
+    "loginSubtitle": {
+      "comment": "Login screen subtitle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Control Discord music from your phone. Sign in with Discord or try the app right away in guest mode."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ładowanie…"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steruj muzyką na Discordzie z telefonu. Zaloguj się przez Discord albo wypróbuj aplikację od razu w trybie gościa."
           }
         }
       }
     },
-    "loginSubtitle" : {
-      "comment" : "Login screen subtitle.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Control Discord music from your phone. Sign in with Discord or try the app right away in guest mode."
+    "logout": {
+      "comment": "Sign out action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign Out"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Steruj muzyką na Discordzie z telefonu. Zaloguj się przez Discord albo wypróbuj aplikację od razu w trybie gościa."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyloguj"
           }
         }
       }
     },
-    "logout" : {
-      "comment" : "Sign out action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign Out"
+    "logoutNotConfirmed": {
+      "comment": "Sign-out failure message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server didn’t confirm sign-out. Your session remains active."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyloguj"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serwer nie potwierdził wylogowania. Sesja pozostała aktywna."
           }
         }
       }
     },
-    "logoutNotConfirmed" : {
-      "comment" : "Sign-out failure message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The server didn’t confirm sign-out. Your session remains active."
+    "minutesAgo": {
+      "comment": "Abbreviated relative time in minutes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$(count)lld min ago"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Serwer nie potwierdził wylogowania. Sesja pozostała aktywna."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$(count)lld min temu"
           }
         }
       }
     },
-    "minutesAgo" : {
-      "comment" : "Abbreviated relative time in minutes.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$(count)lld min ago"
+    "moreTitle": {
+      "comment": "More tab and screen title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$(count)lld min temu"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Więcej"
           }
         }
       }
     },
-    "moreTitle" : {
-      "comment" : "More tab and screen title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More"
+    "moveTrackFailed": {
+      "comment": "Fallback queue move error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t move the track."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Więcej"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się zmienić pozycji utworu."
           }
         }
       }
     },
-    "moveTrackFailed" : {
-      "comment" : "Fallback queue move error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t move the track."
+    "networkUnavailable": {
+      "comment": "Network unavailable error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can’t connect to the server. Try again."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie udało się zmienić pozycji utworu."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak połączenia z serwerem. Spróbuj ponownie."
           }
         }
       }
     },
-    "networkUnavailable" : {
-      "comment" : "Network unavailable error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Can’t connect to the server. Try again."
+    "next": {
+      "comment": "Next onboarding page action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brak połączenia z serwerem. Spróbuj ponownie."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dalej"
           }
         }
       }
     },
-    "next" : {
-      "comment" : "Next onboarding page action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Next"
+    "noAccessTitle": {
+      "comment": "Title shown when the account has no accessible Discord guild.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Access"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dalej"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak dostępu"
           }
         }
       }
     },
-    "noAccessTitle" : {
-      "comment" : "Title shown when the account has no accessible Discord guild.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Access"
+    "noData": {
+      "comment": "No diagnostic data is available.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no data"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brak dostępu"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "brak danych"
           }
         }
       }
     },
-    "noData" : {
-      "comment" : "No diagnostic data is available.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "no data"
+    "noDiscordGuildAccess": {
+      "comment": "No accessible guilds message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KajutaBot isn’t available on any of your Discord servers."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "brak danych"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KajutaBot nie jest dostępny na żadnym z Twoich serwerów Discord."
           }
         }
       }
     },
-    "noDiscordGuildAccess" : {
-      "comment" : "No accessible guilds message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "KajutaBot isn’t available on any of your Discord servers."
+    "noFavoritesDescription": {
+      "comment": "Favorites empty state description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a track from the player or paste its link."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "KajutaBot nie jest dostępny na żadnym z Twoich serwerów Discord."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj utwór z odtwarzacza albo wklej jego link."
           }
         }
       }
     },
-    "noFavoritesDescription" : {
-      "comment" : "Favorites empty state description.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add a track from the player or paste its link."
+    "noFavoritesTitle": {
+      "comment": "Favorites empty state title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Favorites"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodaj utwór z odtwarzacza albo wklej jego link."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak ulubionych"
           }
         }
       }
     },
-    "noFavoritesTitle" : {
-      "comment" : "Favorites empty state title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Favorites"
+    "noResultsForQuery": {
+      "comment": "Empty search result description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing was found for “%1$(query)@”."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brak ulubionych"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie znaleziono niczego dla „%1$(query)@”."
           }
         }
       }
     },
-    "noResultsForQuery" : {
-      "comment" : "Empty search result description.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing was found for “%1$(query)@”."
+    "noResultsTitle": {
+      "comment": "Empty search result title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Results"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie znaleziono niczego dla „%1$(query)@”."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak wyników"
           }
         }
       }
     },
-    "noResultsTitle" : {
-      "comment" : "Empty search result title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Results"
+    "nothingPlaying": {
+      "comment": "Player idle title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing Playing"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brak wyników"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nic nie gra"
           }
         }
       }
     },
-    "nothingPlaying" : {
-      "comment" : "Player idle title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing Playing"
+    "notSelected": {
+      "comment": "Accessibility value when no target is selected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not selected"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nic nie gra"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie wybrano"
           }
         }
       }
     },
-    "notSelected" : {
-      "comment" : "Accessibility value when no target is selected.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not selected"
+    "noVoiceChannels": {
+      "comment": "Empty voice channel picker state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Voice Channels"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie wybrano"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak kanałów głosowych"
           }
         }
       }
     },
-    "noVoiceChannels" : {
-      "comment" : "Empty voice channel picker state.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Voice Channels"
+    "nowPlaying": {
+      "comment": "Label above the currently playing track.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NOW PLAYING"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brak kanałów głosowych"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TERAZ ODTWARZANE"
           }
         }
       }
     },
-    "nowPlaying" : {
-      "comment" : "Label above the currently playing track.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NOW PLAYING"
+    "oauthInvalidCallback": {
+      "comment": "OAuth callback error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid Discord sign-in response."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TERAZ ODTWARZANE"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieprawidłowa odpowiedź logowania Discord."
           }
         }
       }
     },
-    "oauthInvalidCallback" : {
-      "comment" : "OAuth callback error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid Discord sign-in response."
+    "oauthMissingCode": {
+      "comment": "OAuth missing authorization code error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discord didn’t return an authorization code."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nieprawidłowa odpowiedź logowania Discord."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discord nie zwrócił kodu autoryzacji."
           }
         }
       }
     },
-    "oauthMissingCode" : {
-      "comment" : "OAuth missing authorization code error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Discord didn’t return an authorization code."
+    "oauthNotConfigured": {
+      "comment": "OAuth configuration error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discord Client ID is not configured."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Discord nie zwrócił kodu autoryzacji."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak konfiguracji Discord Client ID."
           }
         }
       }
     },
-    "oauthNotConfigured" : {
-      "comment" : "OAuth configuration error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Discord Client ID is not configured."
+    "oauthRandomGenerationFailed": {
+      "comment": "PKCE random generation error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t generate secure sign-in data."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brak konfiguracji Discord Client ID."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się wygenerować bezpiecznych danych logowania."
           }
         }
       }
     },
-    "oauthRandomGenerationFailed" : {
-      "comment" : "PKCE random generation error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t generate secure sign-in data."
+    "oauthStateMismatch": {
+      "comment": "OAuth state mismatch error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sign-in state doesn’t match the request that was started."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie udało się wygenerować bezpiecznych danych logowania."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stan logowania nie zgadza się z rozpoczętą próbą."
           }
         }
       }
     },
-    "oauthStateMismatch" : {
-      "comment" : "OAuth state mismatch error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The sign-in state doesn’t match the request that was started."
+    "ok": {
+      "comment": "Standard confirmation action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stan logowania nie zgadza się z rozpoczętą próbą."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
           }
         }
       }
     },
-    "ok" : {
-      "comment" : "Standard confirmation action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
+    "onboardingFavoritesDescription": {
+      "comment": "Onboarding favorites feature description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save tracks, add them back to the queue, and use the mini player while moving around the app."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapisuj utwory, wrzucaj je ponownie do kolejki i korzystaj z miniplayera podczas poruszania się po aplikacji."
           }
         }
       }
     },
-    "onboardingFavoritesDescription" : {
-      "comment" : "Onboarding favorites feature description.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Save tracks, add them back to the queue, and use the mini player while moving around the app."
+    "onboardingFavoritesTitle": {
+      "comment": "Onboarding favorites feature title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorites Always Within Reach"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zapisuj utwory, wrzucaj je ponownie do kolejki i korzystaj z miniplayera podczas poruszania się po aplikacji."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ulubione zawsze pod ręką"
           }
         }
       }
     },
-    "onboardingFavoritesTitle" : {
-      "comment" : "Onboarding favorites feature title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favorites Always Within Reach"
+    "onboardingPlayerDescription": {
+      "comment": "Onboarding player feature description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See the current track and queue, skip or stop playback, and control repeat and radio."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ulubione zawsze pod ręką"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podejrzyj aktualny utwór i kolejkę, pomijaj lub zatrzymuj odtwarzanie oraz włączaj powtarzanie i radio."
           }
         }
       }
     },
-    "onboardingPlayerDescription" : {
-      "comment" : "Onboarding player feature description.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "See the current track and queue, skip or stop playback, and control repeat and radio."
+    "onboardingPlayerTitle": {
+      "comment": "Onboarding player feature title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Control What’s Playing"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Podejrzyj aktualny utwór i kolejkę, pomijaj lub zatrzymuj odtwarzanie oraz włączaj powtarzanie i radio."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steruj tym, co gra"
           }
         }
       }
     },
-    "onboardingPlayerTitle" : {
-      "comment" : "Onboarding player feature title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Control What’s Playing"
+    "onboardingSearchDescription": {
+      "comment": "Onboarding search feature description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search YouTube, SoundCloud, and the KajutaBot database, or paste a direct link."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Steruj tym, co gra"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyszukuj utwory w YouTube, SoundCloud i bazie KajutaBota albo wklej bezpośredni link."
           }
         }
       }
     },
-    "onboardingSearchDescription" : {
-      "comment" : "Onboarding search feature description.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search YouTube, SoundCloud, and the KajutaBot database, or paste a direct link."
+    "onboardingSearchTitle": {
+      "comment": "Onboarding search feature title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Music Quickly"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyszukuj utwory w YouTube, SoundCloud i bazie KajutaBota albo wklej bezpośredni link."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodawaj muzykę szybko"
           }
         }
       }
     },
-    "onboardingSearchTitle" : {
-      "comment" : "Onboarding search feature title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add Music Quickly"
+    "openPlayer": {
+      "comment": "Mini player action accessibility label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Player"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodawaj muzykę szybko"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz odtwarzacz"
           }
         }
       }
     },
-    "openPlayer" : {
-      "comment" : "Mini player action accessibility label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Player"
+    "openSource": {
+      "comment": "Open original track source action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Source"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otwórz odtwarzacz"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz źródło"
           }
         }
       }
     },
-    "openSource" : {
-      "comment" : "Open original track source action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Source"
+    "operationFailed": {
+      "comment": "Generic mutation error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The operation failed."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otwórz źródło"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operacja nie powiodła się."
           }
         }
       }
     },
-    "operationFailed" : {
-      "comment" : "Generic mutation error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The operation failed."
+    "playerTitle": {
+      "comment": "Player tab and screen title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Player"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Operacja nie powiodła się."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odtwarzacz"
           }
         }
       }
     },
-    "playerTitle" : {
-      "comment" : "Player tab and screen title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Player"
+    "queueChangedRefreshed": {
+      "comment": "Queue version conflict message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The queue changed in the meantime. The latest state was loaded."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odtwarzacz"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kolejka zmieniła się w międzyczasie. Odświeżono stan."
           }
         }
       }
     },
-    "queueChangedRefreshed" : {
-      "comment" : "Queue version conflict message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The queue changed in the meantime. The latest state was loaded."
+    "queueEmptyDescription": {
+      "comment": "Player queue empty state description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a track to start playback."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kolejka zmieniła się w międzyczasie. Odświeżono stan."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj utwór, aby rozpocząć odtwarzanie."
           }
         }
       }
     },
-    "queueEmptyDescription" : {
-      "comment" : "Player queue empty state description.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add a track to start playback."
+    "queueEmptyTitle": {
+      "comment": "Player queue empty state title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queue Is Empty"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodaj utwór, aby rozpocząć odtwarzanie."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kolejka jest pusta"
           }
         }
       }
     },
-    "queueEmptyTitle" : {
-      "comment" : "Player queue empty state title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Queue Is Empty"
+    "queueTitle": {
+      "comment": "Queue section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queue"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kolejka jest pusta"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kolejka"
           }
         }
       }
     },
-    "queueTitle" : {
-      "comment" : "Queue section title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Queue"
+    "queueWaiting": {
+      "comment": "Player idle description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The queue is waiting for tracks."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kolejka"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kolejka oczekuje na utwory."
           }
         }
       }
     },
-    "queueWaiting" : {
-      "comment" : "Player idle description.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The queue is waiting for tracks."
+    "radio": {
+      "comment": "Radio control accessibility label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radio"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kolejka oczekuje na utwory."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radio"
           }
         }
       }
     },
-    "radio" : {
-      "comment" : "Radio control accessibility label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Radio"
+    "realtimeConnected": {
+      "comment": "Realtime connection state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Radio"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Połączono"
           }
         }
       }
     },
-    "realtimeConnected" : {
-      "comment" : "Realtime connection state.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connected"
+    "realtimeConnecting": {
+      "comment": "Realtime connection state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting…"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Połączono"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Łączenie…"
           }
         }
       }
     },
-    "realtimeConnecting" : {
-      "comment" : "Realtime connection state.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connecting…"
+    "realtimeDisconnected": {
+      "comment": "Realtime connection state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Łączenie…"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rozłączono"
           }
         }
       }
     },
-    "realtimeDisconnected" : {
-      "comment" : "Realtime connection state.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disconnected"
+    "realtimeReconnecting": {
+      "comment": "Realtime connection state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnecting…"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rozłączono"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ponowne łączenie…"
           }
         }
       }
     },
-    "realtimeReconnecting" : {
-      "comment" : "Realtime connection state.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reconnecting…"
+    "realtimeSection": {
+      "comment": "Realtime diagnostics section title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Realtime Connection"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ponowne łączenie…"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Połączenie realtime"
           }
         }
       }
     },
-    "realtimeSection" : {
-      "comment" : "Realtime diagnostics section title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Realtime Connection"
+    "realtimeSubscribing": {
+      "comment": "Realtime connection state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscribing to server…"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Połączenie realtime"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subskrybowanie serwera…"
           }
         }
       }
     },
-    "realtimeSubscribing" : {
-      "comment" : "Realtime connection state.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Subscribing to server…"
+    "recentSearches": {
+      "comment": "Recent search history section.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent Searches"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Subskrybowanie serwera…"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostatnie wyszukiwania"
           }
         }
       }
     },
-    "recentSearches" : {
-      "comment" : "Recent search history section.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recent Searches"
+    "reconnectAttempts": {
+      "comment": "Realtime reconnect attempt count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnect attempts: %1$(count)lld"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ostatnie wyszukiwania"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Próby ponownego połączenia: %1$(count)lld"
           }
         }
       }
     },
-    "reconnectAttempts" : {
-      "comment" : "Realtime reconnect attempt count.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reconnect attempts: %1$(count)lld"
+    "refresh": {
+      "comment": "Refresh action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Próby ponownego połączenia: %1$(count)lld"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odśwież"
           }
         }
       }
     },
-    "refresh" : {
-      "comment" : "Refresh action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Refresh"
+    "removeFavorite": {
+      "comment": "Remove favorite action/accessibility label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Favorites"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odśwież"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuń z ulubionych"
           }
         }
       }
     },
-    "removeFavorite" : {
-      "comment" : "Remove favorite action/accessibility label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove from Favorites"
+    "removeFromQueue": {
+      "comment": "Remove queue item action/accessibility label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Queue"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Usuń z ulubionych"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuń z kolejki"
           }
         }
       }
     },
-    "removeFromQueue" : {
-      "comment" : "Remove queue item action/accessibility label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove from Queue"
+    "removeTrackFailed": {
+      "comment": "Fallback queue remove error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t remove the track."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Usuń z kolejki"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się usunąć utworu."
           }
         }
       }
     },
-    "removeTrackFailed" : {
-      "comment" : "Fallback queue remove error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t remove the track."
+    "repeatPlayback": {
+      "comment": "Repeat control accessibility label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie udało się usunąć utworu."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Powtarzanie"
           }
         }
       }
     },
-    "repeatPlayback" : {
-      "comment" : "Repeat control accessibility label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Repeat"
+    "restoreSessionFailedTitle": {
+      "comment": "Title shown when restoring the saved session fails.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t Restore Session"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Powtarzanie"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie można przywrócić sesji"
           }
         }
       }
     },
-    "restoreSessionFailedTitle" : {
-      "comment" : "Title shown when restoring the saved session fails.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t Restore Session"
+    "restoringSessionAccessibility": {
+      "comment": "Accessibility label for the startup activity indicator.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restoring session"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie można przywrócić sesji"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przywracanie sesji"
           }
         }
       }
     },
-    "restoringSessionAccessibility" : {
-      "comment" : "Accessibility label for the startup activity indicator.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restoring session"
+    "results": {
+      "comment": "Search results section.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Results"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Przywracanie sesji"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyniki"
           }
         }
       }
     },
-    "results" : {
-      "comment" : "Search results section.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Results"
+    "retry": {
+      "comment": "Generic retry action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Again"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyniki"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spróbuj ponownie"
           }
         }
       }
     },
-    "retry" : {
-      "comment" : "Generic retry action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try Again"
+    "retryDefaultMessage": {
+      "comment": "Fallback retry message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Spróbuj ponownie"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spróbuj ponownie."
           }
         }
       }
     },
-    "retryDefaultMessage" : {
-      "comment" : "Fallback retry message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try again."
+    "search": {
+      "comment": "Search action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Spróbuj ponownie."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szukaj"
           }
         }
       }
     },
-    "search" : {
-      "comment" : "Search action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search"
+    "searching": {
+      "comment": "Search progress label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching…"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Szukaj"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyszukiwanie…"
           }
         }
       }
     },
-    "searching" : {
-      "comment" : "Search progress label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Searching…"
+    "searchPrompt": {
+      "comment": "Search field prompt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Track name or link"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyszukiwanie…"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nazwa utworu lub link"
           }
         }
       }
     },
-    "searchPrompt" : {
-      "comment" : "Search field prompt.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Track name or link"
+    "searchSource": {
+      "comment": "Search source picker title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nazwa utworu lub link"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Źródło"
           }
         }
       }
     },
-    "searchSource" : {
-      "comment" : "Search source picker title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Source"
+    "searchSourceDatabase": {
+      "comment": "KajutaBot database search source.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Database"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Źródło"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baza danych"
           }
         }
       }
     },
-    "searchSourceDatabase" : {
-      "comment" : "KajutaBot database search source.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Database"
+    "searchSourceSoundCloud": {
+      "comment": "SoundCloud search source.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SoundCloud"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Baza danych"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SoundCloud"
           }
         }
       }
     },
-    "searchSourceSoundCloud" : {
-      "comment" : "SoundCloud search source.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SoundCloud"
+    "searchSourceYouTube": {
+      "comment": "YouTube search source.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SoundCloud"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube"
           }
         }
       }
     },
-    "searchSourceYouTube" : {
-      "comment" : "YouTube search source.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "YouTube"
+    "secondsAgo": {
+      "comment": "Abbreviated relative time in seconds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$(count)lld sec ago"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "YouTube"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$(count)lld s temu"
           }
         }
       }
     },
-    "secondsAgo" : {
-      "comment" : "Abbreviated relative time in seconds.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$(count)lld sec ago"
+    "secureSessionReadFailed": {
+      "comment": "Error restoring the saved session.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t read the secure session store."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$(count)lld s temu"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie można odczytać bezpiecznego magazynu sesji."
           }
         }
       }
     },
-    "secureSessionReadFailed" : {
-      "comment" : "Error restoring the saved session.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t read the secure session store."
+    "selectServerChannelFirst": {
+      "comment": "Action requires a Discord target.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a server and voice channel first."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie można odczytać bezpiecznego magazynu sesji."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najpierw wybierz serwer i kanał głosowy."
           }
         }
       }
     },
-    "selectServerChannelFirst" : {
-      "comment" : "Action requires a Discord target.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a server and voice channel first."
+    "serverChannelTitle": {
+      "comment": "Discord target picker sheet title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server & Channel"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Najpierw wybierz serwer i kanał głosowy."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serwer i kanał"
           }
         }
       }
     },
-    "serverChannelTitle" : {
-      "comment" : "Discord target picker sheet title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Server & Channel"
+    "sessionExpired": {
+      "comment": "Session expired error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your session expired. Sign in again."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Serwer i kanał"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesja wygasła. Zaloguj się ponownie."
           }
         }
       }
     },
-    "sessionExpired" : {
-      "comment" : "Session expired error.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your session expired. Sign in again."
+    "shuffleOrder": {
+      "comment": "Favorites shuffle toggle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shuffle Order"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sesja wygasła. Zaloguj się ponownie."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Losuj kolejność"
           }
         }
       }
     },
-    "shuffleOrder" : {
-      "comment" : "Favorites shuffle toggle.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shuffle Order"
+    "signInDiscord": {
+      "comment": "Discord sign-in button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with Discord"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Losuj kolejność"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaloguj przez Discord"
           }
         }
       }
     },
-    "signInDiscord" : {
-      "comment" : "Discord sign-in button.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign in with Discord"
+    "signingIn": {
+      "comment": "Sign-in progress label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in…"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zaloguj przez Discord"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logowanie…"
           }
         }
       }
     },
-    "signingIn" : {
-      "comment" : "Sign-in progress label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Signing in…"
+    "skipTrack": {
+      "comment": "Player skip control accessibility label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip Track"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Logowanie…"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomiń utwór"
           }
         }
       }
     },
-    "skipTrack" : {
-      "comment" : "Player skip control accessibility label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skip Track"
+    "stopBot": {
+      "comment": "Destructive stop action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop Bot"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pomiń utwór"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatrzymaj bota"
           }
         }
       }
     },
-    "stopBot" : {
-      "comment" : "Destructive stop action.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stop Bot"
+    "stopPlayback": {
+      "comment": "Player stop control accessibility label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop Playback"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zatrzymaj bota"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatrzymaj odtwarzanie"
           }
         }
       }
     },
-    "stopPlayback" : {
-      "comment" : "Player stop control accessibility label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stop Playback"
+    "stopPlaybackMessage": {
+      "comment": "Stop confirmation message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playback will stop and the current track will be interrupted."
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zatrzymaj odtwarzanie"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odtwarzanie zostanie zatrzymane, a aktualny utwór przerwany."
           }
         }
       }
     },
-    "stopPlaybackMessage" : {
-      "comment" : "Stop confirmation message.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Playback will stop and the current track will be interrupted."
+    "stopPlaybackQuestion": {
+      "comment": "Stop confirmation title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop Playback?"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odtwarzanie zostanie zatrzymane, a aktualny utwór przerwany."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatrzymać odtwarzanie?"
           }
         }
       }
     },
-    "stopPlaybackQuestion" : {
-      "comment" : "Stop confirmation title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stop Playback?"
+    "targetQuestion": {
+      "comment": "Onboarding target selection heading.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where do you want to control the bot?"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zatrzymać odtwarzanie?"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdzie chcesz sterować botem?"
           }
         }
       }
     },
-    "targetQuestion" : {
-      "comment" : "Onboarding target selection heading.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Where do you want to control the bot?"
+    "trackLink": {
+      "comment": "Track URL field label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Track Link"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gdzie chcesz sterować botem?"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link do utworu"
           }
         }
       }
     },
-    "trackLink" : {
-      "comment" : "Track URL field label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Track Link"
+    "tryAsGuest": {
+      "comment": "Guest sign-in button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try as Guest"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Link do utworu"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wypróbuj jako gość"
           }
         }
       }
     },
-    "tryAsGuest" : {
-      "comment" : "Guest sign-in button.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try as Guest"
+    "voiceChannel": {
+      "comment": "Discord voice channel picker label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice Channel"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wypróbuj jako gość"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanał głosowy"
           }
         }
       }
     },
-    "voiceChannel" : {
-      "comment" : "Discord voice channel picker label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voice Channel"
+    "libraryAsyncAlgorithmsDescription": {
+      "comment": "Description of Swift Async Algorithms.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AsyncSequence algorithms and channels for Swift Concurrency"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kanał głosowy"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algorytmy AsyncSequence i kanały dla Swift Concurrency"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

@@ -150,6 +150,7 @@ private struct LibrariesView: View {
         .init(name: "Security / Keychain", description: .libraryKeychainDescription, license: "Apple SDK"),
         .init(name: "Nuke", description: .libraryNukeDescription, license: "MIT"),
         .init(name: "SignalRClient", description: .librarySignalRDescription, license: "MIT"),
+        .init(name: "Swift Async Algorithms", description: .libraryAsyncAlgorithmsDescription, license: "Apache 2.0"),
     ]
 
     var body: some View {
