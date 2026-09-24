@@ -71,17 +71,3 @@ func favoriteIdentity(_ raw: String?) -> String {
     if normalizedHost == "soundcloud.com" { return "soundcloud-url:\(path.lowercased())" }
     return input
 }
-
-private let youtubeVideoIDCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
-
-func favoriteArtworkURL(_ favorite: FavoriteResponse) -> URL? {
-    if let url = ArtworkURLResolver.resolve(favorite.thumbnailUrl) {
-        return url
-    }
-    let identity = favoriteIdentity(favorite.contentUrl)
-    guard identity.hasPrefix("youtube:") else { return nil }
-    let videoId = String(identity.dropFirst("youtube:".count))
-    guard videoId.count == 11, videoId.unicodeScalars.allSatisfy(youtubeVideoIDCharacters.contains) else { return nil }
-    return URL(string: "https://i.ytimg.com/vi/\(videoId)/mqdefault.jpg")
-}
-

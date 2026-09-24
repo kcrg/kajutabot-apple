@@ -106,7 +106,7 @@ private struct FavoriteRow: View {
     var body: some View {
         HStack(spacing: 12) {
             ArtworkView(
-                urlString: favoriteArtworkURL(favorite)?.absoluteString,
+                urlString: favorite.thumbnailUrl,
                 layout: .square(64),
                 cornerRadius: 10
             )
