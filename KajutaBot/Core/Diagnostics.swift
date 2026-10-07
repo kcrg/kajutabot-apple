@@ -1,67 +1,43 @@
 import Foundation
-import Pulse
-import PulseProxy
+import Sentry
 
-/// Always-on, on-device diagnostics used by the hidden diagnostics console.
-///
-/// Pulse persists network traffic and application logs locally. Secrets are
-/// redacted before they reach the store because diagnostics are enabled in
-/// Release builds as well.
+/// Only static, developer-authored events. Never pass URLs, tokens, queries or
+/// server-provided error messages. Optional DSN is supplied by the build settings.
 enum Diagnostics {
     static func bootstrap() {
-        LoggerStore.shared.configuration.sizeLimit = 20 * 1_000_000
-        LoggerStore.shared.configuration.maxAge = 3 * 86_400
-
-        NetworkLogger.shared = NetworkLogger {
-            $0.label = "KajutaBot"
-            $0.sensitiveHeaders = [
-                "Authorization",
-                "Cookie",
-                "Set-Cookie",
-                "X-Api-Key",
-                "X-API-Key",
-                "X-Auth-Token",
-            ]
-            $0.sensitiveQueryItems = [
-                "access_token",
-                "refresh_token",
-                "token",
-                "code",
-            ]
-            $0.sensitiveDataFields = [
-                "accessToken",
-                "access_token",
-                "refreshToken",
-                "refresh_token",
-                "token",
-                "authorization",
-                "code",
-            ]
+        guard let dsn = Bundle.main.object(forInfoDictionaryKey: "KAJUTABOT_SENTRY_DSN") as? String,
+              !dsn.isEmpty, !dsn.contains("$(") else { return }
+        SentrySDK.start { options in
+            options.dsn = dsn
+            options.sendDefaultPii = false
+            options.enableMemoryIntrospection = false
+            options.enableNetworkBreadcrumbs = false
+            options.enableNetworkTracking = false
+            options.enableCaptureFailedRequests = false
+            options.tracePropagationTargets = []
+            options.enableAutoBreadcrumbTracking = false
+            options.attachScreenshot = false
+            options.attachViewHierarchy = false
+            options.tracesSampleRate = 0
+            options.beforeBreadcrumb = { breadcrumb in
+                let category: String? = breadcrumb.category
+                return category?.hasPrefix("kajutabot.") == true ? breadcrumb : nil
+            }
         }
-
-        // Intentionally enabled in Release too. Access to the UI is hidden
-        // behind the Discord-account gesture in MoreView.
-        NetworkLogger.enableProxy()
-        info("app", "Diagnostics initialized")
     }
 
-    static func trace(_ label: String, _ message: String) {
-        LoggerStore.shared.storeMessage(label: label, level: .trace, message: message)
+    static func trace(_ label: StaticString, _ message: StaticString) { record(label, message, level: .debug) }
+    static func debug(_ label: StaticString, _ message: StaticString) { record(label, message, level: .debug) }
+    static func info(_ label: StaticString, _ message: StaticString) { record(label, message, level: .info) }
+    static func warning(_ label: StaticString, _ message: StaticString) { record(label, message, level: .warning) }
+    static func error(_ label: StaticString, _ message: StaticString) {
+        record(label, message, level: .error)
+        SentrySDK.capture(message: String(describing: message))
     }
 
-    static func debug(_ label: String, _ message: String) {
-        LoggerStore.shared.storeMessage(label: label, level: .debug, message: message)
-    }
-
-    static func info(_ label: String, _ message: String) {
-        LoggerStore.shared.storeMessage(label: label, level: .info, message: message)
-    }
-
-    static func warning(_ label: String, _ message: String) {
-        LoggerStore.shared.storeMessage(label: label, level: .warning, message: message)
-    }
-
-    static func error(_ label: String, _ message: String) {
-        LoggerStore.shared.storeMessage(label: label, level: .error, message: message)
+    private static func record(_ label: StaticString, _ message: StaticString, level: SentryLevel) {
+        let breadcrumb = Breadcrumb(level: level, category: "kajutabot." + String(describing: label))
+        breadcrumb.message = String(describing: message)
+        SentrySDK.addBreadcrumb(breadcrumb)
     }
 }

@@ -31,24 +31,6 @@ func formatDuration(_ milliseconds: Int64) -> String {
         : String(format: "%lld:%02lld", minutes, remaining)
 }
 
-func playbackPosition(
-    startedAt: Date?,
-    durationMilliseconds: Int64,
-    now: Date = .now
-) -> TimeInterval? {
-    guard durationMilliseconds > 0, let startedAt else { return nil }
-    return min(max(now.timeIntervalSince(startedAt), 0), Double(durationMilliseconds) / 1_000)
-}
-
-func playbackPosition(queue: QueueSnapshotResponse, now: Date = .now) -> TimeInterval? {
-    guard let track = queue.nowPlaying else { return nil }
-    return playbackPosition(
-        startedAt: parseISO8601(queue.nowPlayingStartedAt),
-        durationMilliseconds: track.durationMilliseconds,
-        now: now
-    )
-}
-
 func favoriteIdentity(_ raw: String?) -> String {
     guard let input = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !input.isEmpty else { return "" }
     let lower = input.lowercased()

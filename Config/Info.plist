@@ -8,5 +8,7 @@
     <string>$(KAJUTABOT_API_BASE_URL)</string>
     <key>KAJUTABOT_DISCORD_CLIENT_ID</key>
     <string>$(KAJUTABOT_DISCORD_CLIENT_ID)</string>
+    <key>KAJUTABOT_SENTRY_DSN</key>
+    <string>$(KAJUTABOT_SENTRY_DSN)</string>
 </dict>
 </plist>

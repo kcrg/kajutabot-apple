@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PlayerView: View {
     let app: AppState
+    let openSearch: () -> Void
     @State private var showTargetPicker = false
     @State private var showStopConfirmation = false
     @State private var showClearQueueConfirmation = false
@@ -41,19 +42,31 @@ struct PlayerView: View {
                             .listRowSeparator(.hidden)
                     }
                     .onMove(perform: app.moveQueueEntry)
+                    .moveDisabled(app.isMutating)
                 } else {
                     ContentUnavailableView {
                         Label(.queueEmptyTitle, systemImage: "music.note.list")
                     } description: {
                         Text(.queueEmptyDescription)
+                    } actions: {
+                        Button(.addTrackTitle, action: openSearch)
                     }
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                 }
             } header: {
                 HStack {
-                    Text(.queueTitle)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(.queueTitle)
+                        if let queue = app.queue {
+                            Text("\(queue.pendingEntriesCount) · \(formatDuration(queue.pendingDurationMilliseconds))")
+                                .font(.caption.monospacedDigit())
+                        }
+                    }
                     Spacer()
+                    if app.actionStatuses["queue.reorder"] != nil {
+                        ActionFeedback(status: app.actionStatuses["queue.reorder"], symbol: "arrow.up.arrow.down")
+                    }
                     if !(app.queue?.pendingEntries.isEmpty ?? true) {
                         Button(role: .destructive) { showClearQueueConfirmation = true } label: {
                             Label(.clear, systemImage: "trash")
@@ -62,6 +75,7 @@ struct PlayerView: View {
                                 .contentShape(Rectangle())
                         }
                         .accessibilityLabel(Text(.clearQueue))
+                        .disabled(app.actionStatuses["queue.control.clear"] == .pending)
                     }
                 }
             }
@@ -73,6 +87,11 @@ struct PlayerView: View {
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle(.playerTitle)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) { EditButton().disabled(app.isMutating || (app.queue?.pendingEntries.isEmpty ?? true)) }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: openSearch) { Image(systemName: "magnifyingglass") }
+                    .accessibilityLabel(Text(.addTrackTitle))
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showTargetPicker = true
@@ -85,19 +104,10 @@ struct PlayerView: View {
         }
         .sheet(isPresented: $showTargetPicker) {
             NavigationStack {
-                Form {
-                    Section(.controlsSection) {
-                        DiscordTargetPicker(app: app, showGuildPicker: !app.isGuest)
-                    }
-                }
-                .adaptiveContentWidth(AppLayout.settingsContentMaxWidth)
-                .navigationTitle(.serverChannelTitle)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) { Button(.done) { showTargetPicker = false } }
-                }
+                DiscordSelectionView(app: app) { showTargetPicker = false }
             }
-            .presentationDetents([.medium, .large])
         }
+
         .refreshable {
             await app.refreshPlayer()
         }
@@ -113,284 +123,84 @@ struct PlayerView: View {
         } message: {
             Text(.clearQueueMessage)
         }
-        .alert(String(localized: .errorTitle), isPresented: Binding(
-            get: { app.errorMessage != nil },
-            set: { if !$0 { app.dismissError() } }
-        )) {
-            Button(.ok) { app.dismissError() }
-        } message: {
-            Text(app.errorMessage ?? "")
-        }
+
     }
 }
 
 private struct NowPlayingCard: View {
     let app: AppState
     let requestStop: () -> Void
-
-    private var controlsBlocked: Bool {
-        app.isMutating && app.activeControlAction == nil
-    }
-
-    private let cardShape = RoundedRectangle(cornerRadius: 26, style: .continuous)
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var showVolume = false
 
     var body: some View {
-        let track = app.nowPlaying
-
         VStack(alignment: .leading, spacing: 16) {
-            if let track {
-                let isFavorite = app.isFavorite(track)
-
-                TrackPresentationView(
-                    track: track,
-                    queue: app.presentationQueue,
-                    revision: app.presentationTrackRevision,
-                    initiallyReady: app.initialHeroArtworkReady
-                )
-
-                GlassEffectContainer(spacing: 8) {
-                    HStack(spacing: 12) {
-                        PlayerCircleButton(
-                            systemName: "stop.fill",
-                            role: .destructive,
-                            active: false,
-                            busy: app.activeControlAction == .stop,
-                            disabled: controlsBlocked,
-                            accessibilityLabel: .stopPlayback,
-                            action: requestStop
-                        )
-                        PlayerCircleButton(
-                            systemName: "forward.end.fill",
-                            active: false,
-                            busy: app.activeControlAction == .skip,
-                            disabled: controlsBlocked,
-                            size: 52,
-                            symbolFont: .title2.weight(.bold),
-                            accessibilityLabel: .skipTrack
-                        ) { app.skip() }
-                        PlayerCircleButton(
-                            systemName: "repeat",
-                            active: app.queue?.isRepeatEnabled == true,
-                            busy: app.activeControlAction == .repeatTrack,
-                            disabled: controlsBlocked,
-                            accessibilityLabel: .repeatPlayback,
-                            accessibilityValue: app.queue?.isRepeatEnabled == true ? .enabled : .disabled
-                        ) { app.toggleRepeat() }
-                        PlayerCircleButton(
-                            systemName: "radio.fill",
-                            active: app.queue?.radio.isEnabled == true,
-                            busy: app.activeControlAction == .radio,
-                            disabled: controlsBlocked,
-                            accessibilityLabel: .radio,
-                            accessibilityValue: app.queue?.radio.isEnabled == true ? .enabled : .disabled
-                        ) { app.toggleRadio() }
-                        PlayerCircleButton(
-                            systemName: isFavorite ? "heart.fill" : "heart",
-                            active: isFavorite,
-                            busy: app.isMutatingFavorites,
-                            disabled: app.isMutatingFavorites,
-                            accessibilityLabel: isFavorite ? .removeFavorite : .addFavorite
-                        ) { app.toggleFavorite(track) }
-                    }
-                    .frame(maxWidth: .infinity)
+            if let track = app.nowPlaying {
+                ArtworkView(urlString: track.artworkUrl, layout: .aspectRatio(16 / 9), cornerRadius: 20)
+                Text(.nowPlaying).font(.caption.weight(.semibold)).foregroundStyle(.tint)
+                Text(track.title).font(.title2.bold()).lineLimit(2, reservesSpace: true)
+                    .contentTransition(.interpolate)
+                PlaybackProgressView(progress: app.progress)
+                Button { app.requeueNowPlaying() } label: {
+                    Label {
+                        Text("requeueTrack")
+                    } icon: { ActionFeedback(status: app.actionStatuses["queue.control.requeue"], symbol: "text.badge.plus") }
+                        .frame(maxWidth: .infinity)
                 }
+                .buttonStyle(.bordered)
+                .disabled(app.actionStatuses["queue.control.requeue"] == .pending)
             } else {
-                VStack(spacing: 14) {
-                    Image(systemName: "music.note")
-                        .font(.system(size: 42))
-                        .foregroundStyle(.secondary)
-                    Text(.nothingPlaying)
-                        .font(.title2.bold())
+                ContentUnavailableView {
+                    Label(.nothingPlaying, systemImage: "music.note")
+                } description: {
                     Text(app.queue == nil ? String(localized: .connectAndSelectChannel) : String(localized: .queueWaiting))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 30)
+            }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) { primaryControls; secondaryControls }.fixedSize(horizontal: true, vertical: false)
+                VStack(spacing: 12) {
+                    HStack(spacing: 12) { primaryControls }
+                    HStack(spacing: 12) { secondaryControls }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            if app.actionStatuses["queue.control.skip"] == .success,
+               app.lastSkipOutcome == .restartedRepeatedTrack {
+                Text("repeatRestarted").font(.caption).foregroundStyle(.secondary)
+            }
+            if app.localVolume.showVolumeButton {
+                Button { showVolume = true } label: { Label("localVolumeTitle", systemImage: "speaker.wave.2") }
+                    .buttonStyle(.bordered)
             }
         }
         .padding(18)
-        .background(Color(uiColor: .secondarySystemGroupedBackground), in: cardShape)
-        .clipShape(cardShape)
-    }
-}
-
-/// Keeps the previous track rendered until the incoming hero artwork is ready.
-/// This avoids the "new image appears instantly over the old animation" effect:
-/// both complete track presentations coexist briefly and crossfade inside the card.
-private struct TrackPresentationView: View {
-    let track: PlaybackTrackResponse
-    let queue: QueueSnapshotResponse?
-    let revision: Int
-    let initiallyReady: Bool
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var displayedTrack: PlaybackTrackResponse
-    @State private var displayedQueue: QueueSnapshotResponse?
-    @State private var incomingTrack: PlaybackTrackResponse?
-    @State private var incomingQueue: QueueSnapshotResponse?
-    @State private var initialArtworkReady: Bool
-    @State private var transitionProgress: CGFloat = 0
-    @State private var transitionTask: Task<Void, Never>?
-
-    init(
-        track: PlaybackTrackResponse,
-        queue: QueueSnapshotResponse?,
-        revision: Int,
-        initiallyReady: Bool
-    ) {
-        self.track = track
-        self.queue = queue
-        self.revision = revision
-        self.initiallyReady = initiallyReady
-        _displayedTrack = State(initialValue: track)
-        _displayedQueue = State(initialValue: queue)
-        _initialArtworkReady = State(initialValue: initiallyReady)
+        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 26))
+        .animation(reduceMotion ? nil : .smooth(duration: 0.2), value: app.presentationTrackRevision)
+        .sheet(isPresented: $showVolume) { LocalVolumeSheet(controller: app.localVolume) }
     }
 
-    var body: some View {
-        ZStack(alignment: .topLeading) {
-            if !initialArtworkReady {
-                PlayerCardContentSkeleton()
-                    .transition(.opacity)
-            }
-
-            NowPlayingTrackContent(
-                track: displayedTrack,
-                queue: displayedQueue,
-                onArtworkLoaded: revealInitialArtwork
-            )
-            .opacity(displayedOpacity)
-            .offset(y: reduceMotion ? 0 : (incomingTrack == nil ? 0 : -18 * transitionProgress))
-            .scaleEffect(reduceMotion ? 1 : (incomingTrack == nil ? 1 : 1 - (0.01 * transitionProgress)))
-            .zIndex(0)
-
-            if let incomingTrack {
-                NowPlayingTrackContent(
-                    track: incomingTrack,
-                    queue: incomingQueue,
-                    onArtworkLoaded: revealIncomingArtwork
-                )
-                // Keep the new hierarchy alive so Nuke can load it, but visually
-                // hidden until the hero bitmap is ready.
-                .opacity(max(0.001, transitionProgress))
-                .offset(y: reduceMotion ? 0 : 18 * (1 - transitionProgress))
-                .scaleEffect(reduceMotion ? 1 : 0.985 + (0.015 * transitionProgress))
-                .zIndex(1)
-                .allowsHitTesting(false)
-                .accessibilityHidden(transitionProgress < 1)
-            }
-        }
-        // Intentionally do not clip here. During a track change the complete
-        // presentation may travel through the card padding. The enclosing
-        // NowPlayingCard owns the rounded clip, so animation can use the whole
-        // card surface without ever drawing outside the card itself.
-        .onChange(of: revision) { _, _ in
-            stageIncomingPresentation()
-        }
-        .onChange(of: queue?.version) { _, _ in
-            if incomingTrack == nil {
-                displayedQueue = queue
-            } else {
-                incomingQueue = queue
-            }
-        }
-        .onChange(of: initiallyReady) { _, ready in
-            guard ready, !initialArtworkReady, incomingTrack == nil else { return }
-            withAnimation(.easeOut(duration: 0.12)) {
-                initialArtworkReady = true
-            }
-        }
-        .onDisappear {
-            transitionTask?.cancel()
-        }
+    @ViewBuilder private var primaryControls: some View {
+        PlayerCircleButton(systemName: "stop.fill", role: .destructive, active: false,
+            busy: app.actionStatuses["queue.control.stop"] == .pending, feedback: app.actionStatuses["queue.control.stop"], disabled: app.nowPlaying == nil,
+            accessibilityLabel: .stopPlayback, action: requestStop)
+        PlayerCircleButton(systemName: "forward.end.fill", active: false,
+            busy: app.actionStatuses["queue.control.skip"] == .pending, feedback: app.actionStatuses["queue.control.skip"], disabled: app.nowPlaying == nil,
+            size: 52, symbolFont: .title2.weight(.bold), accessibilityLabel: .skipTrack) { app.skip() }
+        PlayerCircleButton(systemName: "repeat", active: app.queue?.isRepeatEnabled == true,
+            busy: app.actionStatuses["queue.control.repeatTrack"] == .pending, feedback: app.actionStatuses["queue.control.repeatTrack"], disabled: app.nowPlaying == nil,
+            accessibilityLabel: .repeatPlayback, accessibilityValue: app.queue?.isRepeatEnabled == true ? .enabled : .disabled) { app.toggleRepeat() }
     }
 
-    private var displayedOpacity: CGFloat {
-        guard initialArtworkReady else { return 0.001 }
-        guard incomingTrack != nil else { return 1 }
-        return 1 - transitionProgress
-    }
-
-    private func revealInitialArtwork() {
-        guard !initialArtworkReady, incomingTrack == nil else { return }
-        withAnimation(.easeOut(duration: 0.12)) {
-            initialArtworkReady = true
-        }
-    }
-
-    private func stageIncomingPresentation() {
-        transitionTask?.cancel()
-
-        // If an exceptionally fast second update arrives, commit the already staged
-        // presentation before starting the next transition. This keeps the animation
-        // deterministic instead of stacking multiple hidden LazyImages.
-        if let stagedTrack = incomingTrack {
-            displayedTrack = stagedTrack
-            displayedQueue = incomingQueue
-            incomingTrack = nil
-            transitionProgress = 0
-            initialArtworkReady = true
-        }
-
-        incomingTrack = track
-        incomingQueue = queue
-        transitionProgress = 0
-    }
-
-    private func revealIncomingArtwork() {
-        guard let stagedTrack = incomingTrack, transitionProgress == 0 else { return }
-
-        // If the initial artwork never became visible (for example a skip happened
-        // during startup), reveal only the newest prepared presentation instead of
-        // flashing the stale one underneath it.
-        if !initialArtworkReady {
-            displayedTrack = stagedTrack
-            displayedQueue = incomingQueue
-            incomingTrack = nil
-            transitionProgress = 0
-            withAnimation(.easeOut(duration: 0.12)) {
-                initialArtworkReady = true
-            }
-            return
-        }
-
-        let transitionAnimation: Animation = reduceMotion
-            ? .easeOut(duration: 0.14)
-            : .snappy(duration: 0.20, extraBounce: 0.015)
-        let transitionDuration = reduceMotion ? 150 : 215
-
-        withAnimation(transitionAnimation) {
-            transitionProgress = 1
-        }
-
-        transitionTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(transitionDuration))
-            guard !Task.isCancelled, let stagedTrack = incomingTrack else { return }
-
-            displayedTrack = stagedTrack
-            displayedQueue = incomingQueue
-            incomingTrack = nil
-            transitionProgress = 0
-        }
-    }
-}
-
-private struct NowPlayingTrackContent: View {
-    let track: PlaybackTrackResponse
-    let queue: QueueSnapshotResponse?
-    var onArtworkLoaded: (() -> Void)? = nil
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            ArtworkHero(track: track, onLoadCompleted: onArtworkLoaded)
-            Text(.nowPlaying)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.tint)
-            Text(track.title)
-                .font(.title2.bold())
-                .lineLimit(2, reservesSpace: true)
-            PlaybackProgress(queue: queue, track: track)
+    @ViewBuilder private var secondaryControls: some View {
+        PlayerCircleButton(systemName: "radio.fill", active: app.queue?.radio.isEnabled == true,
+            busy: app.actionStatuses["queue.control.radio"] == .pending, feedback: app.actionStatuses["queue.control.radio"],
+            disabled: app.queue == nil || (app.queue?.radio.isEnabled != true && !app.hasDiscordTarget),
+            accessibilityLabel: .radio, accessibilityValue: app.queue?.radio.isEnabled == true ? .enabled : .disabled) { app.toggleRadio() }
+        if let track = app.nowPlaying {
+            let favorite = app.isFavorite(track)
+            PlayerCircleButton(systemName: favorite ? "heart.fill" : "heart", active: favorite,
+                busy: app.actionStatuses[app.favoriteActionKey(for: track)] == .pending, feedback: app.actionStatuses[app.favoriteActionKey(for: track)],
+                disabled: app.isLoadingFavorites, accessibilityLabel: favorite ? .removeFavorite : .addFavorite) { app.toggleFavorite(track) }
         }
     }
 }
@@ -398,87 +208,13 @@ private struct NowPlayingTrackContent: View {
 private struct PlayerCardContentSkeleton: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(uiColor: .tertiarySystemFill))
-                .aspectRatio(16 / 9, contentMode: .fit)
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color(uiColor: .tertiarySystemFill))
-                .frame(width: 132, height: 12)
-            VStack(alignment: .leading, spacing: 8) {
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(Color(uiColor: .tertiarySystemFill))
-                    .frame(height: 22)
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(Color(uiColor: .tertiarySystemFill))
-                    .frame(width: 220, height: 22)
-            }
-            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                .fill(Color(uiColor: .tertiarySystemFill))
-                .frame(height: 8)
+            RoundedRectangle(cornerRadius: 20).fill(.quaternary).aspectRatio(16 / 9, contentMode: .fit)
+            RoundedRectangle(cornerRadius: 6).fill(.quaternary).frame(width: 132, height: 12)
+            RoundedRectangle(cornerRadius: 7).fill(.quaternary).frame(height: 48)
+            RoundedRectangle(cornerRadius: 4).fill(.quaternary).frame(height: 8)
         }
         .redacted(reason: .placeholder)
-    }
-}
-
-private struct ArtworkHero: View {
-    let track: PlaybackTrackResponse
-    var onLoadCompleted: (() -> Void)? = nil
-
-    var body: some View {
-        ZStack {
-            if let color = Color(hex: track.artworkAccentColor) {
-                // The gradient is soft enough on its own. Avoiding a large live blur
-                // prevents an extra offscreen-rendering pass while the player scrolls
-                // and while two hero presentations overlap during a track transition.
-                RadialGradient(
-                    colors: [color.opacity(0.38), color.opacity(0.10), .clear],
-                    center: .bottom,
-                    startRadius: 8,
-                    endRadius: 300
-                )
-            }
-
-            ArtworkView(
-                urlString: track.artworkUrl,
-                layout: .aspectRatio(16 / 9),
-                cornerRadius: 20,
-                onLoadCompleted: onLoadCompleted
-            )
-        }
-        .aspectRatio(16 / 9, contentMode: .fit)
-        .frame(maxWidth: .infinity)
-        .clipped()
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-    }
-}
-
-private struct PlaybackProgress: View {
-    let queue: QueueSnapshotResponse?
-    let track: PlaybackTrackResponse
-
-    var body: some View {
-        let startedAt = parseISO8601(queue?.nowPlayingStartedAt)
-        let durationMilliseconds = track.durationMilliseconds
-        let duration = max(Double(durationMilliseconds) / 1_000, 1)
-        let durationLabel = formatDuration(durationMilliseconds)
-
-        TimelineView(.periodic(from: .now, by: 0.25)) { context in
-            let position = playbackPosition(
-                startedAt: startedAt,
-                durationMilliseconds: durationMilliseconds,
-                now: context.date
-            ) ?? 0
-            VStack(spacing: 6) {
-                ProgressView(value: position, total: duration)
-                HStack {
-                    Text(verbatim: formatDuration(Int64(position * 1_000)))
-                    Spacer()
-                    Text(verbatim: durationLabel)
-                }
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
-            }
-        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -487,6 +223,7 @@ private struct PlayerCircleButton: View {
     var role: ButtonRole? = nil
     let active: Bool
     let busy: Bool
+    var feedback: ActionStatus? = nil
     var disabled = false
     var size: CGFloat = 44
     var symbolFont: Font = .body.weight(.semibold)
@@ -496,6 +233,8 @@ private struct PlayerCircleButton: View {
 
     private var accessibilityValueText: Text {
         if busy { return Text(.inProgress) }
+        if feedback == .success { return Text("actionSucceeded") }
+        if feedback == .failure { return Text("actionFailed") }
         if let accessibilityValue { return Text(accessibilityValue) }
         return Text(verbatim: "")
     }
@@ -503,7 +242,9 @@ private struct PlayerCircleButton: View {
     var body: some View {
         Button(role: role, action: action) {
             Group {
-                if busy {
+                if let feedback {
+                    ActionFeedback(status: feedback, symbol: systemName)
+                } else if busy {
                     ProgressView()
                         .controlSize(.small)
                 } else {
@@ -526,6 +267,7 @@ private struct PlayerCircleButton: View {
 private struct QueueRow: View {
     let app: AppState
     let entry: QueueEntryResponse
+    @State private var showSwap = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -543,26 +285,56 @@ private struct QueueRow: View {
             }
             Spacer()
             Button { app.toggleFavorite(entry.track) } label: {
-                Image(systemName: app.isFavorite(entry.track) ? "heart.fill" : "heart")
+                ActionFeedback(status: app.actionStatuses[app.favoriteActionKey(for: entry.track)], symbol: app.isFavorite(entry.track) ? "heart.fill" : "heart")
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
+            .disabled(app.isLoadingFavorites || app.actionStatuses[app.favoriteActionKey(for: entry.track)] == .pending)
             .accessibilityLabel(Text(app.isFavorite(entry.track) ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
 
-            Button(role: .destructive) { app.removeQueueEntry(entry.entryId) } label: {
-                Image(systemName: "trash")
+            Button { app.requeueEntry(entry) } label: {
+                ActionFeedback(status: app.actionStatuses["queue.requeue." + entry.id], symbol: "text.badge.plus")
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
-            .accessibilityLabel(Text(.removeFromQueue))
+            .accessibilityLabel(Text(.addToQueue))
+            .actionFeedbackAccessibility(app.actionStatuses["queue.requeue." + entry.id])
+            .disabled(app.actionStatuses["queue.requeue." + entry.id] == .pending)
         }
         .padding(12)
         .background(
             Color(uiColor: .secondarySystemGroupedBackground),
             in: RoundedRectangle(cornerRadius: 18, style: .continuous)
         )
+        .swipeActions(edge: .leading) {
+            Button { app.requeueEntry(entry) } label: { Label(.addToQueue, systemImage: "text.badge.plus") }
+                .tint(.accentColor).disabled(app.actionStatuses["queue.requeue." + entry.id] == .pending)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button { app.removeQueueEntry(entry.id) } label: { Label(.removeFromQueue, systemImage: "trash") }
+                .tint(.red).disabled(app.actionStatuses["queue.remove." + entry.id] == .pending)
+        }
+        .contextMenu {
+            Button("swapWith") { showSwap = true }
+                .disabled(app.isMutating || (app.queue?.pendingEntries.count ?? 0) < 2)
+            Button { app.requeueEntry(entry) } label: { Label(.addToQueue, systemImage: "text.badge.plus") }
+            Button { app.swapQueueEntry(entry, offset: -1) } label: { Label("swapPrevious", systemImage: "arrow.up") }
+                .disabled(entry.position <= 1 || app.isMutating)
+            Button { app.swapQueueEntry(entry, offset: 1) } label: { Label("swapNext", systemImage: "arrow.down") }
+                .disabled(entry.position >= (app.queue?.pendingEntries.count ?? 0) || app.isMutating)
+            Button(role: .destructive) { app.removeQueueEntry(entry.id) } label: { Label(.removeFromQueue, systemImage: "trash") }
+        }
+        .accessibilityAction(named: Text(.addToQueue)) { app.requeueEntry(entry) }
+        .accessibilityAction(named: Text(.removeFromQueue)) { app.removeQueueEntry(entry.id) }
+        .accessibilityAction(named: Text("swapPrevious")) { app.swapQueueEntry(entry, offset: -1) }
+        .accessibilityAction(named: Text("swapNext")) { app.swapQueueEntry(entry, offset: 1) }
+        .accessibilityAction(named: Text("swapWith")) { showSwap = true }
+        .sheet(isPresented: $showSwap) {
+            QueueSwapView(app: app, source: entry) { showSwap = false }
+        }
+
     }
 }
 
@@ -600,7 +372,7 @@ private struct PlayerSkeleton: View {
             PlayerCardContentSkeleton()
 
             HStack(spacing: 12) {
-                ForEach(Array([44, 52, 44, 44, 44].enumerated()), id: \.offset) { _, size in
+                ForEach(Array([44, 52, 44].enumerated()), id: \.offset) { _, size in
                     Circle()
                         .fill(Color(uiColor: .tertiarySystemFill))
                         .frame(width: CGFloat(size), height: CGFloat(size))
@@ -613,21 +385,6 @@ private struct PlayerSkeleton: View {
         .background(
             Color(uiColor: .secondarySystemGroupedBackground),
             in: RoundedRectangle(cornerRadius: 26, style: .continuous)
-        )
-    }
-}
-
-private extension Color {
-    init?(hex: String?) {
-        guard let hex else { return nil }
-        let clean = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        guard clean.count == 6, let value = UInt64(clean, radix: 16) else { return nil }
-        self.init(
-            .sRGB,
-            red: Double((value >> 16) & 0xff) / 255,
-            green: Double((value >> 8) & 0xff) / 255,
-            blue: Double(value & 0xff) / 255,
-            opacity: 1
         )
     }
 }

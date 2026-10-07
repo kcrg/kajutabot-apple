@@ -1,9 +1,8 @@
-import PulseUI
 import SwiftUI
 
 struct MoreView: View {
     let app: AppState
-    @State private var isDiagnosticsPresented = false
+    @AppStorage("appearance.theme") private var theme = AppTheme.system
     @State private var isLogoutConfirmationPresented = false
 
     var body: some View {
@@ -13,10 +12,6 @@ struct MoreView: View {
                     if !app.isGuest {
                         ArtworkView(urlString: app.currentUser?.avatarUrl, layout: .square(58), cornerRadius: 14)
                             .contentShape(Rectangle())
-                            .onTapGesture(count: 5) {
-                                Diagnostics.info("diagnostics", "Hidden diagnostics console opened")
-                                isDiagnosticsPresented = true
-                            }
                     }
                     VStack(alignment: .leading, spacing: 3) {
                         Text(app.currentUser?.displayName ?? "-")
@@ -42,6 +37,12 @@ struct MoreView: View {
                 if app.isGuest {
                     Link(String(localized: .joinTestServer), destination: URL(string: "https://discord.gg/7jV7j5djF")!)
                     Button(.signInDiscord) { app.switchGuestToDiscord() }
+                }
+            }
+
+            Section("appearanceSection") {
+                Picker("appearanceTheme", selection: $theme) {
+                    ForEach(AppTheme.allCases) { theme in Text(theme.title).tag(theme) }
                 }
             }
 
@@ -91,17 +92,7 @@ struct MoreView: View {
         } message: {
             Text(.logoutConfirmationMessage)
         }
-        .fullScreenCover(isPresented: $isDiagnosticsPresented) {
-            NavigationStack {
-                ConsoleView()
-                    .navigationTitle(.diagnosticsTitle)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button(.done) { isDiagnosticsPresented = false }
-                        }
-                    }
-            }
-        }
+
     }
 }
 
@@ -183,9 +174,8 @@ private struct LibrariesView: View {
         .init(name: "Security / Keychain", description: .libraryKeychainDescription, license: "Apple SDK"),
         .init(name: "Nuke", description: .libraryNukeDescription, license: "MIT"),
         .init(name: "SignalRClient", description: .librarySignalRDescription, license: "MIT"),
-        .init(name: "Swift Async Algorithms", description: .libraryAsyncAlgorithmsDescription, license: "Apache 2.0"),
         .init(name: "Swift Collections", description: .librarySwiftCollectionsDescription, license: "Apache 2.0"),
-        .init(name: "Pulse", description: .libraryPulseDescription, license: "MIT"),
+        .init(name: "Sentry", description: "librarySentryDescription", license: "MIT"),
     ]
 
     var body: some View {

@@ -6,7 +6,7 @@ enum KeychainError: Error {
     case invalidData
 }
 
-struct KeychainSessionStore: Sendable {
+struct KeychainSessionStore: SessionStoring {
     /// App Groups are also valid keychain access groups. Using the group name keeps
     /// the main app and Share Extension on one protected session without copying
     /// credentials through UserDefaults.

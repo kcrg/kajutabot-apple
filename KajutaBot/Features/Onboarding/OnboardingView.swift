@@ -26,6 +26,10 @@ private let onboardingPages: [OnboardingPage] = [
         description: .onboardingFavoritesDescription,
         symbol: "heart.circle.fill"
     ),
+    .init(id: "queue", title: "onboardingQueueTitle", description: "onboardingQueueDescription", symbol: "arrow.up.arrow.down.circle.fill"),
+    .init(id: "radio", title: "onboardingRadioTitle", description: "onboardingRadioDescription", symbol: "radio.fill"),
+    .init(id: "miniPlayer", title: "onboardingMiniTitle", description: "onboardingMiniDescription", symbol: "rectangle.bottomthird.inset.filled"),
+    .init(id: "share", title: "onboardingShareTitle", description: "onboardingShareDescription", symbol: "square.and.arrow.up"),
 ]
 
 struct OnboardingView: View {
@@ -112,7 +116,7 @@ struct OnboardingView: View {
             }
             .buttonStyle(.borderedProminent)
             .buttonBorderShape(.capsule)
-            .disabled(isLastPage && !app.hasDiscordTarget)
+            .disabled(isLastPage && (!app.hasDiscordTarget || app.isLoadingVoiceChannels))
         }
         .animation(reduceMotion ? .easeOut(duration: 0.15) : .snappy(duration: 0.28), value: showsBackButton)
         .animation(reduceMotion ? .easeOut(duration: 0.15) : .snappy(duration: 0.24), value: isLastPage)
@@ -185,6 +189,7 @@ private struct FeaturePage: View {
 
 private struct SelectionPage: View {
     let app: AppState
+    @State private var showTarget = false
 
     var body: some View {
         ScrollView {
@@ -204,7 +209,11 @@ private struct SelectionPage: View {
                 Text(app.isGuest ? String(localized: .guestTargetDescription) : String(localized: .discordTargetDescription))
                     .foregroundStyle(.secondary)
 
-                DiscordTargetPicker(app: app, showGuildPicker: !app.isGuest)
+                Button { showTarget = true } label: {
+                    Label(app.selectedVoiceChannel?.name ?? String(localized: .changeServerChannel), systemImage: "headphones")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.borderedProminent)
 
                 Spacer(minLength: 24)
             }
@@ -213,5 +222,8 @@ private struct SelectionPage: View {
             .frame(maxWidth: .infinity)
         }
         .scrollBounceBehavior(.basedOnSize)
+        .sheet(isPresented: $showTarget) {
+            NavigationStack { DiscordSelectionView(app: app) { showTarget = false } }
+        }
     }
 }

@@ -8,7 +8,7 @@ enum AppTab: Hashable {
 }
 
 struct MainTabView: View {
-    let app: AppState
+    @Bindable var app: AppState
     @State private var selectedTab: AppTab = .player
 
     private var showsMiniPlayer: Bool {
@@ -19,7 +19,7 @@ struct MainTabView: View {
         TabView(selection: $selectedTab) {
             Tab(String(localized: .playerTitle), systemImage: "music.note.list", value: .player) {
                 NavigationStack {
-                    PlayerView(app: app)
+                    PlayerView(app: app) { selectedTab = .search }
                 }
             }
 
@@ -43,6 +43,9 @@ struct MainTabView: View {
                 }
             }
         }
+        .sheet(item: $app.pendingSharedLink) { entry in SharedImportView(app: app, entry: entry) }
+        .task { app.refreshSharedInbox() }
+        .operationError(app)
         .tabViewSearchActivation(.searchTabSelection)
         .tabViewBottomAccessory(isEnabled: showsMiniPlayer) {
             MiniPlayerView(app: app) {

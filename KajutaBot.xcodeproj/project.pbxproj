@@ -9,10 +9,7 @@
 /* Begin PBXBuildFile section */
 		7A0000000000000000000003 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A0000000000000000000002 /* NukeUI */; };
 		7B0000000000000000000003 /* SignalRClient in Frameworks */ = {isa = PBXBuildFile; productRef = 7B0000000000000000000002 /* SignalRClient */; };
-		7C0000000000000000000003 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7C0000000000000000000002 /* AsyncAlgorithms */; };
-		7D0000000000000000000003 /* Pulse in Frameworks */ = {isa = PBXBuildFile; productRef = 7D0000000000000000000002 /* Pulse */; };
-		7D0000000000000000000005 /* PulseProxy in Frameworks */ = {isa = PBXBuildFile; productRef = 7D0000000000000000000004 /* PulseProxy */; };
-		7D0000000000000000000007 /* PulseUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7D0000000000000000000006 /* PulseUI */; };
+		7D0000000000000000000003 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 7D0000000000000000000002 /* Sentry */; };
 		8A0000000000000000000003 /* DequeModule in Frameworks */ = {isa = PBXBuildFile; productRef = 8A0000000000000000000002 /* DequeModule */; };
 		8E000000000000000000000D /* KajutaBotShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 8E0000000000000000000002 /* KajutaBotShareExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -63,6 +60,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		9F0000000000000000000001 /* KajutaBotShared */ = {isa = PBXFileSystemSynchronizedRootGroup; path = KajutaBotShared; sourceTree = "<group>"; };
 		9EA60AB13062D101006DA601 /* KajutaBot */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = KajutaBot;
@@ -92,10 +90,7 @@
 			files = (
 				7A0000000000000000000003 /* NukeUI in Frameworks */,
 				7B0000000000000000000003 /* SignalRClient in Frameworks */,
-				7C0000000000000000000003 /* AsyncAlgorithms in Frameworks */,
-				7D0000000000000000000003 /* Pulse in Frameworks */,
-				7D0000000000000000000005 /* PulseProxy in Frameworks */,
-				7D0000000000000000000007 /* PulseUI in Frameworks */,
+				7D0000000000000000000003 /* Sentry in Frameworks */,
 				8A0000000000000000000003 /* DequeModule in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -128,6 +123,7 @@
 			isa = PBXGroup;
 			children = (
 				9EA60AB13062D101006DA601 /* KajutaBot */,
+				9F0000000000000000000001 /* KajutaBotShared */,
 				8E0000000000000000000003 /* KajutaBotShareExtension */,
 				9EA60ABF3062D105006DA601 /* KajutaBotTests */,
 				9EA60AC93062D105006DA601 /* KajutaBotUITests */,
@@ -165,15 +161,13 @@
 			);
 			fileSystemSynchronizedGroups = (
 				9EA60AB13062D101006DA601 /* KajutaBot */,
+				9F0000000000000000000001 /* KajutaBotShared */,
 			);
 			name = KajutaBot;
 			packageProductDependencies = (
 				7A0000000000000000000002 /* NukeUI */,
 				7B0000000000000000000002 /* SignalRClient */,
-				7C0000000000000000000002 /* AsyncAlgorithms */,
-				7D0000000000000000000002 /* Pulse */,
-				7D0000000000000000000004 /* PulseProxy */,
-				7D0000000000000000000006 /* PulseUI */,
+				7D0000000000000000000002 /* Sentry */,
 				8A0000000000000000000002 /* DequeModule */,
 			);
 			productName = KajutaBot;
@@ -239,6 +233,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				9F0000000000000000000001 /* KajutaBotShared */,
 				8E0000000000000000000003 /* KajutaBotShareExtension */,
 			);
 			name = KajutaBotShareExtension;
@@ -297,8 +292,7 @@
 			packageReferences = (
 				7A0000000000000000000001 /* XCRemoteSwiftPackageReference "Nuke" */,
 				7B0000000000000000000001 /* XCRemoteSwiftPackageReference "signalr-client-swift" */,
-				7C0000000000000000000001 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
-				7D0000000000000000000001 /* XCRemoteSwiftPackageReference "Pulse" */,
+				7D0000000000000000000001 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 				8A0000000000000000000001 /* XCRemoteSwiftPackageReference "swift-collections" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -817,20 +811,12 @@
 				minimumVersion = 1.0.0;
 			};
 		};
-		7C0000000000000000000001 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
+		7D0000000000000000000001 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.5;
-			};
-		};
-		7D0000000000000000000001 /* XCRemoteSwiftPackageReference "Pulse" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/kean/Pulse.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.2.3;
+				kind = exactVersion;
+				version = 9.24.0;
 			};
 		};
 		8A0000000000000000000001 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
@@ -854,25 +840,10 @@
 			package = 7B0000000000000000000001 /* XCRemoteSwiftPackageReference "signalr-client-swift" */;
 			productName = SignalRClient;
 		};
-		7C0000000000000000000002 /* AsyncAlgorithms */ = {
+		7D0000000000000000000002 /* Sentry */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 7C0000000000000000000001 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
-			productName = AsyncAlgorithms;
-		};
-		7D0000000000000000000002 /* Pulse */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7D0000000000000000000001 /* XCRemoteSwiftPackageReference "Pulse" */;
-			productName = Pulse;
-		};
-		7D0000000000000000000004 /* PulseProxy */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7D0000000000000000000001 /* XCRemoteSwiftPackageReference "Pulse" */;
-			productName = PulseProxy;
-		};
-		7D0000000000000000000006 /* PulseUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7D0000000000000000000001 /* XCRemoteSwiftPackageReference "Pulse" */;
-			productName = PulseUI;
+			package = 7D0000000000000000000001 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 		8A0000000000000000000002 /* DequeModule */ = {
 			isa = XCSwiftPackageProductDependency;

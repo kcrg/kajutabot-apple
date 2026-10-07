@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage("appearance.theme") private var theme = AppTheme.system
     @State private var app = AppState()
 
     var body: some View {
@@ -29,6 +30,7 @@ struct ContentView: View {
             }
         }
         .animation(reduceMotion ? .easeOut(duration: 0.16) : .smooth(duration: 0.32), value: app.authState)
+        .preferredColorScheme(theme.colorScheme)
         .task { await app.initializeIfNeeded() }
         .onChange(of: scenePhase) { _, phase in
             switch phase {

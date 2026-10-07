@@ -27,7 +27,7 @@ enum APIError: LocalizedError, Sendable {
     }
 }
 
-struct AuthAPIClient: Sendable {
+struct AuthAPIClient: AuthSessionAPI {
     let baseURL: URL
     private let session: URLSession
 

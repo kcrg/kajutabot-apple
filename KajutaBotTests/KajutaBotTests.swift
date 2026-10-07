@@ -17,20 +17,14 @@ struct KajutaBotTests {
         #expect(favoriteIdentity("yt:dQw4w9WgXcQ") == "youtube:dQw4w9WgXcQ")
     }
 
-    @Test("Pozycja odtwarzania jest ograniczona do długości utworu")
-    func playbackProgressClamps() throws {
-        let track = PlaybackTrackResponse(
-            contentId: "1", contentType: "youtube", title: "Test", url: "https://example.com",
-            durationMilliseconds: 10_000, artworkUrl: nil, playCount: 0, artworkAccentColor: nil
-        )
-        let queue = QueueSnapshotResponse(
-            guildId: "g", voiceChannelId: "c", nowPlaying: track, nowPlayingFromRadio: false,
-            radio: RadioStateResponse(isEnabled: false, minimumDurationSeconds: nil, maximumDurationSeconds: nil, availableTrackCount: nil),
-            pendingEntries: [], pendingDurationMilliseconds: 0, version: 1,
-            nowPlayingStartedAt: "2026-09-22T10:00:00Z", isRepeatEnabled: false
-        )
-        let now = try #require(ISO8601DateFormatter.kajutaBotWithoutFraction.date(from: "2026-09-22T10:00:30Z"))
-        #expect(playbackPosition(queue: queue, now: now) == 10)
+    @Test("Postęp używa zegara monotonicznego i pozycji backendu")
+    func playbackProgressClamps() {
+        let queue = queueFixture(version: 10, queueVersion: 3, playback: true, position: 5_000)
+        let progress = PlaybackProgressState(snapshot: queue, uptime: 100)
+        #expect(progress.position(at: 102) == 7_000)
+        #expect(progress.position(at: 130) == 10_000)
+        #expect(progress.position(at: 99) == 5_000)
+        #expect(PlaybackProgressState(snapshot: queueFixture(playback: true), uptime: 100).position(at: 101) == nil)
     }
 
     @Test("Dekodowanie zachowuje domyślne wartości kontraktów Androida")
@@ -52,22 +46,28 @@ struct KajutaBotTests {
           "radio": { "isEnabled": false },
           "pendingEntries": [],
           "pendingDurationMilliseconds": 0,
-          "version": 1,
+          "version": 10,
+          "queueVersion": 3,
+          "pendingEntriesCount": 0,
           "nowPlayingStartedAt": null
         }
         """#.data(using: .utf8)!
 
         let queue = try JSONDecoder().decode(QueueSnapshotResponse.self, from: json)
+        #expect(queue.version == 10)
+        #expect(queue.queueVersion == 3)
         #expect(queue.isRepeatEnabled == false)
         #expect(queue.nowPlaying?.artworkUrl == nil)
     }
 
     @Test("Publiczne DTO nie wysyłają technicznych pól i powtórzonego ID")
     func publicDTOShape() throws {
-        let move = MoveQueueEntryRequest(newPosition: 2, expectedVersion: 7)
+        let move = MoveQueueEntryRequest(newPosition: 2, expectedQueueVersion: 7)
         let moveData = try JSONEncoder().encode(move)
         let moveJSON = try #require(JSONSerialization.jsonObject(with: moveData) as? [String: Any])
         #expect(moveJSON["entryId"] == nil)
+        #expect(moveJSON["expectedVersion"] == nil)
+        #expect(moveJSON["expectedQueueVersion"] as? Int == 7)
         #expect(moveJSON["newPosition"] as? Int == 2)
 
         let track = PlaybackTrackResponse(

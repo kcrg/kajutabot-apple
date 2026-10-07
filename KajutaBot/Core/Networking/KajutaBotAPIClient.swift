@@ -1,6 +1,6 @@
 import Foundation
 
-struct KajutaBotAPIClient: Sendable {
+struct KajutaBotAPIClient: KajutaBotAPI {
     let baseURL: URL
     let sessionManager: SessionManager
     private let urlSession: URLSession
@@ -26,11 +26,11 @@ struct KajutaBotAPIClient: Sendable {
         try await send(method: "POST", path: "guilds/\(guildId)/queue/items", body: body)
     }
 
-    func removeQueueEntry(guildId: String, entryId: String, expectedVersion: Int64?) async throws -> QueueSnapshotResponse {
+    func removeQueueEntry(guildId: String, entryId: String, expectedQueueVersion: Int64?) async throws -> QueueSnapshotResponse {
         try await send(
             method: "DELETE",
             path: "guilds/\(guildId)/queue/items/\(entryId)",
-            query: expectedVersion.map { [URLQueryItem(name: "expectedVersion", value: String($0))] } ?? []
+            query: expectedQueueVersion.map { [URLQueryItem(name: "expectedQueueVersion", value: String($0))] } ?? []
         )
     }
 
@@ -38,11 +38,15 @@ struct KajutaBotAPIClient: Sendable {
         try await send(method: "PUT", path: "guilds/\(guildId)/queue/items/\(entryId)/position", body: body)
     }
 
-    func clearPendingQueue(guildId: String, expectedVersion: Int64?) async throws -> QueueSnapshotResponse {
+    func swapQueueEntries(guildId: String, request body: SwapQueueEntriesRequest) async throws -> QueueSnapshotResponse {
+        try await send(method: "POST", path: "guilds/\(guildId)/queue/items/swap", body: body)
+    }
+
+    func clearPendingQueue(guildId: String, expectedQueueVersion: Int64?) async throws -> QueueSnapshotResponse {
         try await send(
             method: "DELETE",
             path: "guilds/\(guildId)/queue/items",
-            query: expectedVersion.map { [URLQueryItem(name: "expectedVersion", value: String($0))] } ?? []
+            query: expectedQueueVersion.map { [URLQueryItem(name: "expectedQueueVersion", value: String($0))] } ?? []
         )
     }
 
@@ -62,11 +66,11 @@ struct KajutaBotAPIClient: Sendable {
         try await send(method: "PUT", path: "guilds/\(guildId)/radio", body: body)
     }
 
-    func disableRadio(guildId: String, expectedVersion: Int64?) async throws -> QueueSnapshotResponse {
+    func disableRadio(guildId: String, expectedQueueVersion: Int64?) async throws -> QueueSnapshotResponse {
         try await send(
             method: "DELETE",
             path: "guilds/\(guildId)/radio",
-            query: expectedVersion.map { [URLQueryItem(name: "expectedVersion", value: String($0))] } ?? []
+            query: expectedQueueVersion.map { [URLQueryItem(name: "expectedQueueVersion", value: String($0))] } ?? []
         )
     }
 
@@ -117,12 +121,20 @@ struct KajutaBotAPIClient: Sendable {
     }
 
     private func performRaw(method: String, path: String, query: [URLQueryItem], body: Data?) async throws -> (Data, HTTPURLResponse) {
+        let identity = await sessionManager.identity
         let token = try await sessionManager.accessToken()
+        try await sessionManager.validate(identity: identity)
         do {
-            return try await execute(method: method, path: path, query: query, body: body, accessToken: token)
+            let result = try await execute(method: method, path: path, query: query, body: body, accessToken: token)
+            try await sessionManager.validate(identity: identity)
+            return result
         } catch let error as APIError where error.statusCode == 401 {
+            try await sessionManager.validate(identity: identity)
             let refreshed = try await sessionManager.accessToken(forceRefreshIfMatching: token)
-            return try await execute(method: method, path: path, query: query, body: body, accessToken: refreshed)
+            try await sessionManager.validate(identity: identity)
+            let result = try await execute(method: method, path: path, query: query, body: body, accessToken: refreshed)
+            try await sessionManager.validate(identity: identity)
+            return result
         }
     }
 

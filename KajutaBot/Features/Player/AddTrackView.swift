@@ -1,21 +1,18 @@
 import SwiftUI
 
 struct AddTrackView: View {
-    let app: AppState
+    @Bindable var app: AppState
     let queued: () -> Void
+    @State private var submission: Task<Void, Never>?
 
-    private var trimmedQuery: String { app.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private var isURL: Bool {
-        let lower = trimmedQuery.lowercased()
-        return lower.hasPrefix("http://") || lower.hasPrefix("https://")
-    }
+    private var query: String { app.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var isURL: Bool { URLInput.firstURL(in: query) != nil }
 
     var body: some View {
         List {
             Section {
                 Picker(String(localized: .searchSource), selection: Binding(
-                    get: { app.searchSource },
-                    set: { app.setSearchSource($0) }
+                    get: { app.searchSource }, set: { app.setSearchSource($0) }
                 )) {
                     ForEach(SearchSourceOption.allCases) { source in
                         Text(source.displayName).tag(source)
@@ -23,46 +20,27 @@ struct AddTrackView: View {
                 }
                 .pickerStyle(.segmented)
             }
-
-            if !app.searchHistory.isEmpty && trimmedQuery.isEmpty {
+            if query.isEmpty && !app.searchHistory.isEmpty {
                 Section(.recentSearches) {
                     ForEach(Array(app.searchHistory), id: \.self) { query in
-                        Button {
-                            app.searchFromHistory(query)
-                        } label: {
-                            Label(query, systemImage: "clock.arrow.circlepath")
-                                .foregroundStyle(.primary)
+                        Button { app.searchFromHistory(query) } label: {
+                            Label(query, systemImage: "clock.arrow.circlepath").foregroundStyle(.primary)
                         }
                     }
                 }
             }
-
             if app.isSearching {
-                Section {
-                    HStack {
-                        Spacer()
-                        ProgressView { Text(.searching) }
-                        Spacer()
-                    }
-                    .padding(.vertical, 22)
-                }
-            } else if app.lastCompletedSearchQuery == trimmedQuery && !app.searchResults.isEmpty {
+                Section { ProgressView { Text(.searching) }.frame(maxWidth: .infinity) }
+            } else if app.lastCompletedSearchQuery == query && !app.searchResults.isEmpty {
                 Section(.results) {
                     ForEach(app.searchResults) { item in
-                        SearchResultRow(item: item) {
-                            app.enqueueSearchResult(item)
-                            queued()
-                        }
+                        result(item)
                     }
                 }
-            } else if app.lastCompletedSearchQuery == trimmedQuery && !trimmedQuery.isEmpty && !isURL {
-                Section {
-                    ContentUnavailableView {
-                        Label(.noResultsTitle, systemImage: "magnifyingglass")
-                    } description: {
-                        Text(.noResultsForQuery(query: trimmedQuery))
-                    }
-                }
+            } else if app.lastCompletedSearchQuery == query && !query.isEmpty && !isURL {
+                ContentUnavailableView {
+                    Label(.noResultsTitle, systemImage: "magnifyingglass")
+                } description: { Text(.noResultsForQuery(query: query)) }
             }
         }
         .scrollContentBackground(.hidden)
@@ -70,57 +48,60 @@ struct AddTrackView: View {
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle(.addTrackTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: Binding(
-                get: { app.searchQuery },
-                set: { app.searchQuery = $0 }
-            ), prompt: Text(.searchPrompt))
-        .onSubmit(of: .search) {
-            app.performSearch()
-        }
+        .searchable(text: $app.searchQuery, prompt: Text(.searchPrompt))
+        .onSubmit(of: .search) { submit() }
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button(isURL ? String(localized: .add) : String(localized: .search)) {
-                    app.performSearch()
-                    if isURL {
-                        queued()
-                    }
-                }
-                .disabled(trimmedQuery.isEmpty || app.isSearching || app.isMutating)
+                Button(isURL ? String(localized: .add) : String(localized: .search), action: submit)
+                    .disabled(query.isEmpty || app.isSearching || app.actionStatuses["queue.enqueue"] == .pending)
             }
         }
+        .onDisappear { submission?.cancel() }
     }
-}
 
-private struct SearchResultRow: View {
-    let item: SearchItemResponse
-    let add: () -> Void
-
-    var body: some View {
-        HStack(spacing: 12) {
+    private func result(_ item: SearchItemResponse) -> some View {
+        let key = "queue.search." + item.id
+        let favorite = app.isFavorite(item.track)
+        return HStack(spacing: 12) {
             ArtworkView(urlString: item.track.artworkUrl, layout: .square(60), cornerRadius: 10)
-
             VStack(alignment: .leading, spacing: 4) {
-                Text(item.track.title)
-                    .lineLimit(2)
-                HStack(spacing: 8) {
-                    Text(formatDuration(item.track.durationMilliseconds))
-                    Text(item.metricCaption)
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                Text(item.track.title).lineLimit(2)
+                if let date = item.dateLabel, !date.isEmpty { Text(date).font(.caption).foregroundStyle(.secondary) }
+                Text("\(item.metricCount.formatted()) \(item.metricCaption)").font(.caption).foregroundStyle(.secondary)
+                Text(verbatim: formatDuration(item.track.durationMilliseconds)).font(.caption).foregroundStyle(.secondary)
             }
-
-            Spacer()
-
-            Button(action: add) {
-                Image(systemName: "text.badge.plus")
-                    .font(.title3)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
+            Spacer(minLength: 4)
+            Button { app.toggleFavorite(item.track) } label: {
+                ActionFeedback(status: app.actionStatuses[app.favoriteActionKey(for: item.track)], symbol: favorite ? "heart.fill" : "heart")
+                    .frame(minWidth: 44, minHeight: 44)
             }
             .buttonStyle(.borderless)
+            .disabled(app.isLoadingFavorites || app.actionStatuses[app.favoriteActionKey(for: item.track)] == .pending)
+            .accessibilityLabel(Text(favorite ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
+            Button { add(item) } label: {
+                ActionFeedback(status: app.actionStatuses[key], symbol: "text.badge.plus").frame(minWidth: 44, minHeight: 44)
+            }
+            .buttonStyle(.borderless)
+            .disabled(app.actionStatuses[key] == .pending)
             .accessibilityLabel(Text(.addToQueue))
+            .actionFeedbackAccessibility(app.actionStatuses[key])
         }
-        .padding(.vertical, 4)
+        .swipeActions(edge: .leading) {
+            Button { add(item) } label: { Label(.addToQueue, systemImage: "text.badge.plus") }
+                .tint(.accentColor).disabled(app.actionStatuses[key] == .pending)
+        }
+        .accessibilityAction(named: Text(.addToQueue)) { add(item) }
+    }
+
+    private func add(_ item: SearchItemResponse) {
+        Task { _ = await app.enqueueSearchResult(item) }
+    }
+
+    private func submit() {
+        submission?.cancel()
+        submission = Task {
+            let completed = await app.submitSearchInput()
+            if completed && !Task.isCancelled { queued() }
+        }
     }
 }

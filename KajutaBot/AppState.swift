@@ -23,6 +23,7 @@ enum PlayerControlAction {
     case skip
     case repeatTrack
     case radio
+    case requeue
 }
 
 @MainActor
@@ -30,12 +31,21 @@ enum PlayerControlAction {
 final class AppState {
     let config: AppConfig
     let realtime: RealtimeClient
+    let localVolume: LocalVolumeController
 
     private let sessionManager: SessionManager
-    private let api: KajutaBotAPIClient
+    private let api: any KajutaBotAPI
     private let oauth = DiscordOAuthService()
     private let defaults: UserDefaults
     private let targetDefaults: UserDefaults
+    @ObservationIgnored private let mutations = QueueMutationCoordinator()
+    @ObservationIgnored private var sessionEpoch = UUID()
+    @ObservationIgnored private var selectionEpoch = UUID()
+    @ObservationIgnored private var favoriteRevision = 0
+    @ObservationIgnored private var favoriteRefreshNeeded = false
+    @ObservationIgnored private var channelGeneration = 0
+    @ObservationIgnored private var feedbackTokens: [String: UUID] = [:]
+    @ObservationIgnored private var operationTasks: [UUID: Task<Void, Never>] = [:]
     @ObservationIgnored private var initialized = false
     private var session: UserSession?
     @ObservationIgnored private var presentationRecoveryTask: Task<Void, Never>?
@@ -71,8 +81,14 @@ final class AppState {
     var hasResolvedQueueState = false
     var initialHeroArtworkReady = false
     var presentationTrackRevision = 0
-    var isMutating = false
+    var actionStatuses: [String: ActionStatus] = [:]
+    var progress: PlaybackProgressState?
+    var isMutating: Bool { actionStatuses.contains { $0.key.hasPrefix("queue.") && $0.value == .pending } }
+    var lastSkipOutcome: SkipOutcome?
     var activeControlAction: PlayerControlAction?
+    var pendingSharedLink: PendingSharedLink?
+    var lastAddedTracks: [PlaybackTrackResponse] = []
+    @ObservationIgnored private var dismissedSharedLinks: Set<UUID> = []
     var errorMessage: String?
 
     var searchQuery = ""
@@ -91,18 +107,19 @@ final class AppState {
     var manualOnboardingRequested = false
     var onboardingCompleted = false
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard, api injectedAPI: (any KajutaBotAPI)? = nil, sessionManager injectedManager: SessionManager? = nil) {
         self.defaults = defaults
         targetDefaults = UserDefaults(suiteName: Keys.appGroup) ?? defaults
         let appConfig = AppConfig()
         config = appConfig
         let authAPI = AuthAPIClient(baseURL: appConfig.apiBaseURL)
-        let manager = SessionManager(store: KeychainSessionStore(), authAPI: authAPI)
+        let manager = injectedManager ?? SessionManager(store: KeychainSessionStore(), authAPI: authAPI)
         sessionManager = manager
-        api = KajutaBotAPIClient(baseURL: appConfig.apiBaseURL, sessionManager: manager)
+        api = injectedAPI ?? KajutaBotAPIClient(baseURL: appConfig.apiBaseURL, sessionManager: manager)
         realtime = RealtimeClient(baseURL: appConfig.apiBaseURL) {
             try await manager.accessToken()
         }
+        localVolume = LocalVolumeController(transport: realtime)
         let artworkPipeline = ArtworkImagePipeline.make(apiBaseURL: appConfig.apiBaseURL) {
             try await manager.accessToken()
         }
@@ -116,7 +133,9 @@ final class AppState {
         selectedVoiceChannelId = targetDefaults.string(forKey: Keys.channelId) ?? defaults.string(forKey: Keys.channelId)
         if let selectedGuildId { targetDefaults.set(selectedGuildId, forKey: Keys.guildId) }
         if let selectedVoiceChannelId { targetDefaults.set(selectedVoiceChannelId, forKey: Keys.channelId) }
-        searchHistory = Deque(defaults.stringArray(forKey: Keys.searchHistory) ?? [])
+        searchHistory = Deque((defaults.stringArray(forKey: Keys.searchHistory) ?? []).prefix(5))
+        realtime.onLocalVolume = { [weak self] in self?.localVolume.receive($0) }
+        realtime.onConnectionChanged = { [weak self] in self?.localVolume.connectionChanged($0) }
         realtime.onSnapshot = { [weak self] snapshot in
             self?.applyQueueSnapshot(snapshot)
         }
@@ -156,7 +175,7 @@ final class AppState {
                 return
             }
             session = restored
-            Diagnostics.info("auth", "Session restored (type: \(restored.sessionType.rawValue))")
+            Diagnostics.info("auth", "Session restored")
             onboardingCompleted = defaults.bool(forKey: onboardingKey(for: restored))
             favoritesShuffle = defaults.bool(forKey: Keys.favoritesShufflePrefix + favoritesOwnerKey)
             await bootstrapAndPresentAuthenticatedState(user: restored.user)
@@ -250,23 +269,27 @@ final class AppState {
         // On the background -> inactive transition iOS gives us a short head start
         // before the scene is fully visible. Use it to refresh the player immediately.
         guard wasBackgrounded else { return }
-        guard case .signedIn = authState, let guildId = selectedGuildId else { return }
+        guard case .signedIn = authState else { return }
+        refreshSharedInbox()
+        let guildId = selectedGuildId
 
         wasBackgrounded = false
         realtime.connect(guildId: guildId)
-        startForegroundPlayerRefresh(guildId: guildId)
+        if let guildId { startForegroundPlayerRefresh(guildId: guildId) }
     }
 
     func sceneBecameActive() {
         let shouldRefreshAfterBackground = wasBackgrounded
         wasBackgrounded = false
 
-        guard case .signedIn = authState, let guildId = selectedGuildId else { return }
+        guard case .signedIn = authState else { return }
+        refreshSharedInbox()
+        let guildId = selectedGuildId
         realtime.connect(guildId: guildId)
 
         // Fallback for lifecycle paths that move directly from background to active.
         if shouldRefreshAfterBackground {
-            startForegroundPlayerRefresh(guildId: guildId)
+            if let guildId { startForegroundPlayerRefresh(guildId: guildId) }
         }
     }
 
@@ -307,8 +330,16 @@ final class AppState {
 
     func selectGuild(_ guildId: String) {
         guard selectedGuildId != guildId else { return }
+        selectionEpoch = UUID()
+        channelGeneration &+= 1
         selectedGuildId = guildId
         selectedVoiceChannelId = nil
+        voiceChannels = []
+        actionStatuses = actionStatuses.filter { !$0.key.hasPrefix("queue.") }
+        feedbackTokens = feedbackTokens.filter { !$0.key.hasPrefix("queue.") }
+        activeControlAction = nil
+        lastSkipOutcome = nil
+        progress = nil
         targetDefaults.set(guildId, forKey: Keys.guildId)
         targetDefaults.removeObject(forKey: Keys.channelId)
         queue = nil
@@ -353,7 +384,7 @@ final class AppState {
         guard !query.isEmpty else { return }
         if looksLikeURL(query) {
             cancelSearch()
-            enqueueInputs([query])
+            launchOperation { _ = await self.enqueueInputs([query]) }
             return
         }
 
@@ -374,7 +405,7 @@ final class AppState {
                 }
             }
             do {
-                let response = try await self.api.search(query: query, source: source)
+                let response = try await self.api.search(query: query, source: source, maxResults: 20)
                 guard !Task.isCancelled, self.searchGeneration == generation else { return }
                 self.searchResults = response.items
                 self.lastCompletedSearchQuery = query
@@ -400,202 +431,228 @@ final class AppState {
         lastCompletedSearchQuery = nil
     }
 
-    func enqueueSearchResult(_ item: SearchItemResponse) {
-        enqueueInputs([item.input])
+    func enqueueSearchResult(_ item: SearchItemResponse) async -> Bool {
+        await enqueueInputs([item.input], key: "queue.search." + item.id)
     }
 
-    func enqueueInputs(_ inputs: [String]) {
+    func submitSearchInput() async -> Bool {
+        if let url = URLInput.firstURL(in: searchQuery) {
+            return await enqueueInputs([url.absoluteString])
+        }
+        performSearch()
+        return false
+    }
+
+    @discardableResult
+    func enqueueInputs(_ inputs: [String], key: String = "queue.enqueue") async -> Bool {
         guard let guildId = selectedGuildId, let channelId = selectedVoiceChannelId else {
             errorMessage = String(localized: .selectServerChannelFirst)
-            return
+            return false
         }
-        guard !isMutating else { return }
-        isMutating = true
-        errorMessage = nil
-        Task {
-            defer { isMutating = false }
-            do {
-                let response = try await api.enqueue(
-                    guildId: guildId,
-                    request: EnqueueRequest(voiceChannelId: channelId, inputs: inputs, expectedVersion: queue?.version)
-                )
-                applyQueueSnapshot(response)
-            } catch {
-                await handleMutationError(error)
-            }
+        return await mutateQueue(key: key, guildId: guildId) { api, token in
+            try await api.enqueue(guildId: guildId, request: EnqueueRequest(
+                voiceChannelId: channelId, inputs: inputs, expectedQueueVersion: token
+            ))
         }
     }
 
-    func skip() { performControl(.skip) { api, guildId, version in try await api.skip(guildId: guildId, request: SkipQueueRequest(skipToPosition: nil, expectedVersion: version)) } }
+    func skip() {
+        performControl(.skip) { api, guild, token in
+            try await api.skip(guildId: guild, request: SkipQueueRequest(skipToPosition: nil, expectedQueueVersion: token))
+        }
+    }
+
     func stop() {
-        performControl(.stop, forcePresentationIdleOnSuccess: true) { api, guildId, version in
-            try await api.stop(guildId: guildId, request: QueueMutationRequest(expectedVersion: version))
+        performControl(.stop, forcePresentationIdleOnSuccess: true) { api, guild, token in
+            try await api.stop(guildId: guild, request: QueueMutationRequest(expectedQueueVersion: token))
         }
     }
 
     func toggleRepeat() {
         let enabled = !(queue?.isRepeatEnabled ?? false)
-        performControl(.repeatTrack) { api, guildId, version in
-            try await api.setRepeat(guildId: guildId, request: SetQueueRepeatRequest(isEnabled: enabled, expectedVersion: version))
+        performControl(.repeatTrack) { api, guild, token in
+            try await api.setRepeat(guildId: guild, request: SetQueueRepeatRequest(isEnabled: enabled, expectedQueueVersion: token))
         }
     }
 
     func toggleRadio() {
         guard let queue else { return }
         if queue.radio.isEnabled {
-            performControl(.radio, forcePresentationIdleOnSuccess: true) { api, guildId, version in
-                try await api.disableRadio(guildId: guildId, expectedVersion: version)
+            performControl(.radio) { api, guild, token in
+                try await api.disableRadio(guildId: guild, expectedQueueVersion: token)
             }
-            return
+        } else {
+            guard let channel = selectedVoiceChannelId else {
+                errorMessage = String(localized: .selectServerChannelFirst)
+                return
+            }
+            performControl(.radio) { api, guild, token in
+                try await api.enableRadio(guildId: guild, request: EnableRadioRequest(
+                    voiceChannelId: channel, minimumDurationSeconds: queue.radio.minimumDurationSeconds ?? 60,
+                    maximumDurationSeconds: queue.radio.maximumDurationSeconds ?? 600, expectedQueueVersion: token
+                ))
+            }
         }
-        guard let channelId = selectedVoiceChannelId else {
-            errorMessage = String(localized: .selectServerChannelFirst)
-            return
-        }
-        let minDuration = queue.radio.minimumDurationSeconds ?? 60
-        let maxDuration = queue.radio.maximumDurationSeconds ?? 600
-        performControl(.radio, forcePresentationIdleOnSuccess: true) { api, guildId, version in
-            try await api.enableRadio(
-                guildId: guildId,
-                request: EnableRadioRequest(
-                    voiceChannelId: channelId,
-                    minimumDurationSeconds: minDuration,
-                    maximumDurationSeconds: maxDuration,
-                    expectedQueueVersion: version
-                )
-            )
+    }
+
+    func requeueNowPlaying() {
+        guard let track = nowPlaying else { return }
+        requeue(track, key: "queue.control.requeue")
+    }
+
+    func requeueEntry(_ entry: QueueEntryResponse) {
+        requeue(entry.track, key: "queue.requeue." + entry.entryId)
+    }
+
+    private func requeue(_ track: PlaybackTrackResponse, key: String) {
+        guard let guild = selectedGuildId, let channel = queue?.voiceChannelId ?? selectedVoiceChannelId else { return }
+        launchOperation {
+            _ = await self.mutateQueue(key: key, guildId: guild) { api, token in
+                try await api.enqueue(guildId: guild, request: EnqueueRequest(
+                    voiceChannelId: channel, inputs: [track.url], expectedQueueVersion: token
+                ))
+            }
         }
     }
 
     func removeQueueEntry(_ entryId: String) {
-        guard let guildId = selectedGuildId, !isMutating else { return }
-        isMutating = true
-        Task {
-            defer { isMutating = false }
-            do {
-                let response = try await api.removeQueueEntry(guildId: guildId, entryId: entryId, expectedVersion: queue?.version)
-                applyQueueSnapshot(response)
-            } catch { await handleMutationError(error) }
+        guard let guild = selectedGuildId else { return }
+        launchOperation {
+            _ = await self.mutateQueue(key: "queue.remove." + entryId, guildId: guild) { api, token in
+                try await api.removeQueueEntry(guildId: guild, entryId: entryId, expectedQueueVersion: token)
+            }
         }
     }
 
+    // Native List reordering is a move. Explicit swaps have a separate action.
     func moveQueueEntry(from offsets: IndexSet, to destination: Int) {
-        guard offsets.count == 1, let from = offsets.first, let current = queue, current.pendingEntries.indices.contains(from) else { return }
-        var preview = current.pendingEntries
-        let moved = preview.remove(at: from)
-        let adjusted = min(max(destination > from ? destination - 1 : destination, 0), preview.count)
-        preview.insert(moved, at: adjusted)
-        let newPosition = adjusted + 1
-        let optimistic = QueueSnapshotResponse(
-            guildId: current.guildId,
-            voiceChannelId: current.voiceChannelId,
-            nowPlaying: current.nowPlaying,
-            nowPlayingFromRadio: current.nowPlayingFromRadio,
-            radio: current.radio,
-            pendingEntries: preview.enumerated().map { index, entry in
-                QueueEntryResponse(entryId: entry.entryId, position: index + 1, track: entry.track)
-            },
-            pendingDurationMilliseconds: current.pendingDurationMilliseconds,
-            version: current.version,
-            nowPlayingStartedAt: current.nowPlayingStartedAt,
-            isRepeatEnabled: current.isRepeatEnabled
-        )
-        queue = optimistic
-        Task {
-            do {
-                let response = try await api.moveQueueEntry(
-                    guildId: current.guildId,
-                    entryId: moved.entryId,
-                    request: MoveQueueEntryRequest(newPosition: newPosition, expectedVersion: current.version)
-                )
-                applyQueueSnapshot(response)
-            } catch {
-                queue = current
-                await handleMutationError(error)
+        guard offsets.count == 1, let from = offsets.first, let current = queue,
+              current.pendingEntries.indices.contains(from), !isMutating else { return }
+        let entry = current.pendingEntries[from]
+        let position = min(max(destination > from ? destination - 1 : destination, 0), current.pendingEntries.count - 1) + 1
+        launchOperation {
+            _ = await self.mutateQueue(key: "queue.reorder", guildId: current.guildId) { api, token in
+                guard token == current.queueVersion else { throw APIError.http(status: 409, problem: nil) }
+                return try await api.moveQueueEntry(guildId: current.guildId, entryId: entry.entryId,
+                    request: MoveQueueEntryRequest(newPosition: position, expectedQueueVersion: token))
+            }
+        }
+    }
+
+    func swapQueueEntry(_ entry: QueueEntryResponse, offset: Int) {
+        guard let current = queue, let index = current.pendingEntries.firstIndex(where: { $0.id == entry.id }),
+              current.pendingEntries.indices.contains(index + offset) else { return }
+        swapQueueEntry(entry, with: current.pendingEntries[index + offset])
+    }
+
+    func swapQueueEntry(_ entry: QueueEntryResponse, with other: QueueEntryResponse) {
+        guard let current = queue, entry.id != other.id, !isMutating,
+              current.pendingEntries.contains(where: { $0.id == entry.id }),
+              current.pendingEntries.contains(where: { $0.id == other.id }) else { return }
+        launchOperation {
+            _ = await self.mutateQueue(key: "queue.reorder", guildId: current.guildId) { api, token in
+                guard token == current.queueVersion else { throw APIError.http(status: 409, problem: nil) }
+                return try await api.swapQueueEntries(guildId: current.guildId, request: SwapQueueEntriesRequest(
+                    firstEntryId: entry.id, secondEntryId: other.id, expectedQueueVersion: token))
             }
         }
     }
 
     func clearQueue() {
-        guard let guildId = selectedGuildId else { return }
-        performControl(nil) { api, _, version in
-            try await api.clearPendingQueue(guildId: guildId, expectedVersion: version)
+        performControl(nil) { api, guild, token in
+            try await api.clearPendingQueue(guildId: guild, expectedQueueVersion: token)
         }
     }
 
-    func refreshFavorites() {
-        Task { await refreshFavoritesAsync() }
-    }
-
-    func refreshFavoritesNow() async {
-        await refreshFavoritesAsync()
-    }
+    func refreshFavorites() { launchOperation { await self.refreshFavoritesAsync() } }
+    func refreshFavoritesNow() async { await refreshFavoritesAsync() }
 
     func setFavoritesShuffle(_ enabled: Bool) {
         favoritesShuffle = enabled
         defaults.set(enabled, forKey: Keys.favoritesShufflePrefix + favoritesOwnerKey)
     }
 
-    func isFavorite(_ track: PlaybackTrackResponse) -> Bool {
-        favorite(for: track) != nil
+    func isFavorite(_ track: PlaybackTrackResponse) -> Bool { favorite(for: track) != nil }
+    func isFavorite(_ track: SearchTrackResponse) -> Bool {
+        favoriteByIdentity[favoriteIdentity(track.url)] != nil ||
+            favoriteByIdentity["\(track.contentType.lowercased() == "youtube" ? "youtube" : "soundcloud-id"):\(track.contentId)"] != nil
+    }
+
+    func favoriteActionKey(for track: PlaybackTrackResponse) -> String {
+        favoriteActionKey(contentType: track.contentType, contentId: track.contentId, url: track.url)
+    }
+
+    func favoriteActionKey(for track: SearchTrackResponse) -> String {
+        favoriteActionKey(contentType: track.contentType, contentId: track.contentId, url: track.url)
+    }
+
+    private func favoriteActionKey(contentType: String, contentId: String, url: String) -> String {
+        let prefix = contentType.lowercased() == "youtube" ? "youtube" : "soundcloud-id"
+        let identifier = "\(prefix):\(contentId)"
+        let urlIdentity = favoriteIdentity(url)
+        let existing = favoriteByIdentity[identifier] ?? favoriteByIdentity[urlIdentity]
+        let candidates = [identifier, urlIdentity, favoriteIdentity(existing?.contentUrl)]
+            .filter { !$0.isEmpty }.map { "favorite." + $0 }
+        return candidates.first { actionStatuses[$0] == .pending }
+            ?? candidates.first { actionStatuses[$0] != nil }
+            ?? "favorite." + (existing.map { favoriteIdentity($0.contentUrl) } ?? urlIdentity)
     }
 
     func toggleFavorite(_ track: PlaybackTrackResponse) {
-        if let existing = favorite(for: track) {
-            deleteFavorite(existing.contentUrl)
-        } else {
-            addFavorite(contentURL: track.url, title: track.title, thumbnailURL: track.artworkUrl)
+        toggleFavorite(request: AddFavoriteRequest(contentType: track.contentType, contentId: track.contentId), url: track.url)
+    }
+
+    func toggleFavorite(_ track: SearchTrackResponse) {
+        toggleFavorite(request: AddFavoriteRequest(contentType: track.contentType, contentId: track.contentId), url: track.url)
+    }
+
+    private func toggleFavorite(request: AddFavoriteRequest, url: String) {
+        let prefix = request.contentType.lowercased() == "youtube" ? "youtube" : "soundcloud-id"
+        if let existing = favoriteByIdentity["\(prefix):\(request.contentId)"] ?? favoriteByIdentity[favoriteIdentity(url)] { deleteFavorite(existing.contentUrl) }
+        else { addFavorite(request, key: favoriteIdentity(url)) }
+    }
+
+    func addFavoriteByURL(_ input: String) async -> Bool {
+        guard let request = URLInput.favoriteRequest(for: input) else {
+            errorMessage = String(localized: "favoriteURLUnsupported")
+            return false
+        }
+        return await mutateFavorite(key: favoriteIdentity(input)) {
+            let favorite = try await self.api.addFavorite(request)
+            return favorite
         }
     }
 
-    func addFavoriteByURL(_ raw: String) {
-        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !value.isEmpty else { return }
-        addFavorite(contentURL: value, title: nil, thumbnailURL: nil)
-    }
-
     func deleteFavorite(_ contentURL: String) {
-        guard !isMutatingFavorites else { return }
-        isMutatingFavorites = true
-        Task {
-            defer { isMutatingFavorites = false }
-            do {
-                try await api.deleteFavorite(contentURL: contentURL)
-                let identity = favoriteIdentity(contentURL)
-                favorites.removeAll { favoriteIdentity($0.contentUrl) == identity }
-                rebuildFavoriteIndex()
-            } catch { errorMessage = userMessage(for: error) }
+        let key = favoriteIdentity(contentURL)
+        launchOperation {
+            _ = await self.mutateFavorite(key: key, deleting: true) {
+                try await self.api.deleteFavorite(contentURL: contentURL)
+                return nil
+            }
         }
     }
 
     func playFavorite(_ favorite: FavoriteResponse) {
-        enqueueInputs([favorite.contentUrl])
+        launchOperation { _ = await self.enqueueInputs([favorite.contentUrl], key: "queue.favorite." + favoriteIdentity(favorite.contentUrl)) }
     }
 
     func queueAllFavorites() {
-        guard let guildId = selectedGuildId, let channelId = selectedVoiceChannelId else {
+        guard let guild = selectedGuildId, let channel = selectedVoiceChannelId else {
             errorMessage = String(localized: .favoritesNeedTarget)
             return
         }
-        guard !isMutatingFavorites else { return }
-        isMutatingFavorites = true
-        Task {
-            defer { isMutatingFavorites = false }
-            do {
-                let response = try await api.queueFavorites(
-                    QueueFavoritesRequest(
-                        guildId: guildId,
-                        voiceChannelId: channelId,
-                        expectedQueueVersion: queue?.version,
-                        shuffle: favoritesShuffle
-                    )
-                )
-                applyQueueSnapshot(response)
-            } catch { errorMessage = userMessage(for: error) }
+        let shuffle = favoritesShuffle
+        launchOperation {
+            _ = await self.mutateQueue(key: "queue.favorites.all", guildId: guild) { api, token in
+                try await api.queueFavorites(QueueFavoritesRequest(
+                    guildId: guild, voiceChannelId: channel, expectedQueueVersion: token, shuffle: shuffle))
+            }
         }
     }
 
     private func finishSignIn(_ newSession: UserSession) async {
+        errorMessage = nil
         session = newSession
         onboardingCompleted = defaults.bool(forKey: onboardingKey(for: newSession))
         favoritesShuffle = defaults.bool(forKey: Keys.favoritesShufflePrefix + favoritesOwnerKey)
@@ -607,10 +664,13 @@ final class AppState {
     /// sooner, transition immediately. Otherwise enter the app after 200 ms and let
     /// the normal player skeleton carry the remaining load.
     private func bootstrapAndPresentAuthenticatedState(user: AuthUserResponse) async {
+        let epoch = sessionEpoch
+        localVolume.configure(isDiscord: session?.sessionType == .discord)
+        realtime.connect(guildId: selectedGuildId)
         startupPresentationTask?.cancel()
         startupPresentationTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(200))
-            guard !Task.isCancelled, let self else { return }
+            guard !Task.isCancelled, let self, self.sessionEpoch == epoch else { return }
             self.presentAuthenticatedUI(user: user)
         }
 
@@ -620,7 +680,9 @@ final class AppState {
         }
 
         await loadGuilds()
+        guard sessionEpoch == epoch else { return }
         await preloadInitialPlayerArtwork()
+        guard sessionEpoch == epoch else { return }
 
         startupPresentationTask?.cancel()
         startupPresentationTask = nil
@@ -631,6 +693,7 @@ final class AppState {
         guard session?.user.discordUserId == user.discordUserId else { return }
         if case .signedIn = authState { return }
         authState = .signedIn(user)
+        refreshSharedInbox()
     }
 
     private func preloadInitialPlayerArtwork() async {
@@ -638,20 +701,26 @@ final class AppState {
             initialHeroArtworkReady = true
             return
         }
-        initialHeroArtworkReady = await ArtworkPreloader.preloadHero(urlString: track.artworkUrl)
+        let epoch = sessionEpoch
+        let selection = selectionEpoch
+        let ready = await ArtworkPreloader.preloadHero(urlString: track.artworkUrl)
+        guard epoch == sessionEpoch, selection == selectionEpoch else { return }
+        initialHeroArtworkReady = ready
     }
 
     private func loadGuilds() async {
-        guard !isLoadingGuilds else { return }
+        guard session != nil, !Task.isCancelled, !isLoadingGuilds else { return }
+        let epoch = sessionEpoch
         let hadWorkingAccess = guildAccessState == .available && !guilds.isEmpty
         isLoadingGuilds = true
         if !hadWorkingAccess {
             guildAccessState = .checking
         }
         guildAccessError = nil
-        defer { isLoadingGuilds = false }
+        defer { if sessionEpoch == epoch { isLoadingGuilds = false } }
         do {
             let loaded = try await api.getMyGuilds()
+            guard sessionEpoch == epoch else { return }
             guilds = loaded.filter(\.isAvailable)
             guard !guilds.isEmpty else {
                 selectedGuildId = nil
@@ -660,7 +729,7 @@ final class AppState {
                 presentationQueue = nil
                 hasResolvedQueueState = true
                 guildAccessState = .none
-                realtime.stop()
+                realtime.connect(guildId: nil)
                 return
             }
 
@@ -689,7 +758,8 @@ final class AppState {
             } else {
                 hasResolvedQueueState = true
             }
-        } catch {
+        } catch is CancellationError { return } catch {
+            guard sessionEpoch == epoch else { return }
             let message = userMessage(for: error)
             if hadWorkingAccess {
                 // A transient guild refresh failure must not tear down a working
@@ -705,9 +775,13 @@ final class AppState {
     }
 
     private func loadVoiceChannels(guildId: String, preserveChannel: String?) async {
+        guard session != nil, !Task.isCancelled, selectedGuildId == guildId else { return }
+        channelGeneration &+= 1
+        let generation = channelGeneration
+        let epoch = sessionEpoch
         isLoadingVoiceChannels = true
         defer {
-            if selectedGuildId == guildId {
+            if selectedGuildId == guildId, sessionEpoch == epoch, channelGeneration == generation {
                 isLoadingVoiceChannels = false
             }
         }
@@ -717,10 +791,10 @@ final class AppState {
             }
             // A response for a previously selected guild must never overwrite the
             // current picker after a fast guild switch.
-            guard selectedGuildId == guildId else { return }
+            guard selectedGuildId == guildId, sessionEpoch == epoch, channelGeneration == generation else { return }
 
             voiceChannels = channels
-            var channel = preserveChannel
+            var channel = selectedVoiceChannelId ?? preserveChannel
             if let candidate = channel, !channels.contains(where: { $0.id == candidate }) {
                 channel = nil
             }
@@ -731,7 +805,7 @@ final class AppState {
         } catch is CancellationError {
             return
         } catch {
-            guard selectedGuildId == guildId else { return }
+            guard selectedGuildId == guildId, sessionEpoch == epoch, channelGeneration == generation else { return }
             voiceChannels = []
             selectedVoiceChannelId = nil
             errorMessage = userMessage(for: error)
@@ -739,6 +813,7 @@ final class AppState {
     }
 
     private func refreshQueueAsync(guildId: String, reportErrors: Bool = true) async {
+        guard session != nil, !Task.isCancelled, selectedGuildId == guildId else { return }
         if queueRefreshGuildId == guildId, let queueRefreshTask {
             _ = try? await queueRefreshTask.value
             return
@@ -781,68 +856,179 @@ final class AppState {
     }
 
     private func refreshFavoritesAsync() async {
-        guard !isLoadingFavorites else { return }
+        guard session != nil, !Task.isCancelled, !isLoadingFavorites, !isMutatingFavorites else { return }
+        let epoch = sessionEpoch
+        let revision = favoriteRevision
+        favoriteRefreshNeeded = false
         isLoadingFavorites = true
-        defer { isLoadingFavorites = false }
+        defer {
+            if sessionEpoch == epoch {
+                isLoadingFavorites = false
+                scheduleFavoriteReconciliationIfNeeded()
+            }
+        }
         do {
-            favorites = try await api.getFavorites()
+            let loaded = try await api.getFavorites()
+            guard sessionEpoch == epoch else { return }
+            guard favoriteRevision == revision else { favoriteRefreshNeeded = true; return }
+            favorites = loaded
             rebuildFavoriteIndex()
-        } catch {
+        } catch is CancellationError {} catch {
+            guard sessionEpoch == epoch, favoriteRevision == revision else { return }
             errorMessage = userMessage(for: error)
         }
     }
 
-    private func addFavorite(contentURL: String, title: String?, thumbnailURL: String?) {
-        guard !isMutatingFavorites else { return }
+    private func scheduleFavoriteReconciliationIfNeeded() {
+        guard favoriteRefreshNeeded, !isLoadingFavorites, !isMutatingFavorites, session != nil else { return }
+        launchOperation { await self.refreshFavoritesAsync() }
+    }
+
+    private func addFavorite(_ request: AddFavoriteRequest, key: String) {
+        launchOperation { _ = await self.mutateFavorite(key: key) { try await self.api.addFavorite(request) } }
+    }
+
+    private func mutateFavorite(
+        key: String, deleting: Bool = false,
+        operation: () async throws -> FavoriteResponse?
+    ) async -> Bool {
+        let actionKey = "favorite." + key
+        guard session != nil, !Task.isCancelled, actionStatuses[actionKey] != .pending else { return false }
+        let epoch = sessionEpoch
+        actionStatuses[actionKey] = .pending
+        favoriteRevision &+= 1
         isMutatingFavorites = true
-        Task {
-            defer { isMutatingFavorites = false }
-            do {
-                let added = try await api.addFavorite(AddFavoriteRequest(contentUrl: contentURL, title: title, thumbnailUrl: thumbnailURL))
+        defer {
+            if epoch == sessionEpoch {
+                if actionStatuses[actionKey] == .pending { actionStatuses.removeValue(forKey: actionKey) }
+                isMutatingFavorites = actionStatuses.contains { $0.key.hasPrefix("favorite.") && $0.value == .pending }
+                favoriteRevision &+= 1
+                scheduleFavoriteReconciliationIfNeeded()
+            }
+        }
+        do {
+            let added = try await operation()
+            guard epoch == sessionEpoch, !Task.isCancelled else { return false }
+            favorites.removeAll { favoriteIdentity($0.contentUrl) == key }
+            if let added {
                 let identity = favoriteIdentity(added.contentUrl)
                 favorites.removeAll { favoriteIdentity($0.contentUrl) == identity }
                 favorites.insert(added, at: 0)
-                rebuildFavoriteIndex()
-            } catch { errorMessage = userMessage(for: error) }
+            }
+            rebuildFavoriteIndex()
+            finishAction(actionKey, status: .success, epoch: epoch)
+            return true
+        } catch is CancellationError { return false } catch {
+            guard epoch == sessionEpoch else { return false }
+            favoriteRefreshNeeded = true
+            finishAction(actionKey, status: .failure, epoch: epoch)
+            errorMessage = userMessage(for: error)
+            return false
         }
     }
 
     private func performControl(
-        _ action: PlayerControlAction?,
-        forcePresentationIdleOnSuccess: Bool = false,
-        operation: @escaping (KajutaBotAPIClient, String, Int64?) async throws -> QueueSnapshotResponse
+        _ action: PlayerControlAction?, forcePresentationIdleOnSuccess: Bool = false,
+        operation: @escaping @MainActor (any KajutaBotAPI, String, Int64) async throws -> QueueSnapshotResponse
     ) {
-        guard let guildId = selectedGuildId, !isMutating else { return }
-        isMutating = true
-        activeControlAction = action
-        errorMessage = nil
-        Task {
-            defer {
-                isMutating = false
-                activeControlAction = nil
+        guard let guild = selectedGuildId else { return }
+        let key = "queue.control." + (action.map { String(describing: $0) } ?? "clear")
+        launchOperation {
+            _ = await self.mutateQueue(key: key, guildId: guild, forceIdle: forcePresentationIdleOnSuccess, control: action) { api, token in
+                try await operation(api, guild, token)
             }
-            do {
-                let response = try await operation(api, guildId, queue?.version)
-                applyQueueSnapshot(response, forcePresentationIdle: forcePresentationIdleOnSuccess)
-            } catch { await handleMutationError(error) }
         }
     }
 
-    private func handleMutationError(_ error: Error) async {
-        if let apiError = error as? APIError,
-           apiError.statusCode == 409 || apiError.problem?.errorCode == "queue_version_conflict",
-           let guildId = selectedGuildId {
-            if let fresh = try? await api.getQueue(guildId: guildId) {
-                applyQueueSnapshot(fresh)
-                errorMessage = String(localized: .queueChangedRefreshed)
-                return
+    private func mutateQueue(
+        key: String, guildId: String, forceIdle: Bool = false, control: PlayerControlAction? = nil,
+        operation: @escaping @MainActor (any KajutaBotAPI, Int64) async throws -> QueueSnapshotResponse
+    ) async -> Bool {
+        guard session != nil, !Task.isCancelled, actionStatuses[key] != .pending else { return false }
+        let epoch = sessionEpoch
+        let selection = selectionEpoch
+        actionStatuses[key] = .pending
+        activeControlAction = control
+        errorMessage = nil
+        defer {
+            if epoch == sessionEpoch, selection == selectionEpoch {
+                if activeControlAction == control { activeControlAction = nil }
+                if actionStatuses[key] == .pending { actionStatuses.removeValue(forKey: key) }
             }
         }
-        errorMessage = userMessage(for: error)
+        do {
+            let result = try await mutations.run(guildId: guildId, fetch: { [api] in
+                try await api.getQueue(guildId: guildId)
+            }, publish: { [weak self] snapshot in
+                guard let self, self.sessionEpoch == epoch else { return }
+                self.applyQueueSnapshot(snapshot)
+            }, mutation: { [api] token in try await operation(api, token) })
+            guard epoch == sessionEpoch, selection == selectionEpoch, !Task.isCancelled else { return false }
+            if forceIdle { applyQueueSnapshot(result, forcePresentationIdle: true) }
+            if control == .skip { lastSkipOutcome = result.skipOutcome }
+            lastAddedTracks = result.addedTracks ?? []
+            finishAction(key, status: .success, epoch: epoch)
+            return true
+        } catch is CancellationError { return false } catch {
+            guard epoch == sessionEpoch, selection == selectionEpoch else { return false }
+            finishAction(key, status: .failure, epoch: epoch)
+            errorMessage = userMessage(for: error)
+            return false
+        }
+    }
+
+    func refreshSharedInbox() {
+        guard session != nil, pendingSharedLink == nil else { return }
+        do {
+            pendingSharedLink = try SharedLinkInbox.appGroup().entries().first { !dismissedSharedLinks.contains($0.id) }
+        } catch { Diagnostics.warning("share", "Shared inbox could not be read") }
+    }
+
+    func importSharedLink(_ entry: PendingSharedLink) async -> Bool {
+        guard entry.status == .ready, pendingSharedLink?.status == .ready, hasDiscordTarget else { return false }
+        do { pendingSharedLink = try SharedLinkInbox.appGroup().claim(entry) }
+        catch { errorMessage = String(localized: "sharedLinkStorageFailed"); return false }
+        let success = await enqueueInputs([entry.url], key: "queue.share." + entry.id.uuidString)
+        if success {
+            do { try SharedLinkInbox.appGroup().remove(entry) }
+            catch { errorMessage = String(localized: "sharedLinkStorageFailed") }
+        }
+        return success
+    }
+
+    func dismissSharedLink(_ entry: PendingSharedLink, discard: Bool) {
+        if discard {
+            do { try SharedLinkInbox.appGroup().remove(entry) }
+            catch { errorMessage = String(localized: "sharedLinkStorageFailed"); return }
+        }
+        dismissedSharedLinks.insert(entry.id)
+        pendingSharedLink = nil
+    }
+
+    private func finishAction(_ key: String, status: ActionStatus, epoch: UUID) {
+        let token = UUID()
+        feedbackTokens[key] = token
+        actionStatuses[key] = status
+        launchOperation {
+            try? await Task.sleep(for: .seconds(1.5))
+            guard !Task.isCancelled, self.sessionEpoch == epoch, self.actionStatuses[key] == status, self.feedbackTokens[key] == token else { return }
+            self.actionStatuses.removeValue(forKey: key)
+            self.feedbackTokens.removeValue(forKey: key)
+        }
+    }
+
+    private func launchOperation(_ operation: @escaping @MainActor () async -> Void) {
+        let id = UUID()
+        operationTasks[id] = Task { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            await operation()
+            self.operationTasks.removeValue(forKey: id)
+        }
     }
 
     private func applyQueueSnapshot(_ snapshot: QueueSnapshotResponse, forcePresentationIdle: Bool = false) {
-        guard selectedGuildId == snapshot.guildId else { return }
+        guard session != nil, selectedGuildId == snapshot.guildId else { return }
+        mutations.observe(snapshot)
         if let current = queue {
             if snapshot.version < current.version { return }
             if snapshot == current && !forcePresentationIdle { return }
@@ -855,10 +1041,11 @@ final class AppState {
             guard let previousTrack = previousQueue?.nowPlaying else { return true }
             return previousTrack.id != nextTrack.id
                 || previousQueue?.nowPlayingStartedAt != snapshot.nowPlayingStartedAt
-                || activeControlAction == .skip
+                || previousQueue?.playbackInstanceId != snapshot.playbackInstanceId
         }()
 
         queue = snapshot
+        if snapshot.nowPlaying != nil { progress = PlaybackProgressState(snapshot: snapshot) }
         hasResolvedQueueState = true
         prefetchUpcomingArtwork(from: snapshot)
         if playbackChanged {
@@ -870,6 +1057,7 @@ final class AppState {
             cancelPresentationRecovery()
         } else if forcePresentationIdle {
             presentationQueue = snapshot
+            progress = nil
             cancelPresentationRecovery()
         } else if previousPresentation?.nowPlaying != nil {
             // The backend can briefly publish an idle snapshot while switching tracks.
@@ -918,6 +1106,7 @@ final class AppState {
                   current.nowPlaying == nil,
                   self.presentationQueue?.nowPlaying != nil else { return }
             self.presentationQueue = current
+            self.progress = nil
         }
     }
 
@@ -980,11 +1169,35 @@ final class AppState {
     private func addSearchHistory(_ value: String) {
         searchHistory.removeAll { $0.caseInsensitiveCompare(value) == .orderedSame }
         searchHistory.prepend(value)
-        while searchHistory.count > 8 { _ = searchHistory.popLast() }
+        while searchHistory.count > 5 { _ = searchHistory.popLast() }
         defaults.set(Array(searchHistory), forKey: Keys.searchHistory)
     }
 
     private func resetAuthenticatedState() {
+        sessionEpoch = UUID()
+        selectionEpoch = UUID()
+        channelGeneration &+= 1
+        pendingSharedLink = nil
+        lastAddedTracks = []
+        dismissedSharedLinks = []
+        mutations.reset()
+        localVolume.configure(isDiscord: false)
+        operationTasks.values.forEach { $0.cancel() }
+        operationTasks.removeAll()
+        actionStatuses = [:]
+        feedbackTokens = [:]
+        errorMessage = nil
+        activeControlAction = nil
+        lastSkipOutcome = nil
+        progress = nil
+        isMutatingFavorites = false
+        favoriteRefreshNeeded = false
+        isLoadingFavorites = false
+        isLoadingGuilds = false
+        isLoadingVoiceChannels = false
+        isLoadingQueue = false
+        foregroundRefreshTask?.cancel()
+        foregroundRefreshTask = nil
         startupPresentationTask?.cancel()
         startupPresentationTask = nil
         cancelSearch()
@@ -1031,7 +1244,7 @@ final class AppState {
             authState = .signedOut(message)
             return message
         }
-        if let apiError = error as? APIError { return apiError.localizedDescription }
+        if let apiError = error as? APIError { return APIUserMessage.message(for: apiError) }
         if error is URLError { return String(localized: .networkUnavailable) }
         return error.localizedDescription
     }

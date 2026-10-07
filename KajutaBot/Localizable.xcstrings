@@ -2827,6 +2827,742 @@
           }
         }
       }
+    },
+    "requeueTrack": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj ponownie"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add again"
+          }
+        }
+      }
+    },
+    "swapPrevious": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamień z poprzednim"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swap with previous"
+          }
+        }
+      }
+    },
+    "swapNext": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamień z następnym"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swap with next"
+          }
+        }
+      }
+    },
+    "playbackProgressLabel": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Postęp odtwarzania"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playback progress"
+          }
+        }
+      }
+    },
+    "localVolumeTitle": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Głośność na Windowsie"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Windows volume"
+          }
+        }
+      }
+    },
+    "localVolumeObserved": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odczytana głośność"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed volume"
+          }
+        }
+      }
+    },
+    "localVolumeDraft": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ustawiana głośność"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requested volume"
+          }
+        }
+      }
+    },
+    "localVolumeHelp": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zmiana dotyczy lokalnego odtwarzacza na Windowsie. 100% to poziom nominalny."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This changes the local Windows player volume. 100% is the nominal level."
+          }
+        }
+      }
+    },
+    "localVolumeUnavailable": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokalny odtwarzacz jest offline lub nie udostępnia sterowania głośnością."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The local player is offline or volume control is unavailable."
+          }
+        }
+      }
+    },
+    "localVolumeSetFailed": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie potwierdzono zmiany głośności. Odczytujemy jej aktualny stan."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The volume change was not confirmed. Refreshing the observed state."
+          }
+        }
+      }
+    },
+    "favoriteURLUnsupported": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wklej link do pojedynczego filmu YouTube. Inne utwory dodawaj do ulubionych z wyników wyszukiwania."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste a single YouTube video link. Add other tracks to favorites from search results."
+          }
+        }
+      }
+    },
+    "favoriteURLHelp": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wklej link do filmu YouTube. Ulubione SoundCloud dodawaj z wyszukiwania."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste a YouTube video link. Add SoundCloud favorites from search."
+          }
+        }
+      }
+    },
+    "errorInvalidServerResponse": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpowiedź serwera jest niezgodna z aplikacją. Spróbuj odświeżyć dane."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server response is incompatible. Try refreshing."
+          }
+        }
+      }
+    },
+    "errorQueuePersistence": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się zapisać kolejki. Odświeżono jej stan; spróbuj ponownie."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The queue could not be saved. Its state was refreshed; try again."
+          }
+        }
+      }
+    },
+    "errorQueueFull": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kolejka jest pełna. Usuń część utworów."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The queue is full. Remove some tracks."
+          }
+        }
+      }
+    },
+    "errorContentUnavailable": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten utwór jest niedostępny."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This track is unavailable."
+          }
+        }
+      }
+    },
+    "errorQueueOtherChannel": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kolejka działa na innym kanale głosowym. Zmień kanał lub zatrzymaj odtwarzanie."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The queue is bound to another voice channel. Change the channel or stop playback."
+          }
+        }
+      }
+    },
+    "errorAccessDenied": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie masz dostępu do tej operacji. Sprawdź konto i serwer."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You do not have access to this operation. Check your account and server."
+          }
+        }
+      }
+    },
+    "errorSearchFailed": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyszukiwanie nie powiodło się. Spróbuj ponownie."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search failed. Try again."
+          }
+        }
+      }
+    },
+    "errorRateLimit": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zbyt wiele żądań. Odczekaj chwilę przed kolejną próbą."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many requests. Wait before trying again."
+          }
+        }
+      }
+    },
+    "errorServerUnavailable": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operacja nie została potwierdzona. Sprawdź aktualny stan przed ponowną próbą."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The operation was not confirmed. Check the current state before trying again."
+          }
+        }
+      }
+    },
+    "sharedLinkTitle": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Udostępniony link"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared link"
+          }
+        }
+      }
+    },
+    "sharedAddedTracks": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodane utwory"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added tracks"
+          }
+        }
+      }
+    },
+    "sharedLinkAdded": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodano do kolejki"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to queue"
+          }
+        }
+      }
+    },
+    "sharedResultUnknown": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wynik dodania nie jest potwierdzony. Sprawdź kolejkę przed ponownym udostępnieniem linku. Nie wyślemy go automatycznie drugi raz."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result is unconfirmed. Check the queue before sharing again. This link will not be sent again automatically."
+          }
+        }
+      }
+    },
+    "sharedLinkDiscard": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuń zapisany link"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard saved link"
+          }
+        }
+      }
+    },
+    "sharedLinkStorageFailed": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się zapisać stanu udostępnionego linku."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save the shared link state."
+          }
+        }
+      }
+    },
+    "appearanceSection": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wygląd"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        }
+      }
+    },
+    "appearanceTheme": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motyw"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theme"
+          }
+        }
+      }
+    },
+    "themeSystem": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemowy"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "themeLight": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jasny"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        }
+      }
+    },
+    "themeDark": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ciemny"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        }
+      }
+    },
+    "librarySentryDescription": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportowanie awarii i diagnostyka bez zapisywania ruchu sieciowego."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crash reporting and diagnostics without recording network traffic."
+          }
+        }
+      }
+    },
+    "onboardingQueueTitle": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zarządzaj kolejką"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage the queue"
+          }
+        }
+      }
+    },
+    "onboardingQueueDescription": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przesuń w prawo, aby dodać utwór ponownie, lub w lewo, aby go usunąć. Edytuj zmienia kolejność. Menu utworu pozwala zamienić sąsiednie pozycje."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe right to add again or left to remove. Edit changes the order. A track’s menu lets you swap adjacent entries."
+          }
+        }
+      }
+    },
+    "onboardingRadioTitle": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radio i powtarzanie"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radio and repeat"
+          }
+        }
+      }
+    },
+    "onboardingRadioDescription": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radio uzupełnia kolejkę i działa także wtedy, gdy player jest pusty. Powtarzanie ponownie odtwarza bieżący utwór."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radio fills the queue and is available when the player is empty. Repeat plays the current track again."
+          }
+        }
+      }
+    },
+    "onboardingMiniTitle": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odtwarzacz zawsze pod ręką"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep playback within reach"
+          }
+        }
+      }
+    },
+    "onboardingMiniDescription": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na ekranach Ulubione i Więcej mini-player pozwala pominąć utwór, zmienić ulubione i wrócić do pełnego odtwarzacza."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On Favorites and More, the mini player lets you skip, manage favorites and open the full player."
+          }
+        }
+      }
+    },
+    "onboardingShareTitle": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodawaj z innych aplikacji"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add from other apps"
+          }
+        }
+      }
+    },
+    "onboardingShareDescription": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "W systemowym menu udostępniania wybierz KajutaBot. Gdy potrzebne jest logowanie lub wybór kanału, link zostanie zapisany do zatwierdzenia w aplikacji."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose KajutaBot in the system share sheet. If sign-in or channel selection is needed, the link is saved for confirmation in the app."
+          }
+        }
+      }
+    },
+    "swapWith": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamień z…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swap with…"
+          }
+        }
+      }
+    },
+    "swapWithDescription": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wybierz pozycję do zamiany. Pozostałe utwory zachowają kolejność."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an entry to swap with. Other tracks keep their order."
+          }
+        }
+      }
+    },
+    "actionSucceeded": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wykonano"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed"
+          }
+        }
+      }
+    },
+    "actionFailed": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się wykonać"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
+          }
+        }
+      }
+    },
+    "repeatRestarted": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Powtarzanie jest włączone — utwór zaczął się od początku."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat is on — the track restarted."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

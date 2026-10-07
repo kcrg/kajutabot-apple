@@ -1,4 +1,3 @@
-import AsyncAlgorithms
 import Foundation
 import Observation
 import SignalRClient
@@ -23,19 +22,20 @@ enum RealtimeConnectionState: String, Sendable {
 
 @MainActor
 @Observable
-final class RealtimeClient {
+final class RealtimeClient: LocalVolumeTransport {
     private let hubURL: String
     private let tokenProvider: @Sendable () async throws -> String
-
     @ObservationIgnored private var connection: HubConnection?
     @ObservationIgnored private var connectionTask: Task<Void, Never>?
+    @ObservationIgnored private var subscriptionTask: Task<Void, Never>?
     @ObservationIgnored private var recoveryTask: Task<Void, Never>?
     @ObservationIgnored private var desiredGuildId: String?
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var subscriptionGeneration = 0
-    @ObservationIgnored private var snapshotSubscriptionGeneration: Int?
-    @ObservationIgnored private let snapshotChannel = AsyncChannel<QueueSnapshotResponse>()
-    @ObservationIgnored private var snapshotConsumerTask: Task<Void, Never>?
+    @ObservationIgnored private var lastSnapshot: QueueSnapshotResponse?
+    @ObservationIgnored private var ready = false
+    @ObservationIgnored private var hasStarted = false
+    @ObservationIgnored private var active = false
 
     var state: RealtimeConnectionState = .disconnected
     var lastFrameAt: Date?
@@ -43,282 +43,226 @@ final class RealtimeClient {
     var reconnectAttempts = 0
     @ObservationIgnored var onSnapshot: ((QueueSnapshotResponse) -> Void)?
     @ObservationIgnored var onRecoveryNeeded: ((String) -> Void)?
+    @ObservationIgnored var onLocalVolume: ((LocalVolumeState) -> Void)?
+    @ObservationIgnored var onConnectionChanged: ((Bool) -> Void)?
 
     init(baseURL: URL, tokenProvider: @escaping @Sendable () async throws -> String) {
         hubURL = baseURL.appending(path: "api/v1/app/hubs/playback").absoluteString
         self.tokenProvider = tokenProvider
-
-        snapshotConsumerTask = Task { [weak self, snapshotChannel] in
-            for await snapshot in snapshotChannel.removeDuplicates() {
-                guard !Task.isCancelled else { return }
-                self?.consumeQueueUpdated(snapshot)
-            }
-        }
     }
 
+    /// The socket belongs to the authenticated session; guild is only a subscription.
     func connect(guildId: String?) {
-        guard desiredGuildId != guildId || connection == nil else { return }
-
-        generation += 1
-        let epoch = generation
+        let changed = desiredGuildId != guildId
         desiredGuildId = guildId
-        subscriptionGeneration = 0
-        snapshotSubscriptionGeneration = nil
-        reconnectAttempts = 0
-        recoveryTask?.cancel()
-        recoveryTask = nil
-        connectionTask?.cancel()
-        connectionTask = nil
-
-        let previousConnection = connection
-        connection = nil
-        if let previousConnection {
-            Task { await previousConnection.stop() }
-        }
-
-        guard let guildId else {
-            state = .disconnected
-            return
-        }
-
-        state = .connecting
-        Diagnostics.debug("realtime", "Connecting")
-        connectionTask = Task { [weak self] in
-            await self?.startConnection(guildId: guildId, epoch: epoch)
+        active = true
+        if connection == nil {
+            generation &+= 1
+            let epoch = generation
+            state = .connecting
+            connectionTask = Task { [weak self] in await self?.start(epoch: epoch) }
+        } else if changed {
+            lastSnapshot = nil
+            scheduleSubscription()
         }
     }
 
     func stop() {
+        active = false
+        generation &+= 1
+        subscriptionGeneration &+= 1
         desiredGuildId = nil
-        generation += 1
-        subscriptionGeneration = 0
-        snapshotSubscriptionGeneration = nil
-        reconnectAttempts = 0
-        recoveryTask?.cancel()
-        recoveryTask = nil
+        ready = false
+        hasStarted = false
+        lastSnapshot = nil
         connectionTask?.cancel()
+        subscriptionTask?.cancel()
+        recoveryTask?.cancel()
         connectionTask = nil
-
-        let activeConnection = connection
+        subscriptionTask = nil
+        recoveryTask = nil
+        let previous = connection
         connection = nil
         state = .disconnected
-
-        if let activeConnection {
-            Task { await activeConnection.stop() }
-        }
+        onConnectionChanged?(false)
+        if let previous { Task { await previous.stop() } }
     }
 
-    private func startConnection(guildId: String, epoch: Int) async {
-        guard isCurrent(guildId: guildId, epoch: epoch) else { return }
+    func getLocalVolume() async throws -> LocalVolumeState {
+        guard ready, let connection else { throw URLError(.notConnectedToInternet) }
+        let epoch = generation
+        let result: LocalVolumeState = try await withInvocationDeadline {
+            try await connection.invoke(method: "GetLocalVolumeState")
+        }
+        guard generation == epoch, ready else { throw CancellationError() }
+        return result
+    }
 
+    func setLocalVolume(_ volume: Int) async throws {
+        guard (0...200).contains(volume), ready, let connection else { throw APIError.invalidResponse }
+        let epoch = generation
+        // invoke waits for Completion; send only writes a frame.
+        try await withInvocationDeadline {
+            try await connection.invoke(method: "SetLocalVolume", arguments: volume) as Void
+        }
+        guard generation == epoch, ready else { throw CancellationError() }
+    }
+
+    private func start(epoch: Int) async {
+        guard isCurrent(epoch) else { return }
         var options = HttpConnectionOptions()
         options.transport = .webSockets
-        options.accessTokenFactory = { [tokenProvider] in
-            try await tokenProvider()
-        }
-
-        let retryPolicy = KajutaBotRetryPolicy { [weak self] attempt in
-            Task { @MainActor [weak self] in
-                guard let self, self.isCurrent(guildId: guildId, epoch: epoch) else { return }
-                self.reconnectAttempts = attempt
-            }
-        }
-
-        let hubConnection = HubConnectionBuilder()
+        options.accessTokenFactory = { [tokenProvider] in try await tokenProvider() }
+        let hub = HubConnectionBuilder()
             .withUrl(url: hubURL, options: options)
-            .withAutomaticReconnect(retryPolicy: retryPolicy)
+            .withAutomaticReconnect(retryPolicy: KajutaBotRetryPolicy { [weak self] attempt in
+                Task { @MainActor in
+                    guard let self, self.isCurrent(epoch) else { return }
+                    self.reconnectAttempts = attempt
+                }
+            })
             .withServerTimeout(serverTimeout: 30)
             .withKeepAliveInterval(keepAliveInterval: 15)
             .build()
-
-        connection = hubConnection
-        await registerHandlers(on: hubConnection, guildId: guildId, epoch: epoch)
-
-        var initialAttempt = 0
-        while isCurrent(guildId: guildId, epoch: epoch), !Task.isCancelled {
+        connection = hub
+        await registerHandlers(hub, epoch: epoch)
+        var attempt = 0
+        while isCurrent(epoch), !Task.isCancelled {
             do {
-                state = initialAttempt == 0 ? .connecting : .reconnecting
-                try await hubConnection.start()
-                guard isCurrent(guildId: guildId, epoch: epoch), !Task.isCancelled else {
-                    await hubConnection.stop()
-                    return
-                }
-
+                try await hub.start()
+                guard isCurrent(epoch), !Task.isCancelled else { await hub.stop(); return }
+                hasStarted = true
+                ready = true
+                state = .connected
                 reconnectAttempts = 0
-                try await subscribe(guildId: guildId, epoch: epoch, on: hubConnection)
-                Diagnostics.info("realtime", "Connected and subscribed")
+                onConnectionChanged?(true)
+                scheduleSubscription()
                 return
-            } catch is CancellationError {
-                await hubConnection.stop()
-                return
-            } catch {
-                guard isCurrent(guildId: guildId, epoch: epoch), !Task.isCancelled else { return }
-
-                initialAttempt += 1
-                reconnectAttempts = initialAttempt
+            } catch is CancellationError { await hub.stop(); return } catch {
+                guard isCurrent(epoch), !Task.isCancelled else { return }
+                attempt &+= 1
+                reconnectAttempts = attempt
                 state = .reconnecting
-                Diagnostics.warning("realtime", "Connection attempt failed: \(error.localizedDescription)")
-                await hubConnection.stop()
-
-                let delay = KajutaBotRetryPolicy.delay(forAttempt: initialAttempt - 1)
-                try? await Task.sleep(for: .seconds(delay))
+                Diagnostics.warning("realtime", "Connection attempt failed")
+                try? await Task.sleep(for: .seconds(KajutaBotRetryPolicy.delay(forAttempt: attempt - 1)))
             }
         }
     }
 
-    private func registerHandlers(on connection: HubConnection, guildId: String, epoch: Int) async {
-        await connection.on("QueueUpdated") { @Sendable [weak self] (snapshot: QueueSnapshotResponse) in
-            await self?.handleQueueUpdated(snapshot, guildId: guildId, epoch: epoch)
+    private func registerHandlers(_ hub: HubConnection, epoch: Int) async {
+        await hub.on("QueueUpdated") { @Sendable [weak self] (snapshot: QueueSnapshotResponse) in
+            await self?.receive(snapshot, epoch: epoch)
         }
-
-        await connection.on("RealtimeHeartbeat") { @Sendable [weak self] (_: Int64) in
-            await self?.handleHeartbeat(guildId: guildId, epoch: epoch)
+        await hub.on("RealtimeHeartbeat") { @Sendable [weak self] (_: Int64) in
+            await self?.heartbeat(epoch: epoch)
         }
-
-        await connection.onReconnecting { @Sendable [weak self] _ in
-            await self?.handleReconnecting(guildId: guildId, epoch: epoch)
+        await hub.on("LocalVolumeStateChanged") { @Sendable [weak self] (volume: LocalVolumeState) in
+            await self?.receive(volume, epoch: epoch)
         }
-
-        await connection.onReconnected { @Sendable [weak self] in
-            await self?.handleReconnected(guildId: guildId, epoch: epoch)
-        }
-
-        await connection.onClosed { @Sendable [weak self] _ in
-            await self?.handleClosed(guildId: guildId, epoch: epoch)
-        }
+        await hub.onReconnecting { @Sendable [weak self] _ in await self?.reconnecting(epoch: epoch) }
+        await hub.onReconnected { @Sendable [weak self] in await self?.reconnected(epoch: epoch) }
+        await hub.onClosed { @Sendable [weak self] _ in await self?.closed(epoch: epoch) }
     }
 
-    private func handleQueueUpdated(_ snapshot: QueueSnapshotResponse, guildId: String, epoch: Int) async {
-        guard isCurrent(guildId: guildId, epoch: epoch), snapshot.guildId == guildId else { return }
-
+    private func receive(_ snapshot: QueueSnapshotResponse, epoch: Int) {
+        guard isCurrent(epoch), snapshot.guildId == desiredGuildId else { return }
         lastFrameAt = .now
         lastQueueUpdateAt = .now
-        snapshotSubscriptionGeneration = subscriptionGeneration
-        reconnectAttempts = 0
         recoveryTask?.cancel()
-        recoveryTask = nil
-        state = .connected
-
-        // SignalR can deliver bursts of equivalent snapshots around reconnects and
-        // mutations. Route them through one AsyncSequence so delivery is ordered and
-        // adjacent duplicates are removed before AppState has to process them.
-        await snapshotChannel.send(snapshot)
+        if snapshot != lastSnapshot {
+            lastSnapshot = snapshot
+            onSnapshot?(snapshot)
+        }
     }
 
-    private func consumeQueueUpdated(_ snapshot: QueueSnapshotResponse) {
-        guard snapshot.guildId == desiredGuildId else { return }
-        onSnapshot?(snapshot)
+    private func receive(_ volume: LocalVolumeState, epoch: Int) {
+        guard isCurrent(epoch), ready else { return }
+        lastFrameAt = .now
+        onLocalVolume?(volume)
     }
 
-    private func handleHeartbeat(guildId: String, epoch: Int) {
-        guard isCurrent(guildId: guildId, epoch: epoch) else { return }
+    private func heartbeat(epoch: Int) {
+        guard isCurrent(epoch) else { return }
         lastFrameAt = .now
     }
 
-    private func handleReconnecting(guildId: String, epoch: Int) {
-        guard isCurrent(guildId: guildId, epoch: epoch) else { return }
-        recoveryTask?.cancel()
-        recoveryTask = nil
+    private func reconnecting(epoch: Int) {
+        guard isCurrent(epoch) else { return }
+        ready = false
         state = .reconnecting
-        Diagnostics.warning("realtime", "Transport reconnecting")
-    }
-
-    private func handleReconnected(guildId: String, epoch: Int) async {
-        guard isCurrent(guildId: guildId, epoch: epoch), let connection else { return }
-
-        do {
-            try await subscribe(guildId: guildId, epoch: epoch, on: connection)
-        } catch {
-            guard isCurrent(guildId: guildId, epoch: epoch) else { return }
-            state = .reconnecting
-            Diagnostics.error("realtime", "Resubscribe failed: \(error.localizedDescription)")
-            await connection.stop()
-
-            // Automatic reconnect covers transport loss. A failed hub subscription is a
-            // domain-level failure, so rebuild the connection to obtain a clean session.
-            self.connection = nil
-            connectionTask?.cancel()
-            connectionTask = Task { [weak self] in
-                guard let self else { return }
-                try? await Task.sleep(for: .seconds(1))
-                guard !Task.isCancelled else { return }
-                self.restartIfCurrent(guildId: guildId, epoch: epoch)
-            }
-        }
-    }
-
-    private func handleClosed(guildId: String, epoch: Int) {
-        guard isCurrent(guildId: guildId, epoch: epoch) else { return }
         recoveryTask?.cancel()
-        recoveryTask = nil
-        state = .disconnected
-        Diagnostics.warning("realtime", "Connection closed")
+        onConnectionChanged?(false)
     }
 
-    private func subscribe(guildId: String, epoch: Int, on connection: HubConnection) async throws {
-        guard isCurrent(guildId: guildId, epoch: epoch) else { return }
-
-        state = .subscribing
-        subscriptionGeneration += 1
-        let subscriptionEpoch = subscriptionGeneration
-        snapshotSubscriptionGeneration = nil
-        recoveryTask?.cancel()
-        recoveryTask = nil
-
-        let initialSnapshotAvailable: Bool = try await connection.invoke(
-            method: "SubscribeGuild",
-            arguments: guildId
-        )
-
-        guard isCurrent(guildId: guildId, epoch: epoch), subscriptionGeneration == subscriptionEpoch else { return }
-
+    private func reconnected(epoch: Int) {
+        guard isCurrent(epoch) else { return }
+        ready = true
+        lastSnapshot = nil
+        state = .connected
         reconnectAttempts = 0
-        if state != .connected {
-            state = .connected
-        }
-
-        guard snapshotSubscriptionGeneration != subscriptionEpoch else { return }
-        scheduleInitialSnapshotRecovery(
-            guildId: guildId,
-            epoch: epoch,
-            subscriptionEpoch: subscriptionEpoch,
-            immediate: !initialSnapshotAvailable
-        )
+        onConnectionChanged?(true)
+        scheduleSubscription()
     }
 
-    private func scheduleInitialSnapshotRecovery(
-        guildId: String,
-        epoch: Int,
-        subscriptionEpoch: Int,
-        immediate: Bool
-    ) {
+    private func closed(epoch: Int) {
+        guard isCurrent(epoch), hasStarted else { return }
+        ready = false
+        onConnectionChanged?(false)
         recoveryTask?.cancel()
-        recoveryTask = Task { [weak self] in
-            if !immediate {
-                try? await Task.sleep(for: .seconds(3))
-            }
-            guard !Task.isCancelled, let self else { return }
-            guard self.isCurrent(guildId: guildId, epoch: epoch) else { return }
-            guard self.subscriptionGeneration == subscriptionEpoch else { return }
-            guard self.snapshotSubscriptionGeneration != subscriptionEpoch else { return }
-            Diagnostics.warning("realtime", "No initial snapshot received; requesting REST recovery")
-            self.onRecoveryNeeded?(guildId)
-        }
-    }
-
-    private func restartIfCurrent(guildId: String, epoch: Int) {
-        guard isCurrent(guildId: guildId, epoch: epoch) else { return }
-        generation += 1
-        let newEpoch = generation
+        subscriptionTask?.cancel()
+        generation &+= 1
+        let nextEpoch = generation
+        hasStarted = false
         state = .reconnecting
         connectionTask = Task { [weak self] in
-            await self?.startConnection(guildId: guildId, epoch: newEpoch)
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled, let self, self.isCurrent(nextEpoch) else { return }
+            await self.start(epoch: nextEpoch)
         }
     }
 
-    private func isCurrent(guildId: String, epoch: Int) -> Bool {
-        desiredGuildId == guildId && generation == epoch
+    private func scheduleSubscription() {
+        subscriptionGeneration &+= 1
+        let subscription = subscriptionGeneration
+        let epoch = generation
+        let previous = subscriptionTask
+        recoveryTask?.cancel()
+        guard ready, let guild = desiredGuildId, let hub = connection else { return }
+        // Serialize SubscribeGuild itself, so late invocations cannot switch the
+        // server subscription back after a newer selection.
+        subscriptionTask = Task { [weak self] in
+            await previous?.value
+            guard !Task.isCancelled, let self, self.isCurrent(epoch),
+                  self.subscriptionGeneration == subscription else { return }
+            self.state = .subscribing
+            do {
+                let available: Bool = try await withInvocationDeadline {
+                    try await hub.invoke(method: "SubscribeGuild", arguments: guild)
+                }
+                guard self.isCurrent(epoch), self.subscriptionGeneration == subscription else { return }
+                self.state = .connected
+                self.scheduleRecovery(guild: guild, epoch: epoch, subscription: subscription, immediate: !available)
+            } catch {
+                guard self.isCurrent(epoch) else { return }
+                if self.desiredGuildId == guild { self.onRecoveryNeeded?(guild) }
+                self.closed(epoch: epoch)
+                await hub.stop()
+                Diagnostics.warning("realtime", "Guild subscription failed; recovering through REST")
+            }
+        }
     }
+
+    private func scheduleRecovery(guild: String, epoch: Int, subscription: Int, immediate: Bool) {
+        guard lastSnapshot?.guildId != guild else { return }
+        recoveryTask = Task { [weak self] in
+            if !immediate { try? await Task.sleep(for: .seconds(3)) }
+            guard !Task.isCancelled, let self, self.isCurrent(epoch),
+                  self.subscriptionGeneration == subscription, self.lastSnapshot?.guildId != guild else { return }
+            self.onRecoveryNeeded?(guild)
+        }
+    }
+
+    private func isCurrent(_ epoch: Int) -> Bool { active && generation == epoch }
 }
 
 private struct KajutaBotRetryPolicy: RetryPolicy {

@@ -1,37 +1,34 @@
 import SwiftUI
 
 struct FavoritesView: View {
-    let app: AppState
-    @State private var newFavoriteURL = ""
+    @Bindable var app: AppState
     @State private var showAddFavorite = false
+    @State private var newFavoriteURL = ""
+    @State private var addTask: Task<Void, Never>?
 
     var body: some View {
         List {
             if app.favorites.isEmpty && app.isLoadingFavorites {
-                ForEach(0..<5, id: \.self) { _ in
-                    FavoriteSkeletonRow()
-                        .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 5, trailing: 16))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
-                }
+                ProgressView { Text(.loading) }.frame(maxWidth: .infinity)
             } else if app.favorites.isEmpty {
                 ContentUnavailableView {
                     Label(.noFavoritesTitle, systemImage: "heart")
-                } description: {
-                    Text(.noFavoritesDescription)
-                }
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
+                } description: { Text(.noFavoritesDescription) }
             } else {
-                ForEach(app.favorites) { favorite in
-                    FavoriteRow(app: app, favorite: favorite)
-                        .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 5, trailing: 16))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                Section {
+                    Button { app.queueAllFavorites() } label: {
+                        Label {
+                            Text(.favoritesAddAll(count: app.favorites.count))
+                        } icon: { ActionFeedback(status: app.actionStatuses["queue.favorites.all"], symbol: "text.badge.plus") }
+                    }
+                    .disabled(app.actionStatuses["queue.favorites.all"] == .pending)
+                    Toggle(String(localized: .shuffleOrder), isOn: Binding(get: { app.favoritesShuffle }, set: app.setFavoritesShuffle))
+                }
+                Section {
+                    ForEach(app.favorites) { favorite in row(favorite) }
                 }
             }
         }
-        .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .adaptiveContentWidth(AppLayout.primaryContentMaxWidth)
         .background(Color(uiColor: .systemGroupedBackground))
@@ -39,132 +36,83 @@ struct FavoritesView: View {
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button { app.refreshFavorites() } label: { Image(systemName: "arrow.clockwise") }
-                Menu {
-                    Toggle(String(localized: .shuffleOrder), isOn: Binding(
-                        get: { app.favoritesShuffle },
-                        set: app.setFavoritesShuffle
-                    ))
-                    Button {
-                        app.queueAllFavorites()
-                    } label: {
-                        Label(.favoritesAddAll(count: app.favorites.count), systemImage: "text.badge.plus")
-                    }
-                    .disabled(app.favorites.isEmpty || app.isMutatingFavorites)
-                    Divider()
-                    Button { showAddFavorite = true } label: {
-                        Label(.addByURL, systemImage: "heart.badge.plus")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
+                    .disabled(app.isLoadingFavorites).accessibilityLabel(Text(.refresh))
+                Button { app.dismissError(); showAddFavorite = true } label: { Image(systemName: "heart.badge.plus") }
+                    .accessibilityLabel(Text(.addByURL))
             }
         }
         .refreshable { await app.refreshFavoritesNow() }
         .sheet(isPresented: $showAddFavorite) {
             NavigationStack {
                 Form {
-                    Section(.trackLink) {
-                        ZStack(alignment: .leading) {
-                            if newFavoriteURL.isEmpty {
-                                Text(verbatim: "https://youtube.com/…")
-                                    .foregroundStyle(.primary.opacity(0.62))
-                                    .allowsHitTesting(false)
-                            }
-
-                            TextField("", text: $newFavoriteURL)
-                                .foregroundStyle(.primary)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .keyboardType(.URL)
-                                .accessibilityLabel(Text(.trackLink))
-                        }
-                    }
+                    TextField(String(localized: .trackLink), text: $newFavoriteURL)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
+                    Text("favoriteURLHelp").font(.footnote).foregroundStyle(.secondary)
                 }
                 .navigationTitle(.addToFavoritesTitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button(.cancel) { showAddFavorite = false } }
+                    ToolbarItem(placement: .cancellationAction) { Button(.cancel) { showAddFavorite = false }.disabled(app.isMutatingFavorites) }
                     ToolbarItem(placement: .confirmationAction) {
                         Button(.add) {
-                            app.addFavoriteByURL(newFavoriteURL)
-                            newFavoriteURL = ""
-                            showAddFavorite = false
+                            addTask = Task {
+                                if await app.addFavoriteByURL(newFavoriteURL), !Task.isCancelled {
+                                    newFavoriteURL = ""
+                                    showAddFavorite = false
+                                }
+                            }
                         }
-                        .disabled(newFavoriteURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .disabled(newFavoriteURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || app.isMutatingFavorites)
                     }
                 }
+                .operationError(app)
             }
-            .presentationDetents([.medium])
+            .interactiveDismissDisabled(app.isMutatingFavorites)
+            .presentationDetents([.medium, .large])
+            .onDisappear { addTask?.cancel() }
         }
     }
-}
 
-private struct FavoriteRow: View {
-    let app: AppState
-    let favorite: FavoriteResponse
-
-    var body: some View {
-        HStack(spacing: 12) {
-            ArtworkView(
-                urlString: favorite.thumbnailUrl,
-                layout: .square(64),
-                cornerRadius: 10
-            )
+    private func row(_ favorite: FavoriteResponse) -> some View {
+        let identity = favoriteIdentity(favorite.contentUrl)
+        let queueKey = "queue.favorite." + identity
+        let deleteKey = "favorite." + identity
+        return HStack(spacing: 12) {
+            ArtworkView(urlString: favorite.thumbnailUrl, layout: .square(60), cornerRadius: 10)
             VStack(alignment: .leading, spacing: 4) {
-                Text(favorite.title)
-                    .lineLimit(2)
+                if let url = URLInput.firstURL(in: favorite.contentUrl) {
+                    Link(favorite.title, destination: url).lineLimit(2)
+                } else { Text(favorite.title).lineLimit(2) }
                 if let date = parseISO8601(favorite.addedAt) {
                     Text(.favoriteSaved(date: date.formatted(date: .numeric, time: .omitted)))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondary)
                 }
             }
             Spacer(minLength: 4)
             Button { app.playFavorite(favorite) } label: {
-                Image(systemName: "text.badge.plus")
-                    .font(.title3)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
+                ActionFeedback(status: app.actionStatuses[queueKey], symbol: "text.badge.plus")
+                    .frame(minWidth: 44, minHeight: 44)
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(.borderless).disabled(app.actionStatuses[queueKey] == .pending)
             .accessibilityLabel(Text(.addToQueue))
-
-            Button(role: .destructive) { app.deleteFavorite(favorite.contentUrl) } label: {
-                Image(systemName: "trash")
-                    .font(.title3)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
+            .actionFeedbackAccessibility(app.actionStatuses[queueKey])
+            if app.actionStatuses[deleteKey] != nil {
+                ActionFeedback(status: app.actionStatuses[deleteKey], symbol: "heart")
             }
-            .buttonStyle(.borderless)
-            .accessibilityLabel(Text(.removeFavorite))
         }
-        .padding(12)
-        .background(
-            Color(uiColor: .secondarySystemGroupedBackground),
-            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-        )
+        .swipeActions(edge: .leading) {
+            Button { app.playFavorite(favorite) } label: { Label(.addToQueue, systemImage: "text.badge.plus") }
+                .tint(.accentColor).disabled(app.actionStatuses[queueKey] == .pending)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button { app.deleteFavorite(favorite.contentUrl) } label: { Label(.removeFavorite, systemImage: "trash") }
+                .tint(.red).disabled(app.actionStatuses[deleteKey] == .pending)
+        }
         .contextMenu {
-            if let url = URL(string: favorite.contentUrl) {
-                Link(destination: url) { Label(.openSource, systemImage: "safari") }
-            }
+            Button { app.playFavorite(favorite) } label: { Label(.addToQueue, systemImage: "text.badge.plus") }
+            Button(role: .destructive) { app.deleteFavorite(favorite.contentUrl) } label: { Label(.removeFavorite, systemImage: "trash") }
         }
-    }
-}
-
-private struct FavoriteSkeletonRow: View {
-    var body: some View {
-        HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 10).fill(.quaternary).frame(width: 64, height: 64)
-            VStack(alignment: .leading, spacing: 8) {
-                RoundedRectangle(cornerRadius: 4).fill(.quaternary).frame(height: 16)
-                RoundedRectangle(cornerRadius: 4).fill(.quaternary).frame(width: 120, height: 12)
-            }
-        }
-        .padding(12)
-        .background(
-            Color(uiColor: .secondarySystemGroupedBackground),
-            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-        )
-        .redacted(reason: .placeholder)
+        .accessibilityAction(named: Text(.addToQueue)) { app.playFavorite(favorite) }
+        .accessibilityAction(named: Text(.removeFavorite)) { app.deleteFavorite(favorite.contentUrl) }
     }
 }
