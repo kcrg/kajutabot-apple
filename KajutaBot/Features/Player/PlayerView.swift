@@ -197,7 +197,7 @@ private struct NowPlayingCard: View {
             accessibilityLabel: .stopPlayback, action: requestStop)
         PlayerCircleButton(systemName: "forward.end.fill", active: false,
             busy: app.actionStatuses["queue.control.skip"] == .pending, feedback: app.actionStatuses["queue.control.skip"], disabled: app.nowPlaying == nil,
-            symbolFont: .system(size: 20, weight: .bold), accessibilityLabel: .skipTrack) { app.skip() }
+            size: 50, symbolFont: .system(size: 22, weight: .bold), accessibilityLabel: .skipTrack) { app.skip() }
         PlayerCircleButton(systemName: "repeat", active: app.queue?.isRepeatEnabled == true,
             busy: app.actionStatuses["queue.control.repeatTrack"] == .pending, feedback: app.actionStatuses["queue.control.repeatTrack"], disabled: app.nowPlaying == nil,
             accessibilityLabel: .repeatPlayback, accessibilityValue: app.queue?.isRepeatEnabled == true ? .enabled : .disabled) { app.toggleRepeat() }
@@ -213,7 +213,8 @@ private struct NowPlayingCard: View {
             let favoriteStatus = app.actionStatuses[app.favoriteActionKey(for: track)]
             PlayerCircleButton(systemName: favorite ? "heart.fill" : "heart", active: favorite,
                 busy: favoriteStatus == .pending, feedback: favoriteStatus,
-                disabled: app.isLoadingFavorites, accessibilityLabel: favorite ? .removeFavorite : .addFavorite) { app.toggleFavorite(track) }
+                disabled: app.isLoadingFavorites, accessibilityLabel: favorite ? .removeFavorite : .addFavorite,
+                accessibilityValue: favorite ? .enabled : .disabled) { app.toggleFavorite(track) }
         }
     }
 }
@@ -232,6 +233,7 @@ private struct PlayerCardContentSkeleton: View {
 }
 
 private struct PlayerCircleButton: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let systemName: String
     var role: ButtonRole? = nil
     let active: Bool
@@ -253,13 +255,19 @@ private struct PlayerCircleButton: View {
 
     var body: some View {
         Button(role: role, action: action) {
-            ActionFeedback(status: feedback ?? (busy ? .pending : nil), symbol: systemName)
+            ActionFeedback(status: feedback ?? (busy ? .pending : nil), symbol: systemName,
+                symbolColor: active ? .accentColor : .primary)
                 .font(symbolFont)
                 .foregroundStyle(active ? Color.accentColor : Color.primary)
                 .frame(width: max(size, 44), height: max(size, 44))
-                .glassEffect(.regular.interactive(), in: .circle)
+                .glassEffect(.regular.tint(active ? Color.accentColor.opacity(0.25) : nil).interactive(), in: .circle)
+                .overlay {
+                    Circle().strokeBorder(active ? Color.accentColor : Color.clear, lineWidth: 1.5)
+                        .allowsHitTesting(false)
+                }
         }
         .buttonStyle(.plain)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: active)
         .disabled(busy || disabled)
         .accessibilityLabel(Text(accessibilityLabel))
         .accessibilityValue(accessibilityValueText)
@@ -284,15 +292,9 @@ private struct QueueRow: View {
         } details: {
             Text(verbatim: formatDuration(entry.track.durationMilliseconds))
         } trailing: {
-            Button { app.toggleFavorite(entry.track) } label: {
-                ActionFeedback(status: favoriteStatus, symbol: favorite ? "heart.fill" : "heart")
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
+            FavoriteButton(isFavorite: favorite, status: favoriteStatus, isDisabled: app.isLoadingFavorites) {
+                app.toggleFavorite(entry.track)
             }
-            .buttonStyle(.borderless)
-            .disabled(app.isLoadingFavorites || favoriteStatus == .pending)
-            .accessibilityLabel(Text(favorite ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
-            .actionFeedbackAccessibility(favoriteStatus)
         }
         .swipeActions(edge: .leading) {
             Button { app.requeueEntry(entry) } label: {
@@ -305,7 +307,7 @@ private struct QueueRow: View {
             }
                 .tint(.accentColor).disabled(app.actionStatuses["queue.requeue." + entry.id] == .pending)
         }
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button { app.removeQueueEntry(entry.id) } label: {
                 Label {
                     Text(.removeFromQueue)
@@ -350,10 +352,10 @@ private struct PlayerSkeleton: View {
             PlayerCardContentSkeleton()
 
             HStack(spacing: 4) {
-                ForEach(0..<5, id: \.self) { _ in
+                ForEach(0..<5, id: \.self) { index in
                     Circle()
                         .fill(Color(uiColor: .tertiarySystemFill))
-                        .frame(width: 44, height: 44)
+                        .frame(width: index == 1 ? 50 : 44, height: index == 1 ? 50 : 44)
                 }
             }
             .frame(maxWidth: .infinity)

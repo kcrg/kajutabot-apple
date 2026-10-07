@@ -10,46 +10,46 @@ struct AddTrackView: View {
 
     var body: some View {
         List {
-            Section {
-                Picker(String(localized: .searchSource), selection: Binding(
-                    get: { app.searchSource }, set: { app.setSearchSource($0) }
-                )) {
-                    ForEach(SearchSourceOption.allCases) { source in
-                        Text(source.displayName).tag(source)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-            if query.isEmpty && !app.searchHistory.isEmpty {
+            if !app.isSearching && query.isEmpty && !app.searchHistory.isEmpty {
                 Section(.recentSearches) {
                     ForEach(Array(app.searchHistory), id: \.self) { query in
                         Button { app.searchFromHistory(query) } label: {
-                            Label(query, systemImage: "clock.arrow.circlepath").foregroundStyle(.primary)
+                            Label(query, systemImage: "clock.arrow.circlepath").foregroundStyle(Color.primary)
                         }
+                        .trackListRow()
                     }
                 }
+                .listSectionSeparator(.hidden)
             }
-            if app.isSearching {
-                Section { ProgressView { Text(.searching) }.frame(maxWidth: .infinity) }
-            } else if app.lastCompletedSearchQuery == query && !app.searchResults.isEmpty {
+            if !app.isSearching && app.lastCompletedSearchQuery == query && !app.searchResults.isEmpty {
                 Section(.results) {
                     ForEach(app.searchResults) { item in
                         result(item).trackListRow()
                     }
                 }
-            } else if app.lastCompletedSearchQuery == query && !query.isEmpty && !isURL {
+                .listSectionSeparator(.hidden)
+            } else if !app.isSearching && app.lastCompletedSearchQuery == query && !query.isEmpty && !isURL {
                 ContentUnavailableView {
                     Label(.noResultsTitle, systemImage: "magnifyingglass")
                 } description: { Text(.noResultsForQuery(query: query)) }
+                    .trackListRow()
             }
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .adaptiveContentWidth(AppLayout.primaryContentMaxWidth)
         .background(Color(uiColor: .systemGroupedBackground))
+        .overlay {
+            if app.isSearching { SearchLoadingView(source: app.searchSource.displayName) }
+        }
         .navigationTitle(.addTrackTitle)
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $app.searchQuery, prompt: Text(.searchPrompt))
+        .searchScopes(Binding(get: { app.searchSource }, set: app.setSearchSource), activation: .onSearchPresentation) {
+            ForEach(SearchSourceOption.allCases) { source in
+                Text(source.displayName).tag(source)
+            }
+        }
         .onSubmit(of: .search) { submit() }
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
@@ -71,14 +71,9 @@ struct AddTrackView: View {
             Text("\(item.metricCount.formatted()) \(item.metricCaption)")
             Text(verbatim: formatDuration(item.track.durationMilliseconds))
         } trailing: {
-            Button { app.toggleFavorite(item.track) } label: {
-                ActionFeedback(status: favoriteStatus, symbol: favorite ? "heart.fill" : "heart")
-                    .frame(minWidth: 44, minHeight: 44)
+            FavoriteButton(isFavorite: favorite, status: favoriteStatus, isDisabled: app.isLoadingFavorites) {
+                app.toggleFavorite(item.track)
             }
-            .buttonStyle(.borderless)
-            .disabled(app.isLoadingFavorites || favoriteStatus == .pending)
-            .actionFeedbackAccessibility(favoriteStatus)
-            .accessibilityLabel(Text(favorite ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
         }
         .swipeActions(edge: .leading) {
             Button { add(item) } label: {
@@ -102,5 +97,24 @@ struct AddTrackView: View {
             let completed = await app.submitSearchInput()
             if completed && !Task.isCancelled { queued() }
         }
+    }
+}
+
+private struct SearchLoadingView: View {
+    let source: LocalizedStringResource
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ProgressView().controlSize(.large).accessibilityHidden(true)
+            VStack(spacing: 6) {
+                Text(.searching).font(.headline).foregroundStyle(Color.primary)
+                Text(source).font(.subheadline).foregroundStyle(.secondary)
+            }
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(Text(.inProgress))
+        .allowsHitTesting(false)
     }
 }

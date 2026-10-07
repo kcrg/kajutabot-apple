@@ -30,13 +30,9 @@ struct MiniPlayerView: View {
                 .buttonStyle(.plain).layoutPriority(1)
                 .accessibilityLabel(Text(.openPlayer)).accessibilityValue(track.title)
                 if placement != .inline {
-                    Button { app.toggleFavorite(track) } label: {
-                        ActionFeedback(status: favoriteStatus,
-                            symbol: favorite ? "heart.fill" : "heart").frame(minWidth: 44, minHeight: 44)
+                    FavoriteButton(isFavorite: favorite, status: favoriteStatus, isDisabled: app.isLoadingFavorites) {
+                        app.toggleFavorite(track)
                     }
-                    .buttonStyle(.plain).disabled(app.isLoadingFavorites || favoriteStatus == .pending)
-                    .accessibilityLabel(Text(favorite ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
-                    .actionFeedbackAccessibility(favoriteStatus)
                 }
                 Button { app.skip() } label: {
                     ActionFeedback(status: app.actionStatuses["queue.control.skip"], symbol: "forward.end.fill").frame(minWidth: 44, minHeight: 44)

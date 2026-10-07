@@ -4,6 +4,7 @@ struct ActionFeedback: View {
     let status: ActionStatus?
     let symbol: String
     var showsSuccess = false
+    var symbolColor: Color? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var spinnerReady = false
 
@@ -28,7 +29,7 @@ struct ActionFeedback: View {
     var body: some View {
         ZStack {
             Image(systemName: displayedSymbol)
-                .foregroundStyle(feedbackColor.map { AnyShapeStyle($0) } ?? AnyShapeStyle(.foreground))
+                .foregroundStyle((feedbackColor ?? symbolColor).map { AnyShapeStyle($0) } ?? AnyShapeStyle(.foreground))
                 .contentTransition(reduceMotion ? .identity : .symbolEffect(.replace.magic(fallback: .downUp)))
                 .opacity(showsSpinner ? 0 : 1)
             if showsSpinner {

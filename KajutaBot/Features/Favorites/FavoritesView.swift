@@ -73,7 +73,7 @@ struct FavoritesView: View {
             }
             .tint(.accentColor).disabled(queueStatus == .pending || deleteStatus == .pending)
         }
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button { app.deleteFavorite(favorite.contentUrl) } label: {
                 Label {
                     Text(.removeFavorite)

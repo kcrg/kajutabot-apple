@@ -16,9 +16,10 @@ struct TrackListCard<Title: View, Details: View, Trailing: View>: View {
     var body: some View {
         HStack(spacing: 12) {
             ArtworkView(urlString: artworkURL, layout: .square(64), cornerRadius: 12)
-                .overlay(alignment: .bottomTrailing) {
+                .overlay(alignment: .center) {
                     ActionFeedback(status: actionStatus, symbol: actionSymbol, showsSuccess: confirmsAction)
-                        .padding(3)
+                        .font(.system(size: 20, weight: .semibold))
+                        .padding(6)
                         .background(.regularMaterial, in: Circle())
                         .opacity(actionStatus == nil ? 0 : 1)
                         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: actionStatus)
