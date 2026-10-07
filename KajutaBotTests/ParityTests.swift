@@ -240,6 +240,16 @@ struct LocalVolumeTests {
 }
 
 struct SharedInputTests {
+    @Test("Link z API jest pełnym URL HTTP(S), a tekst udostępnienia nadal wymaga ekstrakcji")
+    func validatesStructuredURLs() {
+        #expect(URLInput.httpURL(" https://example.com/track%20name?list=one&v=two ")?.absoluteString == "https://example.com/track%20name?list=one&v=two")
+        #expect(URLInput.httpURL("http://example.com/track")?.host == "example.com")
+        #expect(URLInput.httpURL("file:///private/token") == nil)
+        #expect(URLInput.httpURL("/track") == nil)
+        #expect(URLInput.httpURL("Polecam https://example.com/track") == nil)
+        #expect(URLInput.firstURL(in: "Polecam https://example.com/track dziś")?.absoluteString == "https://example.com/track")
+    }
+
     @Test("Parser przyjmuje URL z tekstem, odrzuca inne schematy i obcy host")
     func parsesURLs() {
         #expect(URLInput.firstURL(in: "Polecam https://youtu.be/dQw4w9WgXcQ dziś")?.host == "youtu.be")

@@ -6,6 +6,7 @@ struct PlayerView: View {
     @State private var showTargetPicker = false
     @State private var showStopConfirmation = false
     @State private var showClearQueueConfirmation = false
+    @State private var draggedEntry: QueueDragItem?
 
     var body: some View {
         List {
@@ -30,19 +31,14 @@ struct PlayerView: View {
                 if !app.hasResolvedQueueState {
                     ForEach(0..<3, id: \.self) { _ in
                         QueueRowSkeleton()
-                            .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 5, trailing: 16))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
+                            .trackListRow()
                     }
                 } else if let entries = app.queue?.pendingEntries, !entries.isEmpty {
                     ForEach(entries) { entry in
                         QueueRow(app: app, entry: entry)
-                            .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 5, trailing: 16))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
+                            .modifier(QueueDragModifier(app: app, entry: entry, dragged: $draggedEntry))
+                            .trackListRow()
                     }
-                    .onMove(perform: app.moveQueueEntry)
-                    .moveDisabled(app.isMutating)
                 } else {
                     ContentUnavailableView {
                         Label(.queueEmptyTitle, systemImage: "music.note.list")
@@ -69,12 +65,15 @@ struct PlayerView: View {
                     }
                     if !(app.queue?.pendingEntries.isEmpty ?? true) {
                         Button(role: .destructive) { showClearQueueConfirmation = true } label: {
-                            Label(.clear, systemImage: "trash")
+                            Label {
+                                Text(.clear)
+                            } icon: { ActionFeedback(status: app.actionStatuses["queue.control.clear"], symbol: "trash") }
                                 .labelStyle(.iconOnly)
                                 .frame(width: 44, height: 44)
                                 .contentShape(Rectangle())
                         }
                         .accessibilityLabel(Text(.clearQueue))
+                        .actionFeedbackAccessibility(app.actionStatuses["queue.control.clear"])
                         .disabled(app.actionStatuses["queue.control.clear"] == .pending)
                     }
                 }
@@ -86,12 +85,10 @@ struct PlayerView: View {
         .adaptiveContentWidth(AppLayout.primaryContentMaxWidth)
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle(.playerTitle)
+        .onChange(of: app.queue?.queueVersion) { _, _ in draggedEntry = nil }
+        .onChange(of: app.selectedGuildId) { _, _ in draggedEntry = nil }
+        .onDisappear { draggedEntry = nil }
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) { EditButton().disabled(app.isMutating || (app.queue?.pendingEntries.isEmpty ?? true)) }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: openSearch) { Image(systemName: "magnifyingglass") }
-                    .accessibilityLabel(Text(.addTrackTitle))
-            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showTargetPicker = true
@@ -134,21 +131,13 @@ private struct NowPlayingCard: View {
     @State private var showVolume = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             if let track = app.nowPlaying {
                 ArtworkView(urlString: track.artworkUrl, layout: .aspectRatio(16 / 9), cornerRadius: 20)
                 Text(.nowPlaying).font(.caption.weight(.semibold)).foregroundStyle(.tint)
                 Text(track.title).font(.title2.bold()).lineLimit(2, reservesSpace: true)
                     .contentTransition(.interpolate)
                 PlaybackProgressView(progress: app.progress)
-                Button { app.requeueNowPlaying() } label: {
-                    Label {
-                        Text("requeueTrack")
-                    } icon: { ActionFeedback(status: app.actionStatuses["queue.control.requeue"], symbol: "text.badge.plus") }
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                .disabled(app.actionStatuses["queue.control.requeue"] == .pending)
             } else {
                 ContentUnavailableView {
                     Label(.nothingPlaying, systemImage: "music.note")
@@ -156,24 +145,47 @@ private struct NowPlayingCard: View {
                     Text(app.queue == nil ? String(localized: .connectAndSelectChannel) : String(localized: .queueWaiting))
                 }
             }
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 12) { primaryControls; secondaryControls }.fixedSize(horizontal: true, vertical: false)
-                VStack(spacing: 12) {
-                    HStack(spacing: 12) { primaryControls }
-                    HStack(spacing: 12) { secondaryControls }
+            GlassEffectContainer(spacing: 4) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 4) { primaryControls; secondaryControls }.fixedSize(horizontal: true, vertical: false)
+                    VStack(spacing: 8) {
+                        HStack(spacing: 4) { primaryControls }
+                        HStack(spacing: 4) { secondaryControls }
+                    }
                 }
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
             if app.actionStatuses["queue.control.skip"] == .success,
                app.lastSkipOutcome == .restartedRepeatedTrack {
                 Text("repeatRestarted").font(.caption).foregroundStyle(.secondary)
             }
-            if app.localVolume.showVolumeButton {
-                Button { showVolume = true } label: { Label("localVolumeTitle", systemImage: "speaker.wave.2") }
-                    .buttonStyle(.bordered)
+            if app.nowPlaying != nil || app.localVolume.showVolumeButton {
+                HStack(spacing: 8) {
+                    if app.nowPlaying != nil {
+                        Button { app.requeueNowPlaying() } label: {
+                            Label {
+                                Text("requeueTrack").font(.subheadline)
+                            } icon: {
+                                ActionFeedback(status: app.actionStatuses["queue.control.requeue"],
+                                    symbol: "text.badge.plus", showsSuccess: true)
+                            }
+                            .frame(minHeight: 44)
+                        }
+                        .disabled(app.actionStatuses["queue.control.requeue"] == .pending)
+                        .actionFeedbackAccessibility(app.actionStatuses["queue.control.requeue"], showsSuccess: true)
+                    }
+                    Spacer(minLength: 0)
+                    if app.localVolume.showVolumeButton {
+                        Button { showVolume = true } label: {
+                            Image(systemName: "speaker.wave.2").frame(width: 44, height: 44)
+                        }
+                        .accessibilityLabel(Text("localVolumeTitle"))
+                    }
+                }
+                .buttonStyle(.borderless)
             }
         }
-        .padding(18)
+        .padding(16)
         .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 26))
         .animation(reduceMotion ? nil : .smooth(duration: 0.2), value: app.presentationTrackRevision)
         .sheet(isPresented: $showVolume) { LocalVolumeSheet(controller: app.localVolume) }
@@ -185,7 +197,7 @@ private struct NowPlayingCard: View {
             accessibilityLabel: .stopPlayback, action: requestStop)
         PlayerCircleButton(systemName: "forward.end.fill", active: false,
             busy: app.actionStatuses["queue.control.skip"] == .pending, feedback: app.actionStatuses["queue.control.skip"], disabled: app.nowPlaying == nil,
-            size: 52, symbolFont: .title2.weight(.bold), accessibilityLabel: .skipTrack) { app.skip() }
+            symbolFont: .system(size: 20, weight: .bold), accessibilityLabel: .skipTrack) { app.skip() }
         PlayerCircleButton(systemName: "repeat", active: app.queue?.isRepeatEnabled == true,
             busy: app.actionStatuses["queue.control.repeatTrack"] == .pending, feedback: app.actionStatuses["queue.control.repeatTrack"], disabled: app.nowPlaying == nil,
             accessibilityLabel: .repeatPlayback, accessibilityValue: app.queue?.isRepeatEnabled == true ? .enabled : .disabled) { app.toggleRepeat() }
@@ -198,8 +210,9 @@ private struct NowPlayingCard: View {
             accessibilityLabel: .radio, accessibilityValue: app.queue?.radio.isEnabled == true ? .enabled : .disabled) { app.toggleRadio() }
         if let track = app.nowPlaying {
             let favorite = app.isFavorite(track)
+            let favoriteStatus = app.actionStatuses[app.favoriteActionKey(for: track)]
             PlayerCircleButton(systemName: favorite ? "heart.fill" : "heart", active: favorite,
-                busy: app.actionStatuses[app.favoriteActionKey(for: track)] == .pending, feedback: app.actionStatuses[app.favoriteActionKey(for: track)],
+                busy: favoriteStatus == .pending, feedback: favoriteStatus,
                 disabled: app.isLoadingFavorites, accessibilityLabel: favorite ? .removeFavorite : .addFavorite) { app.toggleFavorite(track) }
         }
     }
@@ -226,14 +239,13 @@ private struct PlayerCircleButton: View {
     var feedback: ActionStatus? = nil
     var disabled = false
     var size: CGFloat = 44
-    var symbolFont: Font = .body.weight(.semibold)
+    var symbolFont: Font = .system(size: 18, weight: .semibold)
     let accessibilityLabel: LocalizedStringResource
     var accessibilityValue: LocalizedStringResource? = nil
     let action: () -> Void
 
     private var accessibilityValueText: Text {
         if busy { return Text(.inProgress) }
-        if feedback == .success { return Text("actionSucceeded") }
         if feedback == .failure { return Text("actionFailed") }
         if let accessibilityValue { return Text(accessibilityValue) }
         return Text(verbatim: "")
@@ -241,22 +253,13 @@ private struct PlayerCircleButton: View {
 
     var body: some View {
         Button(role: role, action: action) {
-            Group {
-                if let feedback {
-                    ActionFeedback(status: feedback, symbol: systemName)
-                } else if busy {
-                    ProgressView()
-                        .controlSize(.small)
-                } else {
-                    Image(systemName: systemName)
-                        .font(symbolFont)
-                        .foregroundStyle(active ? Color.accentColor : Color.primary)
-                }
-            }
-            .frame(width: max(size, 44), height: max(size, 44))
+            ActionFeedback(status: feedback ?? (busy ? .pending : nil), symbol: systemName)
+                .font(symbolFont)
+                .foregroundStyle(active ? Color.accentColor : Color.primary)
+                .frame(width: max(size, 44), height: max(size, 44))
+                .glassEffect(.regular.interactive(), in: .circle)
         }
-        .buttonStyle(.glass)
-        .buttonBorderShape(.circle)
+        .buttonStyle(.plain)
         .disabled(busy || disabled)
         .accessibilityLabel(Text(accessibilityLabel))
         .accessibilityValue(accessibilityValueText)
@@ -270,62 +273,51 @@ private struct QueueRow: View {
     @State private var showSwap = false
 
     var body: some View {
-        HStack(spacing: 12) {
-            Text(verbatim: "\(entry.position)")
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
-                .frame(width: 24)
-            ArtworkView(urlString: entry.track.artworkUrl, layout: .square(54), cornerRadius: 10)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(entry.track.title)
-                    .lineLimit(2)
-                Text(verbatim: formatDuration(entry.track.durationMilliseconds))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
+        let favorite = app.isFavorite(entry.track)
+        let favoriteStatus = app.actionStatuses[app.favoriteActionKey(for: entry.track)]
+        let removeStatus = app.actionStatuses["queue.remove." + entry.id]
+        let removing = removeStatus == .pending || removeStatus == .failure
+        let rowStatus = removing ? removeStatus : app.actionStatuses["queue.requeue." + entry.id]
+        TrackListCard(artworkURL: entry.track.artworkUrl, position: entry.position,
+            actionStatus: rowStatus, actionSymbol: removing ? "trash" : "text.badge.plus", confirmsAction: !removing) {
+            Text(entry.track.title)
+        } details: {
+            Text(verbatim: formatDuration(entry.track.durationMilliseconds))
+        } trailing: {
             Button { app.toggleFavorite(entry.track) } label: {
-                ActionFeedback(status: app.actionStatuses[app.favoriteActionKey(for: entry.track)], symbol: app.isFavorite(entry.track) ? "heart.fill" : "heart")
+                ActionFeedback(status: favoriteStatus, symbol: favorite ? "heart.fill" : "heart")
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
-            .disabled(app.isLoadingFavorites || app.actionStatuses[app.favoriteActionKey(for: entry.track)] == .pending)
-            .accessibilityLabel(Text(app.isFavorite(entry.track) ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
-
-            Button { app.requeueEntry(entry) } label: {
-                ActionFeedback(status: app.actionStatuses["queue.requeue." + entry.id], symbol: "text.badge.plus")
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.borderless)
-            .accessibilityLabel(Text(.addToQueue))
-            .actionFeedbackAccessibility(app.actionStatuses["queue.requeue." + entry.id])
-            .disabled(app.actionStatuses["queue.requeue." + entry.id] == .pending)
+            .disabled(app.isLoadingFavorites || favoriteStatus == .pending)
+            .accessibilityLabel(Text(favorite ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
+            .actionFeedbackAccessibility(favoriteStatus)
         }
-        .padding(12)
-        .background(
-            Color(uiColor: .secondarySystemGroupedBackground),
-            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-        )
         .swipeActions(edge: .leading) {
-            Button { app.requeueEntry(entry) } label: { Label(.addToQueue, systemImage: "text.badge.plus") }
+            Button { app.requeueEntry(entry) } label: {
+                Label {
+                    Text(.addToQueue)
+                } icon: {
+                    ActionFeedback(status: app.actionStatuses["queue.requeue." + entry.id],
+                        symbol: "text.badge.plus", showsSuccess: true)
+                }
+            }
                 .tint(.accentColor).disabled(app.actionStatuses["queue.requeue." + entry.id] == .pending)
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button { app.removeQueueEntry(entry.id) } label: { Label(.removeFromQueue, systemImage: "trash") }
+            Button { app.removeQueueEntry(entry.id) } label: {
+                Label {
+                    Text(.removeFromQueue)
+                } icon: { ActionFeedback(status: app.actionStatuses["queue.remove." + entry.id], symbol: "trash") }
+            }
                 .tint(.red).disabled(app.actionStatuses["queue.remove." + entry.id] == .pending)
         }
         .contextMenu {
             Button("swapWith") { showSwap = true }
                 .disabled(app.isMutating || (app.queue?.pendingEntries.count ?? 0) < 2)
-            Button { app.requeueEntry(entry) } label: { Label(.addToQueue, systemImage: "text.badge.plus") }
-            Button { app.swapQueueEntry(entry, offset: -1) } label: { Label("swapPrevious", systemImage: "arrow.up") }
-                .disabled(entry.position <= 1 || app.isMutating)
-            Button { app.swapQueueEntry(entry, offset: 1) } label: { Label("swapNext", systemImage: "arrow.down") }
-                .disabled(entry.position >= (app.queue?.pendingEntries.count ?? 0) || app.isMutating)
-            Button(role: .destructive) { app.removeQueueEntry(entry.id) } label: { Label(.removeFromQueue, systemImage: "trash") }
         }
+        .actionFeedbackAccessibility(rowStatus, showsSuccess: !removing)
         .accessibilityAction(named: Text(.addToQueue)) { app.requeueEntry(entry) }
         .accessibilityAction(named: Text(.removeFromQueue)) { app.removeQueueEntry(entry.id) }
         .accessibilityAction(named: Text("swapPrevious")) { app.swapQueueEntry(entry, offset: -1) }
@@ -340,48 +332,34 @@ private struct QueueRow: View {
 
 private struct QueueRowSkeleton: View {
     var body: some View {
-        HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                .fill(Color(uiColor: .tertiarySystemFill))
-                .frame(width: 24, height: 12)
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color(uiColor: .tertiarySystemFill))
-                .frame(width: 54, height: 54)
-            VStack(alignment: .leading, spacing: 8) {
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color(uiColor: .tertiarySystemFill))
-                    .frame(height: 15)
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color(uiColor: .tertiarySystemFill))
-                    .frame(width: 72, height: 11)
-            }
-            Spacer()
+        TrackListCard(artworkURL: nil) {
+            RoundedRectangle(cornerRadius: 6).fill(.quaternary).frame(height: 15)
+        } details: {
+            RoundedRectangle(cornerRadius: 6).fill(.quaternary).frame(width: 72, height: 11)
+        } trailing: {
+            EmptyView()
         }
         .redacted(reason: .placeholder)
-        .padding(12)
-        .background(
-            Color(uiColor: .secondarySystemGroupedBackground),
-            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-        )
+        .accessibilityHidden(true)
     }
 }
 
 private struct PlayerSkeleton: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             PlayerCardContentSkeleton()
 
-            HStack(spacing: 12) {
-                ForEach(Array([44, 52, 44].enumerated()), id: \.offset) { _, size in
+            HStack(spacing: 4) {
+                ForEach(0..<5, id: \.self) { _ in
                     Circle()
                         .fill(Color(uiColor: .tertiarySystemFill))
-                        .frame(width: CGFloat(size), height: CGFloat(size))
+                        .frame(width: 44, height: 44)
                 }
             }
             .frame(maxWidth: .infinity)
         }
         .redacted(reason: .placeholder)
-        .padding(18)
+        .padding(16)
         .background(
             Color(uiColor: .secondarySystemGroupedBackground),
             in: RoundedRectangle(cornerRadius: 26, style: .continuous)

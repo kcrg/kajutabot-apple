@@ -7,6 +7,8 @@ struct MiniPlayerView: View {
 
     var body: some View {
         if let track = app.nowPlaying {
+            let favorite = app.isFavorite(track)
+            let favoriteStatus = app.actionStatuses[app.favoriteActionKey(for: track)]
             HStack(spacing: 4) {
                 Button(action: openPlayer) {
                     HStack(spacing: 10) {
@@ -29,11 +31,12 @@ struct MiniPlayerView: View {
                 .accessibilityLabel(Text(.openPlayer)).accessibilityValue(track.title)
                 if placement != .inline {
                     Button { app.toggleFavorite(track) } label: {
-                        ActionFeedback(status: app.actionStatuses[app.favoriteActionKey(for: track)],
-                            symbol: app.isFavorite(track) ? "heart.fill" : "heart").frame(minWidth: 44, minHeight: 44)
+                        ActionFeedback(status: favoriteStatus,
+                            symbol: favorite ? "heart.fill" : "heart").frame(minWidth: 44, minHeight: 44)
                     }
-                    .buttonStyle(.plain).disabled(app.isLoadingFavorites || app.actionStatuses[app.favoriteActionKey(for: track)] == .pending)
-                    .accessibilityLabel(Text(app.isFavorite(track) ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
+                    .buttonStyle(.plain).disabled(app.isLoadingFavorites || favoriteStatus == .pending)
+                    .accessibilityLabel(Text(favorite ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
+                    .actionFeedbackAccessibility(favoriteStatus)
                 }
                 Button { app.skip() } label: {
                     ActionFeedback(status: app.actionStatuses["queue.control.skip"], symbol: "forward.end.fill").frame(minWidth: 44, minHeight: 44)
@@ -43,7 +46,7 @@ struct MiniPlayerView: View {
                 .actionFeedbackAccessibility(app.actionStatuses["queue.control.skip"])
             }
             .padding(.horizontal, 8)
-            .accessibilityAction(named: Text(app.isFavorite(track) ? String(localized: .removeFavorite) : String(localized: .addFavorite))) {
+            .accessibilityAction(named: Text(favorite ? String(localized: .removeFavorite) : String(localized: .addFavorite))) {
                 app.toggleFavorite(track)
             }
         }

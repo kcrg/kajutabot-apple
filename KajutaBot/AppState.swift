@@ -100,6 +100,7 @@ final class AppState {
 
     var favorites: [FavoriteResponse] = []
     private var favoriteByIdentity: [String: FavoriteResponse] = [:]
+    private var favoriteSavedDates: [String: Date] = [:]
     var isLoadingFavorites = false
     var isMutatingFavorites = false
     var favoritesShuffle = false
@@ -531,6 +532,7 @@ final class AppState {
         let entry = current.pendingEntries[from]
         let position = min(max(destination > from ? destination - 1 : destination, 0), current.pendingEntries.count - 1) + 1
         launchOperation {
+            guard self.selectedGuildId == current.guildId, self.queue?.queueVersion == current.queueVersion else { return }
             _ = await self.mutateQueue(key: "queue.reorder", guildId: current.guildId) { api, token in
                 guard token == current.queueVersion else { throw APIError.http(status: 409, problem: nil) }
                 return try await api.moveQueueEntry(guildId: current.guildId, entryId: entry.entryId,
@@ -546,16 +548,25 @@ final class AppState {
     }
 
     func swapQueueEntry(_ entry: QueueEntryResponse, with other: QueueEntryResponse) {
-        guard let current = queue, entry.id != other.id, !isMutating,
-              current.pendingEntries.contains(where: { $0.id == entry.id }),
-              current.pendingEntries.contains(where: { $0.id == other.id }) else { return }
+        guard let current = queue else { return }
+        _ = swapQueueEntries(firstEntryID: entry.id, secondEntryID: other.id, expectedQueueVersion: current.queueVersion)
+    }
+
+    @discardableResult
+    func swapQueueEntries(firstEntryID: String, secondEntryID: String, expectedQueueVersion: Int64) -> Bool {
+        guard let current = queue, current.queueVersion == expectedQueueVersion,
+              firstEntryID != secondEntryID, !isMutating,
+              current.pendingEntries.contains(where: { $0.id == firstEntryID }),
+              current.pendingEntries.contains(where: { $0.id == secondEntryID }) else { return false }
         launchOperation {
+            guard self.selectedGuildId == current.guildId, self.queue?.queueVersion == expectedQueueVersion else { return }
             _ = await self.mutateQueue(key: "queue.reorder", guildId: current.guildId) { api, token in
                 guard token == current.queueVersion else { throw APIError.http(status: 409, problem: nil) }
                 return try await api.swapQueueEntries(guildId: current.guildId, request: SwapQueueEntriesRequest(
-                    firstEntryId: entry.id, secondEntryId: other.id, expectedQueueVersion: token))
+                    firstEntryId: firstEntryID, secondEntryId: secondEntryID, expectedQueueVersion: token))
             }
         }
+        return true
     }
 
     func clearQueue() {
@@ -573,6 +584,7 @@ final class AppState {
     }
 
     func isFavorite(_ track: PlaybackTrackResponse) -> Bool { favorite(for: track) != nil }
+    func favoriteSavedDate(for favorite: FavoriteResponse) -> Date? { favoriteSavedDates[favorite.contentUrl] }
     func isFavorite(_ track: SearchTrackResponse) -> Bool {
         favoriteByIdentity[favoriteIdentity(track.url)] != nil ||
             favoriteByIdentity["\(track.contentType.lowercased() == "youtube" ? "youtube" : "soundcloud-id"):\(track.contentId)"] != nil
@@ -1152,11 +1164,15 @@ final class AppState {
 
     private func rebuildFavoriteIndex() {
         var index: [String: FavoriteResponse] = [:]
+        var dates: [String: Date] = [:]
         index.reserveCapacity(favorites.count)
+        dates.reserveCapacity(favorites.count)
         for favorite in favorites {
             index[favoriteIdentity(favorite.contentUrl)] = favorite
+            dates[favorite.contentUrl] = parseISO8601(favorite.addedAt)
         }
         favoriteByIdentity = index
+        favoriteSavedDates = dates
     }
 
     private func cancelSearch() {
@@ -1221,6 +1237,7 @@ final class AppState {
         cancelPresentationRecovery()
         favorites = []
         favoriteByIdentity = [:]
+        favoriteSavedDates = [:]
         guildAccessState = .checking
         selectedGuildId = targetDefaults.string(forKey: Keys.guildId)
         selectedVoiceChannelId = targetDefaults.string(forKey: Keys.channelId)

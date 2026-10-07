@@ -31,7 +31,7 @@ struct LoginView: View {
                         app.signInWithDiscord()
                     } label: {
                         HStack {
-                            if app.isSigningIn && !app.isGuestSigningIn { ProgressView().controlSize(.small) }
+                            ActionFeedback(status: app.isSigningIn && !app.isGuestSigningIn ? .pending : nil, symbol: "person.crop.circle")
                             Text(app.isSigningIn && !app.isGuestSigningIn ? String(localized: .signingIn) : String(localized: .signInDiscord))
                                 .frame(maxWidth: .infinity)
                         }
@@ -45,7 +45,7 @@ struct LoginView: View {
                         app.signInAsGuest()
                     } label: {
                         HStack {
-                            if app.isGuestSigningIn { ProgressView().controlSize(.small) }
+                            ActionFeedback(status: app.isGuestSigningIn ? .pending : nil, symbol: "person")
                             Text(app.isGuestSigningIn ? String(localized: .signingIn) : String(localized: .tryAsGuest))
                                 .frame(maxWidth: .infinity)
                         }

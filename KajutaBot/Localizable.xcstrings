@@ -1910,6 +1910,24 @@
         }
       }
     },
+    "queuePosition": {
+      "comment": "Accessible position of a pending queue entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queue position %1$(position)lld"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pozycja w kolejce: %1$(position)lld"
+          }
+        }
+      }
+    },
     "queueTitle": {
       "comment": "Queue section title.",
       "extractionState": "manual",

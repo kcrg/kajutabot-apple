@@ -34,7 +34,7 @@ struct AddTrackView: View {
             } else if app.lastCompletedSearchQuery == query && !app.searchResults.isEmpty {
                 Section(.results) {
                     ForEach(app.searchResults) { item in
-                        result(item)
+                        result(item).trackListRow()
                     }
                 }
             } else if app.lastCompletedSearchQuery == query && !query.isEmpty && !isURL {
@@ -43,6 +43,7 @@ struct AddTrackView: View {
                 } description: { Text(.noResultsForQuery(query: query)) }
             }
         }
+        .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .adaptiveContentWidth(AppLayout.primaryContentMaxWidth)
         .background(Color(uiColor: .systemGroupedBackground))
@@ -62,34 +63,32 @@ struct AddTrackView: View {
     private func result(_ item: SearchItemResponse) -> some View {
         let key = "queue.search." + item.id
         let favorite = app.isFavorite(item.track)
-        return HStack(spacing: 12) {
-            ArtworkView(urlString: item.track.artworkUrl, layout: .square(60), cornerRadius: 10)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.track.title).lineLimit(2)
-                if let date = item.dateLabel, !date.isEmpty { Text(date).font(.caption).foregroundStyle(.secondary) }
-                Text("\(item.metricCount.formatted()) \(item.metricCaption)").font(.caption).foregroundStyle(.secondary)
-                Text(verbatim: formatDuration(item.track.durationMilliseconds)).font(.caption).foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 4)
+        let favoriteStatus = app.actionStatuses[app.favoriteActionKey(for: item.track)]
+        return TrackListCard(artworkURL: item.track.artworkUrl, actionStatus: app.actionStatuses[key]) {
+            Text(item.track.title)
+        } details: {
+            if let date = item.dateLabel, !date.isEmpty { Text(date) }
+            Text("\(item.metricCount.formatted()) \(item.metricCaption)")
+            Text(verbatim: formatDuration(item.track.durationMilliseconds))
+        } trailing: {
             Button { app.toggleFavorite(item.track) } label: {
-                ActionFeedback(status: app.actionStatuses[app.favoriteActionKey(for: item.track)], symbol: favorite ? "heart.fill" : "heart")
+                ActionFeedback(status: favoriteStatus, symbol: favorite ? "heart.fill" : "heart")
                     .frame(minWidth: 44, minHeight: 44)
             }
             .buttonStyle(.borderless)
-            .disabled(app.isLoadingFavorites || app.actionStatuses[app.favoriteActionKey(for: item.track)] == .pending)
+            .disabled(app.isLoadingFavorites || favoriteStatus == .pending)
+            .actionFeedbackAccessibility(favoriteStatus)
             .accessibilityLabel(Text(favorite ? String(localized: .removeFavorite) : String(localized: .addFavorite)))
-            Button { add(item) } label: {
-                ActionFeedback(status: app.actionStatuses[key], symbol: "text.badge.plus").frame(minWidth: 44, minHeight: 44)
-            }
-            .buttonStyle(.borderless)
-            .disabled(app.actionStatuses[key] == .pending)
-            .accessibilityLabel(Text(.addToQueue))
-            .actionFeedbackAccessibility(app.actionStatuses[key])
         }
         .swipeActions(edge: .leading) {
-            Button { add(item) } label: { Label(.addToQueue, systemImage: "text.badge.plus") }
+            Button { add(item) } label: {
+                Label {
+                    Text(.addToQueue)
+                } icon: { ActionFeedback(status: app.actionStatuses[key], symbol: "text.badge.plus", showsSuccess: true) }
+            }
                 .tint(.accentColor).disabled(app.actionStatuses[key] == .pending)
         }
+        .actionFeedbackAccessibility(app.actionStatuses[key], showsSuccess: true)
         .accessibilityAction(named: Text(.addToQueue)) { add(item) }
     }
 

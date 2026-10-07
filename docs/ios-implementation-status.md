@@ -9,7 +9,7 @@
 | I-01 | Wspólne DTO aplikacji/Share; `queueVersion`, `expectedQueueVersion`, count, playback instance/position, skip outcome, addedTracks, favorite po ID, endpoint swap | Wymaga potwierdzenia kontraktu wdrożonego backendu; brak fallbacku `version` → `queueVersion` |
 | I-02 | Protokoły API/Keychain, generacja sesji, współdzielony refresh, koordynator wszystkich mutacji kolejki, ochrona odczytów ulubionych i wyboru kanału | Źródła testów dopisane; dalsze wydzielenie PlayerStore/FavoritesStore pozostaje refaktoryzacją |
 | I-03 | Wspólny monotoniczny postęp; stany per akcja, lokalizowane błędy widoczne w zakładkach i arkuszach; feedback VoiceOver; komunikat restartu repeat | Gesty, wygląd i dostępność nie zostały sprawdzone na urządzeniu |
-| I-04–06 | Natywne Search, List/EditButton, wybór Discord, radio bez utworu, requeue, swipe, move i jawny swap dowolnych wpisów, metadane wyników, serca, akcje zbiorcze ulubionych, historia 5 wpisów | Scenariusze UI wymagają Maca/iPhone’a |
+| I-04–06 | Natywne Search i List, wybór Discord, radio bez utworu, requeue, swipe, drag ze swapem i jawny swap dowolnych wpisów, metadane wyników, serca, akcje zbiorcze ulubionych, historia 5 wpisów | Scenariusze UI wymagają Maca/iPhone’a |
 | I-07 | Share z UI SwiftUI i wynikiem addedTracks, gość, wspólny Keychain, App Group inbox, claim przed POST, brak automatycznego replay nieznanego wyniku | App Group, Keychain i koordynacja między procesami wymagają urządzenia i podpisu |
 | I-08 | Sesyjny socket SignalR, osobna subskrypcja guild, stan/draft głośności 0–200%, natywny Slider, event/read race, invoke Completion, debounce wskaźnika 100 ms, limit 10 s, ostatnia oczekująca intencja | Wymaga serwera z helperem Windows i rzeczywistego SignalR |
 | I-09 | System/jasny/ciemny przez AppStorage, rozszerzona pomoc, PL/EN, Sentry zamiast Pulse i ukrytej konsoli | DSN nie jest skonfigurowany; pakiety i telemetria wymagają odbioru na Macu |
@@ -19,12 +19,24 @@
 ## Decyzje dotyczące SwiftUI
 
 - `@MainActor @Observable` dla stanu aplikacji, playera i głośności; `@State` dla lokalnej prezentacji i `@Bindable` dla bindings. Istniejący `SessionManager` pozostaje aktorem.
-- `List`, `EditButton`, `swipeActions`, `NavigationStack`, systemowa zakładka Search, natywny Slider i systemowy mini-player accessory. UIKit pozostaje tylko hostem wymaganym przez Share Extension.
-- Przeciągnięcie przesuwa element. Osobna akcja „Zamień z…” wybiera drugi wpis w arkuszu i wykonuje swap. Menu i akcje VoiceOver udostępniają te działania także bez gestów.
+- `List`, `swipeActions`, `onDrag`/`DropDelegate`, `NavigationStack`, systemowa zakładka Search, natywny Slider i systemowy mini-player accessory. UIKit pozostaje tylko hostem wymaganym przez Share Extension.
+- Przeciągnięcie jest dostępne bez trybu Edit i zamienia dwa wpisy miejscami, jak na Androidzie. Osobna akcja „Zamień z…” wybiera drugi wpis w arkuszu. Akcje VoiceOver udostępniają swap także bez gestów.
 - Wynik wyszukiwania można dodać wielokrotnie bez opuszczania ekranu. URL zmienia zakładkę dopiero po potwierdzonym sukcesie. Stop i czyszczenie wymagają potwierdzenia; usunięcie nie ma pełnego swipe.
 - `TimelineView` aktualizuje widoczny postęp bez timera żyjącego w AppState. Obliczenia używają systemUptime i pozycji backendu; brak pozycji daje stan nieznany zamiast czasu wyliczonego z zegara ściennego.
 
 Natywne gesty i dostępne alternatywy są zgodne z kierunkiem [Apple HIG: Gestures](https://developer.apple.com/design/human-interface-guidelines/gestures). To nie stanowi potwierdzenia jakości VoiceOver ani układu po kompilacji.
+
+## Ujednolicenie UI i feedbacku — 7 października
+
+- `TrackListCard`: wspólna okładka 64 pt, odstępy, tło, narożniki, tytuł i metadane dla kolejki, ulubionych, wyszukiwania i wyboru wpisu do swap. Numer kolejki w prawym górnym rogu, jak na Androidzie. Tytuły mogą zajmować więcej linii przy rozmiarach dostępności Dynamic Type.
+- Dodawanie do kolejki i usuwanie pozostają w swipe; usunięto powtarzające je przyciski i menu. Serce jest osobną akcją. Menu kolejki zawiera tylko „Zamień z…”. VoiceOver zachowuje alternatywy dla gestów.
+- Ulubione bez toolbara i arkusza dodawania URL; odświeżanie przez pull-to-refresh. Dodawanie ulubionych przez serca w playerze, kolejce i wynikach wyszukiwania.
+- Player bez Edit i dodatkowego przycisku wyszukiwania; wybór Discord pozostaje w toolbarze. Pięć przycisków sterowania ma po 44 pt, odstępy 4 pt i wspólny `GlassEffectContainer`. Requeue i głośność dzielą dodatkowy wiersz. `ViewThatFits` zachowuje awaryjny układ przy małej dostępnej szerokości.
+- Drag używa prywatnego UTI z widocznością ownProcess. Rozpoczęcie zapamiętuje guild/entry/queueVersion; zmiana kolejki lub serwera unieważnia gest. Drop wykonuje pojedynczy atomowy swap, bez POST podczas przesuwania nad wierszami. Kontrola wersji i serializacja mutacji pozostają aktywne. Zakończenie gestu, przewijanie przy krawędzi i współdziałanie z context menu wymagają odbioru na urządzeniu.
+- `ActionFeedback` opóźnia spinner o 100 ms i anuluje oczekiwanie po zakończeniu żądania. Szybki sukces nie pokazuje spinnera. SF Symbols używają [Magic Replace z fallbackiem](https://developer.apple.com/documentation/symbols/replacesymboleffect/magic(fallback:)); przejście spinnera odbywa się przez płynne przenikanie w tej samej ramce 24 pt. Reduce Motion wyłącza animacje przejść. Ptaszek jest opt-in: enqueue/requeue i dodanie wszystkich ulubionych. Skip, stop, usunięcie, repeat, radio i serce pokazują wynik bez dodatkowego ptaszka. To samo opóźnienie zastosowano do przycisków logowania.
+- Wydajność: daty ulubionych są parsowane przy zmianie danych, linki z API nie tworzą `NSDataDetector` przy renderowaniu wierszy, tożsamość/status ulubionego jest wyliczana raz na wiersz. Sprawdzanie celu drag jest stałe względem długości kolejki; obecność obu wpisów jest sprawdzana przy zatwierdzeniu. Zachowano lazy `List`, stabilne entryId, ograniczone dekodowanie obrazów i postęp w małych `TimelineView`. Nie wykonano pomiarów Instruments ani benchmarków.
+
+Kontrole Windows: przegląd diff i źródeł, XML Info.plist (w tym UTI), katalog tłumaczeń, `git diff --check`. Dodano test walidacji pełnego URL z API i ekstrakcji URL z tekstu; testów Swift nie uruchomiono. Odbiór na Macu: żądania <100 ms i dłuższe, sukces/błąd, szybkie powtórzenie tej samej akcji, morph/checkmark po zamknięciu swipe, drag między odległymi wpisami i zmiana wersji podczas gestu, 320 pt, Dynamic Type, VoiceOver i Reduce Motion.
 
 ## Semantyka operacji
 

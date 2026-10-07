@@ -18,16 +18,21 @@ struct QueueSwapView: View {
                             app.swapQueueEntry(source, with: entry)
                             done()
                         } label: {
-                            HStack {
-                                Text(verbatim: "\(entry.position)").monospacedDigit()
+                            TrackListCard(artworkURL: entry.track.artworkUrl, position: entry.position) {
                                 Text(entry.track.title).foregroundStyle(.primary)
-                            }
-                            .frame(minHeight: 44)
+                            } details: {
+                                Text(verbatim: formatDuration(entry.track.durationMilliseconds))
+                            } trailing: { EmptyView() }
                         }
+                        .buttonStyle(.plain)
+                        .trackListRow()
                         .disabled(app.isMutating || app.queue?.pendingEntries.contains(where: { $0.id == source.id }) != true)
                     }
                 }
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("swapWith")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(.cancel, action: done) } }

@@ -4,6 +4,15 @@
 <dict>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.tryniecki.KajutaBot.queue-entry</string>
+            <key>UTTypeConformsTo</key>
+            <array><string>public.data</string></array>
+        </dict>
+    </array>
     <key>KAJUTABOT_API_BASE_URL</key>
     <string>$(KAJUTABOT_API_BASE_URL)</string>
     <key>KAJUTABOT_DISCORD_CLIENT_ID</key>
