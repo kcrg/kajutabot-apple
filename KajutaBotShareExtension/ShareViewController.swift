@@ -62,6 +62,7 @@ private final class ShareModel {
     var succeeded = false
     var tracks: [PlaybackTrackResponse] = []
     var message = ""
+    let artworkLoader = ShareArtworkLoader()
 
     func text(pl: String, en: String) -> String {
         Locale.preferredLanguages.first?.lowercased().hasPrefix("pl") == true ? pl : en
@@ -148,22 +149,21 @@ private struct ShareResultView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    if model.isLoading {
-                        ProgressView(model.text(pl: "Dodawanie do kolejki…", en: "Adding to queue…"))
-                    } else {
-                        Label(model.message, systemImage: model.succeeded ? "checkmark.circle.fill" : "info.circle")
+            Group {
+                if model.isLoading {
+                    SharedQueueLoadingView(message: model.text(pl: "Dodawanie do kolejki…", en: "Adding to queue…"))
+                } else if model.succeeded {
+                    SharedQueueResultView(tracks: model.tracks, message: model.message,
+                        tracksTitle: model.text(pl: "Dodane utwory", en: "Added tracks")) { track, hero in
+                        ShareArtworkView(urlString: track.artworkUrl, hero: hero, loader: model.artworkLoader)
                     }
-                }
-                if !model.tracks.isEmpty {
-                    Section(model.text(pl: "Dodane utwory", en: "Added tracks")) {
-                        ForEach(Array(model.tracks.enumerated()), id: \.offset) { _, track in
-                            Text(track.title)
-                        }
-                    }
+                } else {
+                    ContentUnavailableView {
+                        Label("KajutaBot", systemImage: "info.circle")
+                    } description: { Text(model.message) }
                 }
             }
+            .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("KajutaBot")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

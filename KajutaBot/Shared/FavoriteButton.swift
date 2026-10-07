@@ -22,10 +22,6 @@ struct FavoriteButton: View {
                 .font(.system(size: 20, weight: .semibold))
                 .frame(width: 44, height: 44)
                 .background(isFavorite ? Color.accentColor.opacity(0.16) : Color.clear, in: Circle())
-                .overlay {
-                    Circle().strokeBorder(isFavorite ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1)
-                        .allowsHitTesting(false)
-                }
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)

@@ -87,7 +87,6 @@ final class AppState {
     var lastSkipOutcome: SkipOutcome?
     var activeControlAction: PlayerControlAction?
     var pendingSharedLink: PendingSharedLink?
-    var lastAddedTracks: [PlaybackTrackResponse] = []
     @ObservationIgnored private var dismissedSharedLinks: Set<UUID> = []
     var errorMessage: String?
 
@@ -446,9 +445,13 @@ final class AppState {
 
     @discardableResult
     func enqueueInputs(_ inputs: [String], key: String = "queue.enqueue") async -> Bool {
+        await enqueueSnapshot(inputs, key: key) != nil
+    }
+
+    private func enqueueSnapshot(_ inputs: [String], key: String) async -> QueueSnapshotResponse? {
         guard let guildId = selectedGuildId, let channelId = selectedVoiceChannelId else {
             errorMessage = String(localized: .selectServerChannelFirst)
-            return false
+            return nil
         }
         return await mutateQueue(key: key, guildId: guildId) { api, token in
             try await api.enqueue(guildId: guildId, request: EnqueueRequest(
@@ -955,8 +958,8 @@ final class AppState {
     private func mutateQueue(
         key: String, guildId: String, forceIdle: Bool = false, control: PlayerControlAction? = nil,
         operation: @escaping @MainActor (any KajutaBotAPI, Int64) async throws -> QueueSnapshotResponse
-    ) async -> Bool {
-        guard session != nil, !Task.isCancelled, actionStatuses[key] != .pending else { return false }
+    ) async -> QueueSnapshotResponse? {
+        guard session != nil, !Task.isCancelled, actionStatuses[key] != .pending else { return nil }
         let epoch = sessionEpoch
         let selection = selectionEpoch
         actionStatuses[key] = .pending
@@ -975,17 +978,16 @@ final class AppState {
                 guard let self, self.sessionEpoch == epoch else { return }
                 self.applyQueueSnapshot(snapshot)
             }, mutation: { [api] token in try await operation(api, token) })
-            guard epoch == sessionEpoch, selection == selectionEpoch, !Task.isCancelled else { return false }
+            guard epoch == sessionEpoch, selection == selectionEpoch, !Task.isCancelled else { return nil }
             if forceIdle { applyQueueSnapshot(result, forcePresentationIdle: true) }
             if control == .skip { lastSkipOutcome = result.skipOutcome }
-            lastAddedTracks = result.addedTracks ?? []
             finishAction(key, status: .success, epoch: epoch)
-            return true
-        } catch is CancellationError { return false } catch {
-            guard epoch == sessionEpoch, selection == selectionEpoch else { return false }
+            return result
+        } catch is CancellationError { return nil } catch {
+            guard epoch == sessionEpoch, selection == selectionEpoch else { return nil }
             finishAction(key, status: .failure, epoch: epoch)
             errorMessage = userMessage(for: error)
-            return false
+            return nil
         }
     }
 
@@ -996,16 +998,17 @@ final class AppState {
         } catch { Diagnostics.warning("share", "Shared inbox could not be read") }
     }
 
-    func importSharedLink(_ entry: PendingSharedLink) async -> Bool {
-        guard entry.status == .ready, pendingSharedLink?.status == .ready, hasDiscordTarget else { return false }
+    func importSharedLink(_ entry: PendingSharedLink) async -> [PlaybackTrackResponse]? {
+        guard entry.status == .ready, pendingSharedLink?.id == entry.id,
+              pendingSharedLink?.status == .ready, hasDiscordTarget else { return nil }
         do { pendingSharedLink = try SharedLinkInbox.appGroup().claim(entry) }
-        catch { errorMessage = String(localized: "sharedLinkStorageFailed"); return false }
-        let success = await enqueueInputs([entry.url], key: "queue.share." + entry.id.uuidString)
-        if success {
+        catch { errorMessage = String(localized: "sharedLinkStorageFailed"); return nil }
+        let result = await enqueueSnapshot([entry.url], key: "queue.share." + entry.id.uuidString)
+        if result != nil {
             do { try SharedLinkInbox.appGroup().remove(entry) }
             catch { errorMessage = String(localized: "sharedLinkStorageFailed") }
         }
-        return success
+        return result.map { $0.addedTracks ?? [] }
     }
 
     func dismissSharedLink(_ entry: PendingSharedLink, discard: Bool) {
@@ -1194,7 +1197,6 @@ final class AppState {
         selectionEpoch = UUID()
         channelGeneration &+= 1
         pendingSharedLink = nil
-        lastAddedTracks = []
         dismissedSharedLinks = []
         mutations.reset()
         localVolume.configure(isDiscord: false)

@@ -3214,6 +3214,12 @@
         }
       }
     },
+    "sharedLinkAdding": {
+      "localizations": {
+        "pl": { "stringUnit": { "state": "translated", "value": "Dodawanie do kolejki…" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Adding to queue…" } }
+      }
+    },
     "sharedLinkAdded": {
       "localizations": {
         "pl": {

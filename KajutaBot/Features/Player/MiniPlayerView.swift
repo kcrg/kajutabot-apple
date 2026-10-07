@@ -13,8 +13,12 @@ struct MiniPlayerView: View {
                 Button(action: openPlayer) {
                     HStack(spacing: 10) {
                         ArtworkView(urlString: track.artworkUrl, layout: .square(placement == .inline ? 24 : 42), cornerRadius: 8)
+                            .playerTransitionElement(track: track, revision: app.presentationTrackRevision,
+                                location: .miniPlayer, part: .artwork, cornerRadius: 8)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(track.title).font(.subheadline.weight(.semibold)).lineLimit(1)
+                                .playerTransitionElement(track: track, revision: app.presentationTrackRevision,
+                                    location: .miniPlayer, part: .title)
                             if placement != .inline {
                                 TimelineView(.periodic(from: .now, by: 1)) { _ in
                                     Text(verbatim: "\(app.progress?.position().map(formatPlaybackElapsed) ?? "—") / \(formatDuration(track.durationMilliseconds))")

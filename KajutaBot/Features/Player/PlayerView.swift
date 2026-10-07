@@ -134,9 +134,13 @@ private struct NowPlayingCard: View {
         VStack(alignment: .leading, spacing: 12) {
             if let track = app.nowPlaying {
                 ArtworkView(urlString: track.artworkUrl, layout: .aspectRatio(16 / 9), cornerRadius: 20)
+                    .playerTransitionElement(track: track, revision: app.presentationTrackRevision,
+                        location: .player, part: .artwork, cornerRadius: 20)
                 Text(.nowPlaying).font(.caption.weight(.semibold)).foregroundStyle(.tint)
                 Text(track.title).font(.title2.bold()).lineLimit(2, reservesSpace: true)
                     .contentTransition(.interpolate)
+                    .playerTransitionElement(track: track, revision: app.presentationTrackRevision,
+                        location: .player, part: .title)
                 PlaybackProgressView(progress: app.progress)
             } else {
                 ContentUnavailableView {
@@ -213,7 +217,8 @@ private struct NowPlayingCard: View {
             let favoriteStatus = app.actionStatuses[app.favoriteActionKey(for: track)]
             PlayerCircleButton(systemName: favorite ? "heart.fill" : "heart", active: favorite,
                 busy: favoriteStatus == .pending, feedback: favoriteStatus,
-                disabled: app.isLoadingFavorites, accessibilityLabel: favorite ? .removeFavorite : .addFavorite,
+                disabled: app.isLoadingFavorites, showsActiveOutline: false,
+                accessibilityLabel: favorite ? .removeFavorite : .addFavorite,
                 accessibilityValue: favorite ? .enabled : .disabled) { app.toggleFavorite(track) }
         }
     }
@@ -240,6 +245,7 @@ private struct PlayerCircleButton: View {
     let busy: Bool
     var feedback: ActionStatus? = nil
     var disabled = false
+    var showsActiveOutline = true
     var size: CGFloat = 44
     var symbolFont: Font = .system(size: 18, weight: .semibold)
     let accessibilityLabel: LocalizedStringResource
@@ -262,7 +268,7 @@ private struct PlayerCircleButton: View {
                 .frame(width: max(size, 44), height: max(size, 44))
                 .glassEffect(.regular.tint(active ? Color.accentColor.opacity(0.25) : nil).interactive(), in: .circle)
                 .overlay {
-                    Circle().strokeBorder(active ? Color.accentColor : Color.clear, lineWidth: 1.5)
+                    Circle().strokeBorder(active && showsActiveOutline ? Color.accentColor : Color.clear, lineWidth: 1.5)
                         .allowsHitTesting(false)
                 }
         }
