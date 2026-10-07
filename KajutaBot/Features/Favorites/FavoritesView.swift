@@ -27,7 +27,7 @@ struct FavoritesView: View {
                     .disabled(app.actionStatuses["queue.favorites.all"] == .pending)
                     .actionFeedbackAccessibility(app.actionStatuses["queue.favorites.all"], showsSuccess: true)
                     .trackListRow()
-                    Toggle(String(localized: .shuffleOrder), isOn: Binding(get: { app.favoritesShuffle }, set: app.setFavoritesShuffle))
+                    Toggle(String(localized: .shuffleOrder), isOn: Binding(get: { app.favoritesShuffle }, set: { app.setFavoritesShuffle($0) }))
                         .trackListRow()
                 }
                 .listSectionSeparator(.hidden)

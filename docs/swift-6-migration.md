@@ -35,3 +35,11 @@ xcodebuild -project KajutaBot.xcodeproj -scheme KajutaBot -destination 'platform
 ```
 
 Schemat KajutaBot zawiera oba targety testowe. Sprawdzić również udostępnienie URL/playlisty na podpisanym urządzeniu, login/refresh/logout, realtime, drag kolejki i animację Player ↔ mini-player. Kontrole statyczne nie potwierdzają poprawności typowania ani wykonania callbacków w SDK konkretnego Xcode; rozstrzygają to powyższe buildy i odbiór.
+
+## Awaria swift-frontend po migracji
+
+Raport z Xcode 26.3 na Intel Mac wskazuje SIGABRT w IRGen: `SmallVectorBase::grow_pod` → `SyncCallEmission::setArgs` → `emitLazyDefinitions`. Nie zawiera nazwy pliku źródłowego ani emitowanej funkcji; sam raport macOS nie pozwala potwierdzić przyczyny.
+
+W czterech miejscach (`MainTabView`, `LocalVolumeSheet`, `AddTrackView`, `FavoritesView`) setter `Binding` przekazywał bezpośrednio metodę izolowaną do MainActor. Zmieniono `set: model.update` na `set: { model.update($0) }`. To obejście podejrzanej konwersji funkcji przez kompilator; pozostają wywołania tych samych metod, ich efekty uboczne i izolacja UI. [Raport autorów migracji STORES](https://product.st.inc/entry/swift6-migration-stores-regi) zawiera reprodukcję awarii przy bezpośrednim przekazaniu metody MainActor jako settera Binding w trybie Swift 6. Nie dowodzi to jeszcze, że ten sam mechanizm wywołał załączoną awarię.
+
+Swift 6, Approachable Concurrency, kontrola Sendable i deployment iOS 26.2 pozostają włączone. Nie zmieniono klientów HTTP, pakietów ani optymalizacji. Po poprawce wykonać na Macu Product → Clean Build Folder i powtórzyć build Debug/Release. Jeśli crash pozostaje, w Report Navigator otworzyć pełny log nieudanego SwiftCompile i zachować polecenie `swift-frontend`, komunikat LLVM oraz linie `While evaluating request IRGenRequest` / `While emitting IR SIL function`. Te dane wskazują jednostkę kompilacji i funkcję, których brakuje w raporcie macOS.

@@ -45,7 +45,7 @@ struct AddTrackView: View {
         .navigationTitle(.addTrackTitle)
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $app.searchQuery, prompt: Text(.searchPrompt))
-        .searchScopes(Binding(get: { app.searchSource }, set: app.setSearchSource), activation: .onSearchPresentation) {
+        .searchScopes(Binding(get: { app.searchSource }, set: { app.setSearchSource($0) }), activation: .onSearchPresentation) {
             ForEach(SearchSourceOption.allCases) { source in
                 Text(source.displayName).tag(source)
             }

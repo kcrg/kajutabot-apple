@@ -19,7 +19,7 @@ struct MainTabView: View {
     }
 
     var body: some View {
-        TabView(selection: Binding(get: { selectedTab }, set: selectTab)) {
+        TabView(selection: Binding(get: { selectedTab }, set: { selectTab($0) })) {
             Tab(String(localized: .playerTitle), systemImage: "music.note.list", value: .player) {
                 NavigationStack {
                     PlayerView(app: app) { selectTab(.search) }

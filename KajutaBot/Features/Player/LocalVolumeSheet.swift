@@ -21,7 +21,7 @@ struct LocalVolumeSheet: View {
                         Text(controller.draft.map { "\(Int($0))%" } ?? "—")
                             .monospacedDigit()
                     }
-                    Slider(value: Binding(get: { controller.draft ?? 0 }, set: controller.updateDraft),
+                    Slider(value: Binding(get: { controller.draft ?? 0 }, set: { controller.updateDraft($0) }),
                            in: 0...200, step: 1, onEditingChanged: { editing in
                         if editing { controller.beginEditing() } else { controller.endEditing() }
                     })
