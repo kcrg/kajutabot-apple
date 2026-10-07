@@ -34,11 +34,15 @@ struct ShareArtworkView: View {
 
 /// Keep image decoding off the main actor and inside the extension's smaller memory budget.
 actor ShareArtworkLoader {
-    private let cache = NSCache<NSString, UIImage>()
+    private let cache: NSCache<NSString, UIImage>
     private let baseURL: URL
     private let session: URLSession
 
     init() {
+        let imageCache = NSCache<NSString, UIImage>()
+        imageCache.totalCostLimit = 8 * 1_024 * 1_024
+        imageCache.countLimit = 30
+        cache = imageCache
         let rawBase = Bundle.main.object(forInfoDictionaryKey: "KAJUTABOT_API_BASE_URL") as? String
         let base = URL(string: rawBase ?? "") ?? URL(string: "https://api.kajuta.tryniecki.eu")!
         baseURL = base
@@ -48,8 +52,6 @@ actor ShareArtworkLoader {
         configuration.timeoutIntervalForRequest = 15
         session = URLSession(configuration: configuration,
                              delegate: ShareArtworkRedirectDelegate(baseURL: base), delegateQueue: nil)
-        cache.totalCostLimit = 8 * 1_024 * 1_024
-        cache.countLimit = 30
     }
 
     deinit { session.invalidateAndCancel() }
@@ -102,7 +104,7 @@ actor ShareArtworkLoader {
     }
 }
 
-private final class ShareArtworkRedirectDelegate: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+private final class ShareArtworkRedirectDelegate: NSObject, URLSessionTaskDelegate {
     private let baseURL: URL
 
     init(baseURL: URL) { self.baseURL = baseURL }
@@ -120,7 +122,7 @@ private final class ShareArtworkRedirectDelegate: NSObject, URLSessionTaskDelega
 
     func urlSession(_ session: URLSession, task: URLSessionTask,
                     willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest,
-                    completionHandler: @escaping (URLRequest?) -> Void) {
+                    completionHandler: @escaping @Sendable (URLRequest?) -> Void) {
         var redirected = request
         if let url = request.url, !Self.isProtected(url, baseURL: baseURL) {
             redirected.setValue(nil, forHTTPHeaderField: "Authorization")

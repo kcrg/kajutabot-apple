@@ -1,16 +1,16 @@
 import Foundation
+import Synchronization
 import Testing
 @testable import KajutaBot
 
 private enum StubFailure: Error { case unexpectedCall }
 
-private final class MemorySessionStore: SessionStoring, @unchecked Sendable {
-    private let lock = NSLock()
-    private var value: UserSession?
-    init(_ value: UserSession?) { self.value = value }
-    func load() throws -> UserSession? { lock.withLock { value } }
-    func save(_ value: UserSession) throws { lock.withLock { self.value = value } }
-    func clear() throws { lock.withLock { value = nil } }
+private final class MemorySessionStore: SessionStoring {
+    private let value: Mutex<UserSession?>
+    init(_ value: UserSession?) { self.value = Mutex(value) }
+    func load() throws -> UserSession? { value.withLock { $0 } }
+    func save(_ value: UserSession) throws { self.value.withLock { $0 = value } }
+    func clear() throws { value.withLock { $0 = nil } }
 }
 
 private func sessionFixture(expired: Bool = true) -> UserSession {
@@ -78,21 +78,21 @@ struct SessionIsolationTests {
     }
 }
 
-private final class RequestRecorder: @unchecked Sendable {
-    private let lock = NSLock()
-    private var requests: [URLRequest] = []
-    func append(_ request: URLRequest) { lock.withLock { requests.append(request) } }
-    func snapshot() -> [URLRequest] { lock.withLock { requests } }
+private final class RequestRecorder: Sendable {
+    private let requests = Mutex<[URLRequest]>([])
+    func append(_ request: URLRequest) { requests.withLock { $0.append(request) } }
+    func snapshot() -> [URLRequest] { requests.withLock { $0 } }
 }
 
+// URLProtocol inherits unchecked Sendable from Foundation. Its only shared
+// fixture state is protected by Mutex; requests are handled by URLSession.
 private final class FixtureURLProtocol: URLProtocol, @unchecked Sendable {
-    private static let lock = NSLock()
-    nonisolated(unsafe) private static var fixture: (@Sendable (URLRequest) -> Data)?
-    static func configure(_ handler: (@Sendable (URLRequest) -> Data)?) { lock.withLock { fixture = handler } }
+    private static let fixture = Mutex<(@Sendable (URLRequest) -> Data)?>(nil)
+    static func configure(_ handler: (@Sendable (URLRequest) -> Data)?) { fixture.withLock { $0 = handler } }
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
-        let handler = Self.lock.withLock { Self.fixture }
+        let handler = Self.fixture.withLock { $0 }
         guard let data = handler?(request), let url = request.url,
               let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil) else {
             client?.urlProtocol(self, didFailWithError: StubFailure.unexpectedCall)

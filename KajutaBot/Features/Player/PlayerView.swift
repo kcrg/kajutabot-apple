@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PlayerView: View {
     let app: AppState
-    let openSearch: () -> Void
+    let openSearch: @MainActor () -> Void
     @State private var showTargetPicker = false
     @State private var showStopConfirmation = false
     @State private var showClearQueueConfirmation = false
@@ -126,7 +126,7 @@ struct PlayerView: View {
 
 private struct NowPlayingCard: View {
     let app: AppState
-    let requestStop: () -> Void
+    let requestStop: @MainActor () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showVolume = false
 
@@ -250,7 +250,7 @@ private struct PlayerCircleButton: View {
     var symbolFont: Font = .system(size: 18, weight: .semibold)
     let accessibilityLabel: LocalizedStringResource
     var accessibilityValue: LocalizedStringResource? = nil
-    let action: () -> Void
+    let action: @MainActor () -> Void
 
     private var accessibilityValueText: Text {
         if busy { return Text(.inProgress) }

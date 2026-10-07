@@ -5,7 +5,7 @@ struct FavoriteButton: View {
     let isFavorite: Bool
     let status: ActionStatus?
     var isDisabled = false
-    let action: () -> Void
+    let action: @MainActor () -> Void
 
     private var stateDescription: Text {
         switch status {

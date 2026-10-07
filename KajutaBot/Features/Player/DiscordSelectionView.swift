@@ -2,7 +2,7 @@ import SwiftUI
 
 struct DiscordSelectionView: View {
     let app: AppState
-    let done: () -> Void
+    let done: @MainActor () -> Void
 
     var body: some View {
         List {

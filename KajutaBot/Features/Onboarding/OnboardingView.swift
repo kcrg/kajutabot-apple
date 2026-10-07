@@ -1,6 +1,6 @@
 import SwiftUI
 
-private struct OnboardingPage: Identifiable {
+private struct OnboardingPage: Identifiable, Sendable {
     let id: String
     let title: LocalizedStringResource
     let description: LocalizedStringResource
@@ -128,7 +128,7 @@ struct OnboardingView: View {
         }
     }
 
-    private func performAnimated(_ changes: @escaping () -> Void) {
+    private func performAnimated(_ changes: @escaping @MainActor () -> Void) {
         withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .snappy(duration: 0.28)) {
             changes()
         }

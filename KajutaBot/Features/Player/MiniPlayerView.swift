@@ -2,7 +2,7 @@ import SwiftUI
 
 struct MiniPlayerView: View {
     let app: AppState
-    let openPlayer: () -> Void
+    let openPlayer: @MainActor () -> Void
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 
     var body: some View {

@@ -4,21 +4,21 @@ import Foundation
 import Nuke
 import Observation
 
-enum AppAuthState: Equatable {
+enum AppAuthState: Equatable, Sendable {
     case restoring
     case signedOut(String? = nil)
     case signedIn(AuthUserResponse)
     case recoverableError(String)
 }
 
-enum GuildAccessState: Equatable {
+enum GuildAccessState: Equatable, Sendable {
     case checking
     case available
     case none
     case error
 }
 
-enum PlayerControlAction {
+enum PlayerControlAction: Sendable {
     case stop
     case skip
     case repeatTrack
@@ -905,7 +905,7 @@ final class AppState {
 
     private func mutateFavorite(
         key: String, deleting: Bool = false,
-        operation: () async throws -> FavoriteResponse?
+        operation: @MainActor () async throws -> FavoriteResponse?
     ) async -> Bool {
         let actionKey = "favorite." + key
         guard session != nil, !Task.isCancelled, actionStatuses[actionKey] != .pending else { return false }

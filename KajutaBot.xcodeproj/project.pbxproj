@@ -15,13 +15,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		8E000000000000000000000A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9EA60AA73062D101006DA601 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 8E0000000000000000000001;
-			remoteInfo = KajutaBotShareExtension;
-		};
 		9EA60ABD3062D105006DA601 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9EA60AA73062D101006DA601 /* Project object */;
@@ -36,7 +29,21 @@
 			remoteGlobalIDString = 9EA60AAE3062D101006DA601;
 			remoteInfo = KajutaBot;
 		};
+		8E000000000000000000000A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9EA60AA73062D101006DA601 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8E0000000000000000000001;
+			remoteInfo = KajutaBotShareExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		9EA60AAF3062D101006DA601 /* KajutaBot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KajutaBot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9EA60ABC3062D105006DA601 /* KajutaBotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KajutaBotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9EA60AC63062D105006DA601 /* KajutaBotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KajutaBotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8E0000000000000000000002 /* KajutaBotShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KajutaBotShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		8E000000000000000000000C /* Embed App Extensions */ = {
@@ -52,19 +59,8 @@
 		};
 /* End PBXCopyFilesBuildPhase section */
 
-/* Begin PBXFileReference section */
-		8E0000000000000000000002 /* KajutaBotShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KajutaBotShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		9EA60AAF3062D101006DA601 /* KajutaBot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KajutaBot.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		9EA60ABC3062D105006DA601 /* KajutaBotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KajutaBotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		9EA60AC63062D105006DA601 /* KajutaBotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KajutaBotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-/* End PBXFileReference section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		8E0000000000000000000003 /* KajutaBotShareExtension */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = KajutaBotShareExtension;
-			sourceTree = "<group>";
-		};
+		9F0000000000000000000001 /* KajutaBotShared */ = {isa = PBXFileSystemSynchronizedRootGroup; path = KajutaBotShared; sourceTree = "<group>"; };
 		9EA60AB13062D101006DA601 /* KajutaBot */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = KajutaBot;
@@ -80,21 +76,14 @@
 			path = KajutaBotUITests;
 			sourceTree = "<group>";
 		};
-		9F0000000000000000000001 /* KajutaBotShared */ = {
+		8E0000000000000000000003 /* KajutaBotShareExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = KajutaBotShared;
+			path = KajutaBotShareExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		8E0000000000000000000005 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		9EA60AAC3062D101006DA601 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -114,6 +103,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		9EA60AC33062D105006DA601 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8E0000000000000000000005 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -149,29 +145,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8E0000000000000000000001 /* KajutaBotShareExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 8E0000000000000000000009 /* Build configuration list for PBXNativeTarget "KajutaBotShareExtension" */;
-			buildPhases = (
-				8E0000000000000000000004 /* Sources */,
-				8E0000000000000000000005 /* Frameworks */,
-				8E0000000000000000000006 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				8E0000000000000000000003 /* KajutaBotShareExtension */,
-				9F0000000000000000000001 /* KajutaBotShared */,
-			);
-			name = KajutaBotShareExtension;
-			packageProductDependencies = (
-			);
-			productName = KajutaBotShareExtension;
-			productReference = 8E0000000000000000000002 /* KajutaBotShareExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 		9EA60AAE3062D101006DA601 /* KajutaBot */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9EA60AD03062D105006DA601 /* Build configuration list for PBXNativeTarget "KajutaBot" */;
@@ -247,6 +220,29 @@
 			productReference = 9EA60AC63062D105006DA601 /* KajutaBotUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		8E0000000000000000000001 /* KajutaBotShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8E0000000000000000000009 /* Build configuration list for PBXNativeTarget "KajutaBotShareExtension" */;
+			buildPhases = (
+				8E0000000000000000000004 /* Sources */,
+				8E0000000000000000000005 /* Frameworks */,
+				8E0000000000000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				9F0000000000000000000001 /* KajutaBotShared */,
+				8E0000000000000000000003 /* KajutaBotShareExtension */,
+			);
+			name = KajutaBotShareExtension;
+			packageProductDependencies = (
+			);
+			productName = KajutaBotShareExtension;
+			productReference = 8E0000000000000000000002 /* KajutaBotShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -257,7 +253,7 @@
 				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
-					8E0000000000000000000001 = {
+					9EA60AAE3062D101006DA601 = {
 						CreatedOnToolsVersion = 26.3;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
@@ -265,7 +261,7 @@
 							};
 						};
 					};
-					9EA60AAE3062D101006DA601 = {
+					8E0000000000000000000001 = {
 						CreatedOnToolsVersion = 26.3;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
@@ -313,13 +309,6 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		8E0000000000000000000006 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		9EA60AAD3062D101006DA601 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -341,16 +330,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-/* End PBXResourcesBuildPhase section */
-
-/* Begin PBXSourcesBuildPhase section */
-		8E0000000000000000000004 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
+		8E0000000000000000000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
 		9EA60AAB3062D101006DA601 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -372,14 +361,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8E0000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		8E000000000000000000000B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 8E0000000000000000000001 /* KajutaBotShareExtension */;
-			targetProxy = 8E000000000000000000000A /* PBXContainerItemProxy */;
-		};
 		9EA60ABE3062D105006DA601 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 9EA60AAE3062D101006DA601 /* KajutaBot */;
@@ -390,68 +381,14 @@
 			target = 9EA60AAE3062D101006DA601 /* KajutaBot */;
 			targetProxy = 9EA60AC73062D105006DA601 /* PBXContainerItemProxy */;
 		};
+		8E000000000000000000000B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8E0000000000000000000001 /* KajutaBotShareExtension */;
+			targetProxy = 8E000000000000000000000A /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		8E0000000000000000000007 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = Config/KajutaBotShareExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4M4XKKUYT3;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "Config/KajutaBotShareExtension-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				KAJUTABOT_API_BASE_URL = "https://api.kajuta.tryniecki.eu";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tryniecki.KajutaBot.KajutaBot.ShareExtension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		8E0000000000000000000008 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = Config/KajutaBotShareExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 4M4XKKUYT3;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "Config/KajutaBotShareExtension-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				KAJUTABOT_API_BASE_URL = "https://api.kajuta.tryniecki.eu";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tryniecki.KajutaBot.KajutaBot.ShareExtension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRIP_SWIFT_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 		9EA60ACE3062D105006DA601 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -606,14 +543,17 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tryniecki.KajutaBot.KajutaBot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -652,10 +592,13 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				STRIP_SWIFT_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_COMPILATION_MODE = wholemodule;
+
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.0;
+
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -674,8 +617,10 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KajutaBot.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/KajutaBot";
 			};
@@ -695,8 +640,10 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KajutaBot.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/KajutaBot";
 			};
@@ -714,8 +661,10 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = KajutaBot;
 			};
@@ -733,25 +682,79 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = KajutaBot;
+			};
+			name = Release;
+		};
+		8E0000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/KajutaBotShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4M4XKKUYT3;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Config/KajutaBotShareExtension-Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				KAJUTABOT_API_BASE_URL = "https://api.kajuta.tryniecki.eu";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tryniecki.KajutaBot.KajutaBot.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8E0000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/KajutaBotShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 4M4XKKUYT3;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Config/KajutaBotShareExtension-Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				KAJUTABOT_API_BASE_URL = "https://api.kajuta.tryniecki.eu";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tryniecki.KajutaBot.KajutaBot.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRIP_SWIFT_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8E0000000000000000000009 /* Build configuration list for PBXNativeTarget "KajutaBotShareExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				8E0000000000000000000007 /* Debug */,
-				8E0000000000000000000008 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		9EA60AAA3062D101006DA601 /* Build configuration list for PBXProject "KajutaBot" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -784,6 +787,15 @@
 			buildConfigurations = (
 				9EA60AD73062D105006DA601 /* Debug */,
 				9EA60AD83062D105006DA601 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8E0000000000000000000009 /* Build configuration list for PBXNativeTarget "KajutaBotShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8E0000000000000000000007 /* Debug */,
+				8E0000000000000000000008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

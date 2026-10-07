@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AddTrackView: View {
     @Bindable var app: AppState
-    let queued: () -> Void
+    let queued: @MainActor () -> Void
     @State private var submission: Task<Void, Never>?
 
     private var query: String { app.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines) }

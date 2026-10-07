@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum AppTheme: String, CaseIterable, Identifiable {
+enum AppTheme: String, CaseIterable, Identifiable, Sendable {
     case system, light, dark
     var id: String { rawValue }
     var title: LocalizedStringResource {

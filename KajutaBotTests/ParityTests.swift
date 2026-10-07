@@ -21,7 +21,7 @@ func queueFixture(version: Int64 = 1, queueVersion: Int64 = 1,
 }
 
 @MainActor
-private final class ControlledGate<Value> {
+private final class ControlledGate<Value: Sendable> {
     private var result: Value?
     private var continuation: CheckedContinuation<Value, Never>?
     private var entered = false

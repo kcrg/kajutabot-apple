@@ -22,6 +22,7 @@ struct QueueDragItem: Codable, Sendable {
 }
 
 /// Commit once on drop, never on every row crossed by the pointer.
+@MainActor
 private struct QueueDropDelegate: DropDelegate {
     let app: AppState
     let targetID: String

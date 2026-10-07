@@ -2,7 +2,7 @@ import Nuke
 import NukeUI
 import SwiftUI
 
-enum ArtworkLayout: Equatable {
+enum ArtworkLayout: Equatable, Sendable {
     case square(CGFloat)
     case aspectRatio(CGFloat)
 }
@@ -90,7 +90,7 @@ struct ArtworkView: View {
     let urlString: String?
     let layout: ArtworkLayout
     var cornerRadius: CGFloat = 14
-    var onLoadCompleted: (() -> Void)? = nil
+    var onLoadCompleted: (@MainActor () -> Void)? = nil
 
     var body: some View {
         let request = ArtworkRequestFactory.make(urlString: urlString, layout: layout)

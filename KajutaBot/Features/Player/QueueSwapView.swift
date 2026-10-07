@@ -3,7 +3,7 @@ import SwiftUI
 struct QueueSwapView: View {
     let app: AppState
     let source: QueueEntryResponse
-    let done: () -> Void
+    let done: @MainActor () -> Void
 
     var body: some View {
         NavigationStack {

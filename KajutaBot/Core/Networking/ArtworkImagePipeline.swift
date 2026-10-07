@@ -3,7 +3,7 @@ import Nuke
 
 /// Adds KajutaBot authorization only to the protected local artwork endpoint.
 /// External provider artwork never receives the user's access token.
-final class ArtworkImagePipelineDelegate: ImagePipeline.Delegate, @unchecked Sendable {
+final class ArtworkImagePipelineDelegate: ImagePipeline.Delegate {
     private let apiBaseURL: URL
     private let tokenProvider: @Sendable () async throws -> String
 

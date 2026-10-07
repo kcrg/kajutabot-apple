@@ -1,25 +1,5 @@
 import Foundation
 
-extension ISO8601DateFormatter {
-    nonisolated(unsafe) static let kajutaBot: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter
-    }()
-
-    nonisolated(unsafe) static let kajutaBotWithoutFraction: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter
-    }()
-}
-
-func parseISO8601(_ raw: String?) -> Date? {
-    guard let raw, !raw.isEmpty else { return nil }
-    return ISO8601DateFormatter.kajutaBot.date(from: raw)
-        ?? ISO8601DateFormatter.kajutaBotWithoutFraction.date(from: raw)
-}
-
 func formatDuration(_ milliseconds: Int64) -> String {
     guard milliseconds > 0 else { return "--:--" }
     let seconds = milliseconds / 1_000

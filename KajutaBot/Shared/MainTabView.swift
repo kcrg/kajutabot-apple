@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum AppTab: Hashable {
+enum AppTab: Hashable, Sendable {
     case player
     case favorites
     case more

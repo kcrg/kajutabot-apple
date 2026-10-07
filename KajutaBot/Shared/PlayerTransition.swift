@@ -1,15 +1,15 @@
 import Observation
 import SwiftUI
 
-enum PlayerTransitionLocation: Hashable { case player, miniPlayer }
-enum PlayerTransitionPart: Hashable { case artwork, title }
+enum PlayerTransitionLocation: Hashable, Sendable { case player, miniPlayer }
+enum PlayerTransitionPart: Hashable, Sendable { case artwork, title }
 
-struct PlayerTransitionIdentity: Equatable {
+struct PlayerTransitionIdentity: Equatable, Sendable {
     let trackID: String
     let revision: Int
 }
 
-fileprivate struct PlayerElementMeasurement: Equatable {
+fileprivate struct PlayerElementMeasurement: Equatable, Sendable {
     let identity: PlayerTransitionIdentity
     let frame: CGRect
     let cornerRadius: CGFloat
@@ -20,13 +20,13 @@ fileprivate struct PlayerElementMeasurement: Equatable {
 /// assuming matchedGeometryEffect can connect views across those hosts.
 @MainActor @Observable
 final class PlayerTransition {
-    struct Layout: Equatable {
+    struct Layout: Equatable, Sendable {
         let artwork: CGRect
         let title: CGRect
         let cornerRadius: CGFloat
     }
 
-    struct Flight: Identifiable {
+    struct Flight: Identifiable, Sendable {
         let id = UUID()
         let identity: PlayerTransitionIdentity
         let track: PlaybackTrackResponse
@@ -93,8 +93,10 @@ final class PlayerTransition {
         withAnimation(.smooth(duration: 0.38), completionCriteria: .removed) {
             flight?.isAtDestination = true
         } completion: { [weak self] in
-            guard self?.flight?.id == id else { return }
-            self?.cancel()
+            Task { @MainActor [weak self] in
+                guard self?.flight?.id == id else { return }
+                self?.cancel()
+            }
         }
     }
 

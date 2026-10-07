@@ -48,7 +48,7 @@ struct AuthAPIClient: AuthSessionAPI {
         try await send(path: "auth/refresh", body: RefreshUserSessionRequest(refreshToken: refreshToken))
     }
 
-    private func send<Response: Decodable, Body: Encodable>(path: String, body: Body?) async throws -> Response {
+    private func send<Response: Decodable & Sendable, Body: Encodable & Sendable>(path: String, body: Body?) async throws -> Response {
         var request = URLRequest(url: apiURL(path))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -63,7 +63,8 @@ struct AuthAPIClient: AuthSessionAPI {
         baseURL.appending(path: "api/v1/app").appending(path: path)
     }
 
-    private func decodeResponse<T: Decodable>(_ request: URLRequest) async throws -> T {
+    @concurrent
+    private func decodeResponse<T: Decodable & Sendable>(_ request: URLRequest) async throws -> T {
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {
@@ -74,4 +75,4 @@ struct AuthAPIClient: AuthSessionAPI {
     }
 }
 
-private struct EmptyBody: Codable {}
+private struct EmptyBody: Codable, Sendable {}

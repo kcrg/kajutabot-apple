@@ -1,6 +1,6 @@
 import Foundation
 
-struct PlaybackProgressState: Equatable {
+struct PlaybackProgressState: Equatable, Sendable {
     let identity: String
     let durationMilliseconds: Int64
     let positionMilliseconds: Int64?
@@ -27,7 +27,7 @@ struct PlaybackProgressState: Equatable {
     }
 }
 
-enum ActionStatus: Equatable {
+enum ActionStatus: Equatable, Sendable {
     case pending
     case success
     case failure

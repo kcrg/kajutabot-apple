@@ -42,9 +42,7 @@ final class ShareViewController: UIViewController {
         for item in extensionContext?.inputItems.compactMap({ $0 as? NSExtensionItem }) ?? [] {
             for provider in item.attachments ?? [] {
                 for type in [UTType.url.identifier, UTType.plainText.identifier] where provider.hasItemConformingToTypeIdentifier(type) {
-                    let value = try await provider.shareItem(type)
-                    if let url = value as? URL, let valid = URLInput.firstURL(in: url.absoluteString) { return valid }
-                    if let text = value as? String, let url = URLInput.firstURL(in: text) { return url }
+                    if let url = try await provider.sharedURL(for: type) { return url }
                 }
             }
             if let text = item.attributedContentText?.string, let url = URLInput.firstURL(in: text) { return url }
@@ -76,7 +74,7 @@ private final class ShareModel {
         let store = KeychainSessionStore()
         let session = try store.load()
         let defaults = UserDefaults(suiteName: "group.com.tryniecki.KajutaBot")
-        guard let session, let expiry = Self.expiry(session.accessTokenExpiresAtUtc),
+        guard let session, let expiry = parseISO8601(session.accessTokenExpiresAtUtc),
               expiry.timeIntervalSinceNow > 60,
               let guild = defaults?.string(forKey: "selection.guildId"),
               let channel = defaults?.string(forKey: "selection.voiceChannelId") else {
@@ -122,12 +120,6 @@ private final class ShareModel {
         isLoading = false
     }
 
-    private static func expiry(_ value: String) -> Date? {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.date(from: value) ?? ISO8601DateFormatter().date(from: value)
-    }
-
     private func send(base: URL, path: String, token: String, body: Data? = nil) async throws -> QueueSnapshotResponse {
         var request = URLRequest(url: base.appending(path: "api/v1/app").appending(path: path))
         request.httpMethod = body == nil ? "GET" : "POST"
@@ -145,7 +137,7 @@ private final class ShareModel {
 
 private struct ShareResultView: View {
     let model: ShareModel
-    let done: () -> Void
+    let done: @MainActor () -> Void
 
     var body: some View {
         NavigationStack {
@@ -175,12 +167,18 @@ private struct ShareResultView: View {
     }
 }
 
+@MainActor
 private extension NSItemProvider {
-    func shareItem(_ type: String) async throws -> NSSecureCoding? {
+    func sharedURL(for type: String) async throws -> URL? {
         try await withCheckedThrowingContinuation { continuation in
-            loadItem(forTypeIdentifier: type, options: nil) { item, error in
+            loadItem(forTypeIdentifier: type, options: nil) { @Sendable item, error in
                 if let error { continuation.resume(throwing: error) }
-                else { continuation.resume(returning: item) }
+                else {
+                    // Extract a Sendable value inside the callback. The provider's
+                    // arbitrary Objective-C payload never crosses an actor boundary.
+                    let text = (item as? URL)?.absoluteString ?? (item as? String)
+                    continuation.resume(returning: text.flatMap { URLInput.firstURL(in: $0) })
+                }
             }
         }
     }

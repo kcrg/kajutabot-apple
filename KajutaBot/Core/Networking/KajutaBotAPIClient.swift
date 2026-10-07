@@ -102,11 +102,11 @@ struct KajutaBotAPIClient: KajutaBotAPI {
         try await send(method: "POST", path: "users/me/favorites/queue", body: body)
     }
 
-    private func send<T: Decodable>(method: String, path: String, query: [URLQueryItem] = []) async throws -> T {
+    private func send<T: Decodable & Sendable>(method: String, path: String, query: [URLQueryItem] = []) async throws -> T {
         try await perform(method: method, path: path, query: query, body: nil)
     }
 
-    private func send<T: Decodable, Body: Encodable>(method: String, path: String, query: [URLQueryItem] = [], body: Body) async throws -> T {
+    private func send<T: Decodable & Sendable, Body: Encodable & Sendable>(method: String, path: String, query: [URLQueryItem] = [], body: Body) async throws -> T {
         try await perform(method: method, path: path, query: query, body: try JSONEncoder().encode(body))
     }
 
@@ -114,7 +114,9 @@ struct KajutaBotAPIClient: KajutaBotAPI {
         _ = try await performRaw(method: method, path: path, query: query, body: nil)
     }
 
-    private func perform<T: Decodable>(method: String, path: String, query: [URLQueryItem], body: Data?) async throws -> T {
+    // Approachable Concurrency otherwise inherits the caller's actor, including UI.
+    @concurrent
+    private func perform<T: Decodable & Sendable>(method: String, path: String, query: [URLQueryItem], body: Data?) async throws -> T {
         let (data, _) = try await performRaw(method: method, path: path, query: query, body: body)
         do { return try JSONDecoder().decode(T.self, from: data) }
         catch { throw APIError.decoding(error) }

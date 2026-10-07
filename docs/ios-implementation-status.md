@@ -14,9 +14,11 @@
 | I-08 | Sesyjny socket SignalR, osobna subskrypcja guild, stan/draft głośności 0–200%, natywny Slider, event/read race, invoke Completion, debounce wskaźnika 100 ms, limit 10 s, ostatnia oczekująca intencja | Wymaga serwera z helperem Windows i rzeczywistego SignalR |
 | I-09 | System/jasny/ciemny przez AppStorage, rozszerzona pomoc, PL/EN, Sentry zamiast Pulse i ukrytej konsoli | DSN nie jest skonfigurowany; pakiety i telemetria wymagają odbioru na Macu |
 | I-10 | Udokumentowany kierunek oficjalnego RemoteMediaSession | Nie wdrożono; potrzebny SDK i próba na urządzeniu |
-| I-11 | Testy kontraktów HTTP/DTO, kolejki, sesji, progress, inbox i głośności; workflow macOS z coverage | Workflow dodany, nie uruchomiony; pełne XCUITest funkcji i odbiór wydania pozostają do wykonania |
+| I-11 | Testy kontraktów HTTP/DTO, kolejki, sesji, progress, inbox i głośności | Źródła testów przygotowane; w bieżącym checkout brak workflow macOS, pełne XCUITest funkcji i odbiór wydania pozostają do wykonania |
 
 ## Decyzje dotyczące SwiftUI
+
+Aktualizacja: wszystkie targety Debug/Release używają trybu Swift 6, z jawnym default isolation `nonisolated` i istniejącym Approachable Concurrency. Minimum iOS pozostaje 26.2. Zmiany izolacji, Sendable, parsera dat, callbacków i testowych blokad opisuje [migracja do Swift 6](swift-6-migration.md). Kompilacja i testy nadal wymagają Maca.
 
 - `@MainActor @Observable` dla stanu aplikacji, playera i głośności; `@State` dla lokalnej prezentacji i `@Bindable` dla bindings. Istniejący `SessionManager` pozostaje aktorem.
 - `List`, `swipeActions`, `onDrag`/`DropDelegate`, `NavigationStack`, systemowa zakładka Search, natywny Slider i systemowy mini-player accessory. UIKit pozostaje tylko hostem wymaganym przez Share Extension.
@@ -75,7 +77,7 @@ Przegląd źródeł i sygnatur użytego SignalR/Sentry; parsowanie struktury Ope
 ## Bramka na Macu
 
 1. Xcode 26.2+, otwarcie projektu, Resolve Package Dependencies i zapis nowego Package.resolved. Kompilacja Debug oraz Release aplikacji i Share Extension; pełne diagnostics concurrency.
-2. Uruchomienie KajutaBotTests z coverage na iOS 26.2. Workflow `.github/workflows/ios-validation.yml` wykonuje resolve i te testy na macOS 26/Xcode 26.2 bez podpisu. Nie używa produkcyjnych danych w testach kontraktów.
+2. Uruchomienie KajutaBotTests z coverage na iOS 26.2, w tym ISO8601ParsingTests. W bieżącym checkout nie ma `.github/workflows/ios-validation.yml`; polecenia build/test na Macu podaje [migracja do Swift 6](swift-6-migration.md). Testy kontraktów nie używają produkcyjnych danych.
 3. Odbiór manualny: 320/375 pt i iPad, największe rozmiary Dynamic Type, VoiceOver, Reduce Motion, PL/EN, systemowy/jasny/ciemny. Sprawdzić czy toolbar, akcje wierszy i mini-player się mieszczą; nic nie znika pod klawiaturą. Animacja Player ↔ mini-player: obie strony, mini-player inline po scrollu, Player przewinięty poza okładkę, szybkie zmiany zakładek, skip/repeat restart podczas przejścia, obrót/resize i powrót z tła. Sprawdzić zgodność końcowych pozycji i brak pozostającego niewidocznego tytułu/obrazu.
 4. Queue/search/favorites: wiele kliknięć, wynik vs URL, snapshot w czasie reorder, błąd 409/429/5xx, timeout po commit, duplikaty entryId/contentId, repeat restart, radio bez utworu, zmiana guild A→B→A i kanału podczas odczytu, logout w czasie mutacji/refresh.
 5. Share na podpisanym urządzeniu: Safari/YouTube/SoundCloud/plain text, playlisty, gość, brak i wygasła sesja, brak celu, jednoczesne uruchomienie app/extension, utrata odpowiedzi i receipt unknown. Zweryfikować limit pamięci rozszerzenia. Sprawdzić pojedynczy/pusty wynik, długą playlistę z duplikatami, chronione/relatywne i zewnętrzne miniatury, błędy obrazów, wynik poniżej 100 ms oraz przewijanie i centrowanie przy dużym Dynamic Type.

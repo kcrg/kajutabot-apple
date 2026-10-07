@@ -51,7 +51,7 @@ final class DiscordOAuthService: NSObject, ASWebAuthenticationPresentationContex
 
         defer { session = nil }
         let callbackURL: URL = try await withCheckedThrowingContinuation { continuation in
-            let authSession = ASWebAuthenticationSession(url: authorizationURL, callbackURLScheme: config.callbackScheme) { url, error in
+            let authSession = ASWebAuthenticationSession(url: authorizationURL, callbackURLScheme: config.callbackScheme) { @Sendable url, error in
                 if let error {
                     continuation.resume(throwing: error)
                 } else if let url {

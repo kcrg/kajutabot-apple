@@ -7,7 +7,7 @@ struct PlayerWindowFrameReader: UIViewRepresentable {
     let layoutSignal: CGRect
     var identity: PlayerTransitionIdentity? = nil
     var refreshID: UUID? = nil
-    let onChange: (CGRect) -> Void
+    let onChange: @MainActor (CGRect) -> Void
 
     func makeUIView(context: Context) -> FrameView {
         let view = FrameView()
@@ -40,7 +40,7 @@ struct PlayerWindowFrameReader: UIViewRepresentable {
         var identity: PlayerTransitionIdentity?
         var refreshID: UUID?
         var lastFrame: CGRect?
-        var onChange: ((CGRect) -> Void)?
+        var onChange: (@MainActor (CGRect) -> Void)?
         private var reportScheduled = false
 
         override func layoutSubviews() {

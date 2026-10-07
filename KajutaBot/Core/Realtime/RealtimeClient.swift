@@ -41,10 +41,10 @@ final class RealtimeClient: LocalVolumeTransport {
     var lastFrameAt: Date?
     var lastQueueUpdateAt: Date?
     var reconnectAttempts = 0
-    @ObservationIgnored var onSnapshot: ((QueueSnapshotResponse) -> Void)?
-    @ObservationIgnored var onRecoveryNeeded: ((String) -> Void)?
-    @ObservationIgnored var onLocalVolume: ((LocalVolumeState) -> Void)?
-    @ObservationIgnored var onConnectionChanged: ((Bool) -> Void)?
+    @ObservationIgnored var onSnapshot: (@MainActor (QueueSnapshotResponse) -> Void)?
+    @ObservationIgnored var onRecoveryNeeded: (@MainActor (String) -> Void)?
+    @ObservationIgnored var onLocalVolume: (@MainActor (LocalVolumeState) -> Void)?
+    @ObservationIgnored var onConnectionChanged: (@MainActor (Bool) -> Void)?
 
     init(baseURL: URL, tokenProvider: @escaping @Sendable () async throws -> String) {
         hubURL = baseURL.appending(path: "api/v1/app/hubs/playback").absoluteString
@@ -116,7 +116,7 @@ final class RealtimeClient: LocalVolumeTransport {
         let hub = HubConnectionBuilder()
             .withUrl(url: hubURL, options: options)
             .withAutomaticReconnect(retryPolicy: KajutaBotRetryPolicy { [weak self] attempt in
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     guard let self, self.isCurrent(epoch) else { return }
                     self.reconnectAttempts = attempt
                 }
