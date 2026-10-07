@@ -1,32 +1,42 @@
 {
-  "pins": [
+  "originHash" : "5100edbbb3e99c55d1114d8bb54c3ac53d375c577e1305a3e41c9c728e349f79",
+  "pins" : [
     {
-      "identity": "nuke",
-      "kind": "remoteSourceControl",
-      "location": "https://github.com/kean/Nuke.git",
-      "state": {
-        "revision": "30f7a7e72e0607d304fbf69c799474bd5fb6d1ce",
-        "version": "13.2.0"
+      "identity" : "nuke",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kean/Nuke.git",
+      "state" : {
+        "revision" : "30f7a7e72e0607d304fbf69c799474bd5fb6d1ce",
+        "version" : "13.2.0"
       }
     },
     {
-      "identity": "signalr-client-swift",
-      "kind": "remoteSourceControl",
-      "location": "https://github.com/dotnet/signalr-client-swift",
-      "state": {
-        "revision": "1a27323e478ad75dc8383a11f0c5d5cce62afc6e",
-        "version": "1.0.0"
+      "identity" : "sentry-cocoa",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/getsentry/sentry-cocoa.git",
+      "state" : {
+        "revision" : "d82bb1c5eb353a593573a5624bb370f5a1f500ce",
+        "version" : "9.24.0"
       }
     },
     {
-      "identity": "swift-collections",
-      "kind": "remoteSourceControl",
-      "location": "https://github.com/apple/swift-collections.git",
-      "state": {
-        "revision": "a66de878e87ef5a3d5d390e0f6d9002aa5541a43",
-        "version": "1.7.0"
+      "identity" : "signalr-client-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dotnet/signalr-client-swift",
+      "state" : {
+        "revision" : "1a27323e478ad75dc8383a11f0c5d5cce62afc6e",
+        "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "swift-collections",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-collections.git",
+      "state" : {
+        "revision" : "3b69cedbaa49957e97c092ae400bb57602ef941f",
+        "version" : "1.7.2"
       }
     }
   ],
-  "version": 2
+  "version" : 3
 }

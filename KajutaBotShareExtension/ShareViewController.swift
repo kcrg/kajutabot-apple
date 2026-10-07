@@ -180,7 +180,7 @@ private extension NSItemProvider {
         try await withCheckedThrowingContinuation { continuation in
             loadItem(forTypeIdentifier: type, options: nil) { item, error in
                 if let error { continuation.resume(throwing: error) }
-                else { continuation.resume(returning: item as? NSSecureCoding) }
+                else { continuation.resume(returning: item) }
             }
         }
     }
